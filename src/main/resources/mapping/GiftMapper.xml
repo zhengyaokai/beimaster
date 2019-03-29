@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GiftMapper" >
+	<select id="findGiftList" parameterType="map" resultType="map">
+		select 
+			id,name,concat('${@bmatser.util.Constants@IMAGE_URL}','giftImg/',
+			if(small_pic is not null and small_pic !='',small_pic,'0.jpg')) smallPic,score,market_price marketPrice,
+			ifnull(surplus_num,0) surplusNum 
+		from gift
+		where `status` = 1 
+		<if test="isRecommend != null and isRecommend != ''">
+			and is_recommend =#{isRecommend}
+		</if>
+		<if test="type != null and  type == 1">
+			and score &gt;= 0 and score &lt;= 9999
+		</if>
+		<if test="type != null and  type == 2">
+			and score &gt;= 10000 and score &lt;= 49999
+		</if>
+		<if test="type != null and  type == 3">
+			and score &gt;= 50000 
+		</if>
+		order by order_sn
+	</select>
+	
+	<select id="findAppGiftList" parameterType="map" resultType="map">
+		select 
+			id,name,concat('${@bmatser.util.Constants@IMAGE_URL}','giftImg/',
+			if(small_pic is not null and small_pic !='',small_pic,'0.jpg')) smallPic,score,market_price marketPrice,
+			ifnull(surplus_num,0) surplusNum  
+		from gift
+		where `status` = 1 
+		<if test="isRecommend != null and isRecommend == 1">
+			and is_recommend =#{isRecommend}
+		</if>
+
+		<if test="type != null and  type == 1">
+			and score &gt;= 0 and score &lt;= 9999
+		</if>
+		<if test="type != null and  type == 2">
+			and score &gt;= 10000 and score &lt;= 49999
+		</if>
+		<if test="type != null and  type == 3">
+			and score &gt;= 50000 
+		</if>
+		order by order_sn
+		limit #{page}, #{row} 
+	</select>
+	
+	<select id="findAppGiftListCount"  resultType="int">
+		select 
+			count(1) count 
+		from gift
+		where `status` = 1 
+		<if test="isRecommend != null and isRecommend == 1">
+			and is_recommend =#{isRecommend}
+		</if>
+	
+		<if test="type != null and  type == 1">
+			and score &gt;= 0 and score &lt;= 9999
+		</if>
+		<if test="type != null and  type == 2">
+			and score &gt;= 10000 and score &lt;= 49999
+		</if>
+		<if test="type != null and  type == 3">
+			and score &gt;= 50000 
+		</if>
+	</select>
+	
+	<select id="findGiftById" parameterType="map" resultType="map">
+		select 
+			id,name,small_pic smallPic,score,market_price marketPrice,
+			big_pic bigPic,banner,spe_pic spePic,ifnull(total_num,0) totalNum,ifnull(surplus_num,0) surplusNum,
+			limit_start_time limitStartTime,limit_end_time limitEndTime
+		from gift
+		where `status` = 1 and id  =#{id}
+		limit 0,1
+	</select>
+	<!-- 查询所需积分 -->
+	<select id="selectScoreById" parameterType="Integer" resultType="Integer">
+		select score
+		from gift
+		where id=#{id} and status = '1' 
+	</select>
+	<!-- 查询兑换时间 -->
+	<select id="selectExchangeTime" parameterType="Integer" resultType="String">
+		select limit_start_time limitStartTime
+		from gift
+		where id=#{giftId} and status = '1' 
+	</select>
+	
+	<!-- 积分商品剩余数量扣减 -->
+	<update id="updateSurplusNum">
+	  update gift set surplus_num = ifnull(surplus_num,0)- #{num}
+	  where id = #{giftId}
+	</update>
+	
+	<!-- 查询剩余数量 -->
+	<select id="selectSurplusNumById" resultType="int">
+		select surplus_num surplusNum
+		from gift
+		where id=#{giftId} and status = '1' 
+	</select>
+</mapper>

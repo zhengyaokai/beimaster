@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.StaffMapper" >
+  <resultMap id="BaseResultMap" type="bmatser.model.Staff" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="login_name" property="loginName" jdbcType="VARCHAR" />
+    <result column="password" property="password" jdbcType="VARCHAR" />
+    <result column="staff_no" property="staffNo" jdbcType="VARCHAR" />
+    <result column="staff_name" property="staffName" jdbcType="VARCHAR" />
+    <result column="sex" property="sex" jdbcType="CHAR" />
+    <result column="mobile" property="mobile" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="CHAR" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="create_staff_id" property="createStaffId" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+    <resultMap id="findStaffsResultMap" type="bmatser.pageModel.StaffPage" extends="BaseResultMap">
+    <result column="create_staff_no" property="createStaffNo" jdbcType="VARCHAR" />
+    <result column="create_staff_name" property="createStaffName" jdbcType="VARCHAR" />
+    <result column="create_mobile" property="createStaffMobile" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+	    id, login_name, password, staff_no, staff_name, sex, mobile, status, remark, create_staff_id, 
+	    create_time
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from sys_staff
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+  <select id="getOwnerManager" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select s.id,s.staff_name
+   from sys_staff s LEFT JOIN (select * from crm_customer_manager where status='1') ccm on ccm.manager_id=s.id where ccm.customer_id= #{id,jdbcType=INTEGER}
+  </select>
+  
+  
+  <select id="getOwnerService" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select s.id,s.staff_name
+   from sys_staff s LEFT JOIN (select * from crm_customer_service where status='1') ccs on ccs.service_id=s.id where ccs.customer_id= #{id,jdbcType=INTEGER}
+  </select>
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    update sys_staff
+	set status='2'
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.Staff" useGeneratedKeys="true" keyProperty="id">
+    insert into sys_staff (id, login_name, password, 
+      staff_no, staff_name, sex, 
+      mobile, status, remark, 
+      create_staff_id, create_time,dept_id,duty_id,head_image)
+    values (#{id,jdbcType=INTEGER}, #{loginName,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
+      #{staffNo,jdbcType=VARCHAR}, #{staffName,jdbcType=VARCHAR}, #{sex,jdbcType=CHAR}, 
+      #{mobile,jdbcType=VARCHAR}, #{status,jdbcType=CHAR}, #{remark,jdbcType=VARCHAR}, 
+      #{createStaffId,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP},#{deptId,jdbcType=INTEGER},
+      #{dutyId,jdbcType=INTEGER},#{headImage,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.pageModel.StaffPage" useGeneratedKeys="true" keyProperty="id">
+    insert into sys_staff
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="loginName != null" >
+        login_name,
+      </if>
+      <if test="password != null" >
+        password,
+      </if>
+      <if test="staffNo != null" >
+        staff_no,
+      </if>
+      <if test="staffName != null" >
+        staff_name,
+      </if>
+      <if test="sex != null" >
+        sex,
+      </if>
+      <if test="mobile != null" >
+        mobile,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="remark != null" >
+        remark,
+      </if>
+      <if test="createStaffId != null" >
+        create_staff_id,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="loginName != null" >
+        #{loginName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null" >
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="staffNo != null" >
+        #{staffNo,jdbcType=VARCHAR},
+      </if>
+      <if test="staffName != null" >
+        #{staffName,jdbcType=VARCHAR},
+      </if>
+      <if test="sex != null" >
+        #{sex,jdbcType=CHAR},
+      </if>
+      <if test="mobile != null" >
+        #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=CHAR},
+      </if>
+      <if test="remark != null" >
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createStaffId != null" >
+        #{createStaffId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.pageModel.StaffPage" >
+    update sys_staff
+    <set >
+      <if test="loginName != null" >
+        login_name = #{loginName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null" >
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="staffNo != null" >
+        staff_no = #{staffNo,jdbcType=VARCHAR},
+      </if>
+      <if test="staffName != null" >
+        staff_name = #{staffName,jdbcType=VARCHAR},
+      </if>
+      <if test="sex != null" >
+        sex = #{sex,jdbcType=CHAR},
+      </if>
+      <if test="mobile != null" >
+        mobile = #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+      <if test="remark != null" >
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createStaffId != null" >
+        create_staff_id = #{createStaffId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.Staff" >
+    update sys_staff
+    <set>
+      <if test="loginName != null and loginName != ''">
+    	login_name = #{loginName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null and password != ''">
+      	password = #{password,jdbcType=VARCHAR},
+      </if>
+      staff_no = #{staffNo,jdbcType=VARCHAR},
+      staff_name = #{staffName,jdbcType=VARCHAR},
+      <if test="headImage != null and headImage != ''">
+      head_image = #{headImage,jdbcType=VARCHAR},
+      </if>
+      dept_id = #{deptId,jdbcType=INTEGER},
+      duty_id = #{dutyId,jdbcType=INTEGER},
+      sex = #{sex,jdbcType=CHAR},
+      mobile = #{mobile,jdbcType=VARCHAR},
+      <if test="status != null">
+	      status = #{status,jdbcType=CHAR},
+      </if>
+      remark = #{remark,jdbcType=VARCHAR},
+      <if test="createStaffId != null">
+      	  create_staff_id = #{createStaffId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+          create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+
+  <sql id="staffs_Column_List">
+    sys_staff.id, sys_staff.login_name, sys_staff.staff_no, sys_staff.staff_name, sys_staff.sex, sys_staff.mobile, sys_staff.status, sys_staff.remark, sys_staff.create_staff_id, 
+    sys_staff.create_time,sys_role.id,sys_role.role_no,sys_role.role_name,create_staff.staff_no create_staff_no,create_staff.staff_name create_staff_name,create_staff.mobile create_mobile
+  </sql>
+  <select id="findStaffs" parameterType="bmatser.pageModel.StaffPage"  resultMap="findStaffsResultMap">
+    select 
+    <include refid="staffs_Column_List" />
+    from sys_staff
+    left join sys_staff create_staff on sys_staff.create_staff_id = create_staff.id
+    join sys_staff_role on sys_staff.id = sys_staff_role.staff_id
+    join sys_role on sys_staff_role.role_id = sys_role.id
+    where   status =1
+    <if test="roleId != null" >
+        and sys_role.id = #{roleId,jdbcType=INTEGER}
+    </if>
+    <if test="roleNo != null" >
+        and sys_role.role_no = #{roleNo,jdbcType=INTEGER}
+    </if>
+    <if test="status != null" >
+        and sys_staff.status = #{status,jdbcType=VARCHAR}
+    </if>
+    <if test="staffName != null" >
+        and sys_staff.staff_name = #{staffName,jdbcType=VARCHAR}
+    </if>
+    <if test="mobile != null" >
+        and sys_staff.mobile = #{mobile,jdbcType=VARCHAR}
+    </if>
+    order by sys_staff.create_time desc
+    limit #{page}, #{rows} 
+  </select>
+  
+  <!-- 根据条件查询员工数量 -->
+  <select id="findAllCount" parameterType="bmatser.pageModel.StaffPage" resultType="long">
+    select count(*) from sys_staff
+    left join sys_staff create_staff on sys_staff.create_staff_id = create_staff.id
+    join sys_staff_role on sys_staff.id = sys_staff_role.staff_id
+    join sys_role on sys_staff_role.role_id = sys_role.id
+    where status =1
+    <if test="roleId != null" >
+        and sys_role.id = #{roleId,jdbcType=INTEGER}
+    </if>
+     <if test="roleNo != null" >
+        and sys_role.role_no = #{roleNo,jdbcType=INTEGER}
+    </if>
+    <if test="status != null" >
+        and sys_staff.status = #{status,jdbcType=VARCHAR}
+    </if>
+    <if test="staffName != null" >
+        and sys_staff.staff_name = #{staffName,jdbcType=VARCHAR}
+    </if>
+    <if test="mobile != null" >
+        and sys_staff.mobile = #{mobile,jdbcType=VARCHAR}
+    </if>
+    and sys_staff_role.status='1'
+  </select>  
+  
+  <!-- 根据员工ID查询员工信息 -->
+  <select id="getStaffById" parameterType="java.lang.Integer"  resultMap="findStaffsResultMap">
+    select 
+    <include refid="staffs_Column_List" />
+    from sys_staff
+    left join sys_staff create_staff on sys_staff.create_staff_id = create_staff.id
+    join sys_staff_role on sys_staff.id = sys_staff_role.staff_id
+    join sys_role on sys_staff_role.role_id = sys_role.id
+    where sys_staff.id = #{id,jdbcType=INTEGER}
+  </select>
+  
+   <!-- 登录 -->
+  <select id="login" resultMap="findStaffsResultMap">
+    select 
+    sys_staff.id, sys_staff.login_name, sys_staff.staff_no, sys_staff.staff_name, sys_staff.sex, sys_staff.mobile, sys_staff.status, sys_staff.remark, sys_staff.create_staff_id, 
+    sys_staff.create_time,sys_role.id,sys_role.role_no,sys_role.role_name
+    from sys_staff
+    join sys_staff_role on sys_staff.id = sys_staff_role.staff_id
+    join sys_role on sys_staff_role.role_id = sys_role.id
+    where sys_staff.login_name = #{loginName,jdbcType=VARCHAR}
+    and sys_staff.password = #{password,jdbcType=VARCHAR}
+    and sys_staff.status = '1'
+  </select>
+   <!-- 用户名是否存在 -->
+  <select id="existLoginName"  resultType="long">  
+    select count(*) from sys_staff
+    where status='1' and login_name = #{loginName,jdbcType=VARCHAR}
+  </select>  
+  
+  <select id="getCustomerManager" resultMap="BaseResultMap">
+    select s.*
+    from sys_staff s LEFT JOIN sys_staff_role sr on sr.staff_id=s.id left JOIN 
+    sys_role r on r.id=sr.role_id where r.role_no like '%1010%' and s.status='1'
+  </select>
+  
+  <select id="getCustomerService" resultMap="BaseResultMap">
+    select s.*
+    from sys_staff s LEFT JOIN sys_staff_role sr on sr.staff_id=s.id left JOIN 
+    sys_role r on r.id=sr.role_id where r.role_no like '%1020%' and s.status='1' and sr.status = '1'
+  </select>
+  <select id="getCustomerReferees" resultMap="BaseResultMap">
+    select s.*
+    from sys_staff s LEFT JOIN sys_staff_role sr on sr.staff_id=s.id left JOIN
+    sys_role r on r.id=sr.role_id where r.role_no like '10%' and s.status='1' and sr.status = '1'
+  </select>
+  
+   <update id="editStaffPassword">
+    update sys_staff
+    set password = #{newPassword,jdbcType=VARCHAR}
+    where id = #{staffId,jdbcType=INTEGER} and password = #{oldPassword,jdbcType=VARCHAR}
+  </update>
+  
+  <select id="findStaffByPage" parameterType="bmatser.pageModel.StaffPage" resultType="bmatser.model.Staff">
+  	select 
+  		id,staff_no staffNo,staff_name staffName,sex,mobile,dept_id deptId,duty_id dutyId,head_image headImage 
+  	from sys_staff 
+  	where status = 1
+  	<if test="staff.staffName != null and staff.staffName != ''">
+  		and staff_name like '%${staff.staffName}%'
+  	</if>
+  	<if test="staff.mobile != null and staff.mobile != ''" >
+  		and mobile like '%${staff.mobile}%'
+  	</if>
+  	<if test="staff.deptId != null  and staff.deptId != ''" >
+  		and dept_id = #{staff.deptId}
+  	</if>
+  	order by id
+	<if test="size == 0">
+		limit 0,8
+	</if>
+	<if test="size != 0">
+		limit ${showNum},${size}
+	</if>
+  </select>
+  
+  <select id="findStaffByPageCount" parameterType="bmatser.pageModel.StaffPage"  resultType="java.lang.Long">
+  	select 
+  		count(id)
+  	from sys_staff 
+  	where status = 1
+  	<if test="staff.staffName != null and staff.staffName != ''">
+  		and staff_name like '%${staff.staffName}%'
+  	</if>
+  	<if test="staff.mobile != null and staff.mobile != ''" >
+  		and mobile like '%${staff.mobile}%'
+  	</if>
+  	<if test="staff.deptId != null  and staff.deptId != ''" >
+  		and dept_id = #{staff.deptId}
+  	</if>
+  	order by id
+  </select>
+  
+<!-- 查询邮箱地址 -->  
+  <select id="findEmail" resultType="java.lang.String">
+  	select email from sys_staff where id=#{id} and status=1
+  </select>
+
+<!-- 根据员工编号获取id -->  
+  <!-- <select id="selectIdByStaffNo" resultType="int">
+  	select id from sys_staff where staff_no=#{staffNo} and status='1'
+  </select> -->
+  
+  <!-- 根据员工邀请码获取id -->  
+   <select id="selectIdByInvitation" resultType="Integer">
+  	select id from sys_staff where invitation=#{staffNo} and status='1'
+  </select> 
+  
+  <!-- 查询自动分配客服（工控：商务2、3、5部） -->
+  <select id="selectAutoService" resultMap="findStaffsResultMap">
+	  <!-- select distinct s.id  from sys_staff s
+	inner join sys_staff_role ssr on s.id=ssr.staff_id
+	inner JOIN sys_role sr on ssr.role_id=sr.id
+	and sr.role_no='102010' and s.id not in(10,11,26,21,53)
+	and s.STATUS=1
+	order by id -->
+	select distinct s.id,s.email
+    from sys_staff s 
+		LEFT JOIN sys_staff_role sr on sr.staff_id=s.id 
+		left JOIN sys_role r on r.id=sr.role_id 
+		LEFT JOIN sys_group g on g.id=s.group_id and g.`status`=1
+		where r.role_no = '102010' and s.status='1' and sr.status='1'
+	  	and g.id in (2,3,11) and s.id !=25
+		order by s.id
+   </select> 
+   
+   <!-- 查询自动分配客服（劳保：商务4部） -->
+  <select id="selectAutoLBService" resultMap="findStaffsResultMap">
+	select distinct s.id,s.email
+    from sys_staff s 
+		LEFT JOIN sys_staff_role sr on sr.staff_id=s.id 
+		left JOIN sys_role r on r.id=sr.role_id 
+		LEFT JOIN sys_group g on g.id=s.group_id and g.`status`=1
+		where r.role_no = '102010' and s.status='1' and sr.status='1'
+	  	and g.id =4 and s.id !=25
+		order by s.id
+   </select> 
+   
+   <!-- 查询客服分配数 -->
+   <select id="selectServiceAssign" resultType="Integer">
+  	select count(cc.id) from crm_customer cc LEFT JOIN crm_customer_service ccs on cc.id=ccs.customer_id 
+		  where cc.rank_id!=1 and cc.rank_id!=13 and ccs.service_id= #{staffId} and cc.`status`!=2 and ccs.`status`=1;
+  </select>
+   
+</mapper>

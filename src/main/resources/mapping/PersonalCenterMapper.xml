@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.PersonalCenterMapper" >
+	<!-- 获取二维码 -->
+	<select id="getQrcode" resultType="map">
+		select id,concat('${@bmatser.util.Constants@IMAGE_URL}','qrImg/',qrcode_path) qrcodePath,create_time createTime from dealer_qrcode
+		where dealer_id = #{dealerId} and status = '1'
+	</select>
+
+    <select id="getInvitedRecord" resultType="map">
+      select d.dealer_name dealerName,t.createTime from 
+      (select DISTINCT invited_open_id invitedOpenId,create_time createTime from dealer_invited
+        where dealer_id = #{dealerId}
+        <if test="startTime != null and startTime !=''">
+			and DATE_FORMAT(create_time,'%Y-%m-%d') &gt;= DATE_FORMAT(#{startTime},'%Y-%m-%d')
+	   </if>
+	   <if test="endTime != null and endTime !=''">
+			and DATE_FORMAT(create_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d')
+	   </if>
+       GROUP BY invitedOpenId
+       ORDER BY createTime desc) t,dealer d
+      where t.invitedOpenId = d.open_id
+      limit #{page}, #{rows}
+    </select>
+    
+    <select id="getInvitedRecordCount" resultType="int">
+      select count(1) from 
+      (select DISTINCT invited_open_id invitedOpenId,create_time createTime from dealer_invited
+        where dealer_id = #{dealerId}
+        <if test="startTime != null and startTime !=''">
+			and DATE_FORMAT(create_time,'%Y-%m-%d') &gt;= DATE_FORMAT(#{startTime},'%Y-%m-%d')
+	   </if>
+	   <if test="endTime != null and endTime !=''">
+			and DATE_FORMAT(create_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d')
+	   </if>
+       GROUP BY invitedOpenId
+       ORDER BY createTime desc) t,dealer d
+      where t.invitedOpenId = d.open_id
+    </select>
+    
+    <select id="getDealerName" resultType="String">
+      select dealer_name from dealer
+        where dealer_id = #{dealerId}
+    </select>
+    
+    <insert id="saveBankAccount">
+	   insert into dealer_bank_card(dealer_id,
+		<if test="accountName != null and accountName != ''">
+			account_name,
+		</if>
+		<if test="bankName != null and bankName != ''">
+			bank_name,
+		</if>
+		<if test="card != null and card != ''">
+			card,
+		</if>
+		create_time)
+		values(#{dealerId},
+		<if test="accountName != null and accountName != ''">
+			#{accountName},
+		</if>
+		<if test="bankName != null and bankName != ''">
+			#{bankName},
+		</if>
+		<if test="card != null and card != ''">
+			#{card},
+		</if>
+		now());
+	</insert>
+	
+	<select id="selectBankAccount" resultType="map">
+      select id,account_name accountName,bank_name bankName,card from dealer_bank_card
+      where dealer_id = #{dealerId}
+      order by create_time desc 
+    </select>
+    
+    <select id="getCard" resultType="String">
+      select card from dealer_bank_card where id  = #{id}
+    </select>
+    
+    <update id="modifyBankCard">
+      update dealer_bank_card 
+       set bank_name = #{bankName},card = #{card}      
+	  where id = #{id} and dealer_id = #{dealerId}
+    </update>
+</mapper>

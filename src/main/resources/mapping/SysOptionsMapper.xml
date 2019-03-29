@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.SysOptionsMapper">
+
+	<select id="findSysOptions" parameterType="java.lang.Integer" resultType="bmatser.model.SysOptionsValue">
+		select     
+			opt_value as id,opt_text as optText 
+		from sys_options_value sov
+		left join sys_options so on sov.opt_id = so.id and so.status = 1 
+		where so.id = #{id} and sov.status = 1 
+		<if test="id == 3">
+			and opt_value != 0 
+		</if>
+	</select>
+	
+	<!-- 获取系统配置 -->
+	<select id="getPaySysOption" resultType="Map">
+		select opt_value as optValue,opt_text as optText,remark
+		from sys_options_value sov
+		where sov.opt_id = #{optId} and sov.status = 1
+		<if test="remark!=null">
+			and sov.remark=#{remark}
+		</if>
+	</select>
+	
+	<!-- 根据id获取系统参数 -->
+	<select id="findPaySysOption" resultType="bmatser.model.SysOptionsValue">
+		select     
+			opt_value as id,opt_text as optText,remark 
+		from sys_options_value sov
+		where sov.opt_value = #{optValue} and sov.status = 1 
+		and sov.opt_id=#{optId}
+	</select>
+	
+</mapper>

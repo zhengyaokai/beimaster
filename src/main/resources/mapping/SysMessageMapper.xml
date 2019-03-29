@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.SysMessageMapper" >
+  
+<!-- 获取数据更新动态 -->
+	<select id="findDataMessages" resultType="Map">
+		select id, title, create_time createTime from sys_message
+		where status = 1 and message_type = 1 and target_type = 0
+		order by order_sn desc
+		limit 0,5
+	</select>
+
+
+	<select id="findDataNotice" resultType="Map">
+		select
+			id, title,message_type type from sys_message
+		where status = 1 and (message_type = 2 or message_type = 5) and target_type = 0 and title != ''
+		order by order_sn desc
+		limit 0,15
+	</select>
+
+    <select id="findDataDetail" resultType="Map" >
+        select
+        id, title,content,message_type type ,create_time from sys_message
+        where status = 1 and (message_type = 2 or message_type = 5) and target_type = 0 and title != ''
+        order by create_time desc
+        limit #{page},#{rows}
+    </select>
+
+    <select id="findDataDetailForIos" resultType="java.util.Map" >
+        select
+        id, title,message_type type ,create_time from sys_message
+        where status = 1 and (message_type = 2 or message_type = 5) and target_type = 0 and title != ''
+        order by create_time desc
+        limit #{page},#{rows}
+    </select>
+
+    <select id="findDataNoticeForIos" resultType="Map">
+        select
+        id, title,message_type type from sys_message
+        where status = 1 and (message_type = 2 or message_type = 5) and target_type = 0 and title != ''
+        order by order_sn desc
+        limit 0,15
+    </select>
+
+
+	<!-- 查询商城首页通知公告  add 20160603 -->
+	<select id="findMallNotice" resultType="Map">
+		select id, title, create_time createTime,target_url targetUrl from sys_message
+		where status = 1 and message_type = 4 and target_type = 0 and title != ''
+		order by modify_time desc
+		limit 0,5
+	</select>
+	
+   <select id="findHotKeyWord" resultType="java.lang.String">
+  		select 
+  			opt_text
+  		from sys_options_value
+  		where opt_id = 8
+  </select>
+  <!--查询通告详情   -->
+  <select id="selectSysMessage" resultType="map">
+  		SELECT title,content,create_time createTime,message_type messageType
+       FROM sys_message
+       WHERE id=#{id}
+       AND status='1' 
+       order by order_sn desc
+  </select>
+  
+  <!-- 查询用户贷通信息列表 -->
+  <select id="getSysMessageList" resultType="map">
+   select sm.id,sm.content,sm.create_time createTime,smd.id_read isRead from sys_message sm,sys_message_dealer smd
+    where sm.id = smd.message_id
+     and sm.status = '1'
+     and sm.message_type = '6'
+     and sm.target_type = '3'
+     and smd.dealer_id =#{dealerId} 
+    order by createTime desc
+    limit ${page},${rows}
+  </select>
+  
+  <!-- 查询用户贷通信息总数 -->
+  <select id="getAllSysMessageListCount" resultType="int">
+   select count(1) from sys_message sm,sys_message_dealer smd
+    where sm.id = smd.message_id
+     and sm.status = '1'
+     and sm.message_type = '6'
+     and sm.target_type = '3'
+     and smd.dealer_id =#{dealerId} 
+  </select>
+  
+  <!-- 查询用户贷通未读信息总数 -->
+  <select id="getSysMessageListCount" resultType="int">
+   select count(1) from sys_message sm,sys_message_dealer smd
+    where sm.id = smd.message_id
+     and smd.id_read = 0
+     and sm.status = '1'
+     and sm.message_type = '6'
+     and sm.target_type = '3'
+     and smd.dealer_id =#{dealerId} 
+  </select>
+  
+  <!-- saas贷通信息列表批量删除 -->
+  <update id="deleteSysMessageById">
+    update sys_message set status = '2' where id  = #{id}
+  </update> 
+  
+  <!-- 消息更新为已读 -->
+  <update id="updateIsRead">
+    update sys_message_dealer set id_read = 1,read_time = NOW() where message_id = #{id} AND dealer_id = #{dealerId}
+  </update>
+  
+  <!-- 查询消息内容 -->
+  <select id="getSysMessageInfo" resultType = "map">
+    select sm.id,sm.content,sm.create_time createTime,smd.id_read isRead from sys_message sm,sys_message_dealer smd
+    where sm.id = smd.message_id
+    and sm.id  = #{id}
+    and smd.dealer_id =#{dealerId}  
+  </select>
+
+    <!--查询系统公告-->
+    <select id="getSysNotice" resultType="java.util.Map">
+       select
+			id, title,message_type type , create_time createTime from sys_message
+		where status = 1 and message_type = 6 and target_type = 0 and title != ''
+		order by order_sn desc
+		limit #{page},#{rows}
+    </select>
+
+    <select id="getSysNoticeById" parameterType="java.lang.Integer" resultType="java.util.Map">
+        select * from sys_message where id = #{id}
+    </select>
+</mapper>

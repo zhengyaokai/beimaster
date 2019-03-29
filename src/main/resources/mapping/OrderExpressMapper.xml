@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.OrderExpressMapper" >
+  <resultMap id="BaseResultMap" type="bmatser.model.OrderExpress" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="shop_name" property="shopName" jdbcType="VARCHAR" />
+    <result column="original_order_id" property="originalOrderId" jdbcType="BIGINT" />
+    <result column="fexpcomname" property="fexpcomname" jdbcType="VARCHAR" />
+    <result column="fexp_no" property="fexpNo" jdbcType="VARCHAR" />
+    <result column="fname" property="fname" jdbcType="VARCHAR" />
+    <result column="fexpprttime" property="fexpprttime" jdbcType="TIMESTAMP" />
+    <result column="status" property="status" jdbcType="CHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, shop_name, original_order_id, fexpcomname, fexp_no, fname, fexpprttime, status
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from order_express
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="findByOriginalOrderId" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select
+    <include refid="Base_Column_List" />
+    from order_express
+    where `status`=1 and original_order_id = #{originalId,jdbcType=BIGINT}
+  </select>
+  <select id="findByOriginalOrderIdAndFexpNoAndFexpcomname" resultMap="BaseResultMap"  >
+    select
+    <include refid="Base_Column_List" />
+    from order_express
+    where `status`=1
+    and original_order_id = #{originalId,jdbcType=BIGINT}
+    and fexp_no = #{fexpNo,jdbcType=VARCHAR}
+    and fexpcomname = #{fexpcomname,jdbcType=VARCHAR}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from order_express
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.OrderExpress" useGeneratedKeys="true" keyProperty="id">
+    insert into order_express (id, shop_name, original_order_id, 
+      fexpcomname, fexp_no, fname, 
+      fexpprttime, status)
+    values (#{id,jdbcType=INTEGER}, #{shopName,jdbcType=VARCHAR}, #{originalOrderId,jdbcType=BIGINT}, 
+      #{fexpcomname,jdbcType=VARCHAR}, #{fexpNo,jdbcType=VARCHAR}, #{fname,jdbcType=VARCHAR}, 
+      #{fexpprttime,jdbcType=TIMESTAMP}, #{status,jdbcType=CHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.model.OrderExpress" >
+    insert into order_express
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="shopName != null" >
+        shop_name,
+      </if>
+      <if test="originalOrderId != null" >
+        original_order_id,
+      </if>
+      <if test="fexpcomname != null" >
+        fexpcomname,
+      </if>
+      <if test="fexpNo != null" >
+        fexp_no,
+      </if>
+      <if test="fname != null" >
+        fname,
+      </if>
+      <if test="fexpprttime != null" >
+        fexpprttime,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="shopName != null" >
+        #{shopName,jdbcType=VARCHAR},
+      </if>
+      <if test="originalOrderId != null" >
+        #{originalOrderId,jdbcType=BIGINT},
+      </if>
+      <if test="fexpcomname != null" >
+        #{fexpcomname,jdbcType=VARCHAR},
+      </if>
+      <if test="fexpNo != null" >
+        #{fexpNo,jdbcType=VARCHAR},
+      </if>
+      <if test="fname != null" >
+        #{fname,jdbcType=VARCHAR},
+      </if>
+      <if test="fexpprttime != null" >
+        #{fexpprttime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=CHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.OrderExpress" >
+    update order_express
+    <set >
+      <if test="shopName != null" >
+        shop_name = #{shopName,jdbcType=VARCHAR},
+      </if>
+      <if test="originalOrderId != null" >
+        original_order_id = #{originalOrderId,jdbcType=BIGINT},
+      </if>
+      <if test="fexpcomname != null" >
+        fexpcomname = #{fexpcomname,jdbcType=VARCHAR},
+      </if>
+      <if test="fexpNo != null" >
+        fexp_no = #{fexpNo,jdbcType=VARCHAR},
+      </if>
+      <if test="fname != null" >
+        fname = #{fname,jdbcType=VARCHAR},
+      </if>
+      <if test="fexpprttime != null" >
+        fexpprttime = #{fexpprttime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.OrderExpress" >
+    update order_express
+    set shop_name = #{shopName,jdbcType=VARCHAR},
+      original_order_id = #{originalOrderId,jdbcType=BIGINT},
+      fexpcomname = #{fexpcomname,jdbcType=VARCHAR},
+      fexp_no = #{fexpNo,jdbcType=VARCHAR},
+      fname = #{fname,jdbcType=VARCHAR},
+      fexpprttime = #{fexpprttime,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=CHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

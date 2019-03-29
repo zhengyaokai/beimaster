@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.CrmCustomerMapper" >
+<!-- 由商家id更新客户信息的公司名称-->
+   <update id="updateById" parameterType="bmatser.model.CrmCustomer" >
+    update crm_customer
+    <set>
+      <if test="name != null" >
+        name = #{name},
+      </if>
+      <if test="status != null" >
+        status = #{status},
+      </if>
+    </set>
+    where dealer_id = #{dealerId} 
+  </update>
+  <!-- 由商家dealerId查询客户信息的-->
+  <select id="selectId" parameterType="bmatser.model.CrmCustomer" resultType="Integer">
+  SELECT id FROM crm_customer WHERE dealer_id=#{dealerId} 
+  </select>
+ <select id="find" parameterType="bmatser.model.CrmCustomer" resultType="bmatser.model.CrmCustomer">
+		 select 
+			id id,rank_id rankId,name name,place_id placeId,detail_address detailAddress,buy_channel buyChannel,
+			telephone telephone,email email,lng lng,lat lat,other_brand_name otherBrandName,status status,
+			create_time createTime,create_staff_id createStaffId,register_mobile registerMobile,
+			dealer_id dealerId,fax fax,remark remark,is_manual isManual,sales_scale salesScale,
+			sale_customer_group saleCustomerGroup
+		 from crm_customer
+</select>
+	<insert id="save"  useGeneratedKeys="true" parameterType="map" keyProperty="id">
+		insert into crm_customer
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="id != null" >id,</if>
+			<if test="rankId != null" >rank_id,</if>
+			<if test="name != null" >name,</if>
+			<if test="placeId != null" >place_id,</if>
+			<if test="detailAddress != null" >detail_address,</if>
+			<if test="buyChannel != null" >buy_channel,</if>
+			<if test="telephone != null" >telephone,</if>
+			<if test="email != null" >email,</if>
+			<if test="lng != null" >lng,</if>
+			<if test="lat != null" >lat,</if>
+			<if test="otherBrandName != null" >other_brand_name,</if>
+			<if test="status != null" >status,</if>
+			<if test="1==1" >create_time,</if>
+			<if test="1==1" >create_staff_id,</if>
+			<if test="registerMobile != null" >register_mobile,</if>
+			<if test="dealerId != null" >dealer_id,</if>
+			<if test="fax != null" >fax,</if>
+			<if test="remark != null" >remark,</if>
+			<if test="isManual != null" >is_manual,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="id != null" > #{id},</if>
+			<if test="rankId != null" > #{rankId},</if>
+			<if test="name != null" > #{name},</if>
+			<if test="placeId != null" > #{placeId},</if>
+			<if test="detailAddress != null" > #{detailAddress},</if>
+			<if test="buyChannel != null" > #{buyChannel},</if>
+			<if test="telephone != null" > #{telephone},</if>
+			<if test="email != null" > #{email},</if>
+			<if test="lng != null" > #{lng},</if>
+			<if test="lat != null" > #{lat},</if>
+			<if test="otherBrandName != null" > #{otherBrandName},</if>
+			<if test="status != null" > #{status},</if>
+			<if test="1==1" > now(),</if>
+			<if test="1==1" > 0,</if>
+			<if test="registerMobile != null" > #{registerMobile},</if>
+			<if test="dealerId != null" > #{dealerId},</if>
+			<if test="fax != null" > #{fax},</if>
+			<if test="remark != null" > #{remark},</if>
+			<if test="isManual != null" > #{isManual},</if>
+		</trim>
+</insert>
+	<update id="update" parameterType="bmatser.model.CrmCustomer">
+		 update crm_customer 
+			<set>
+				<if test="id != null">id =#{id},</if>
+				<if test="rankId != null">rank_id =#{rankId},</if>
+				<if test="name != null">name =#{name},</if>
+				<if test="placeId != null">place_id =#{placeId},</if>
+				<if test="detailAddress != null">detail_address =#{detailAddress},</if>
+				<if test="buyChannel != null">buy_channel =#{buyChannel},</if>
+				<if test="telephone != null">telephone =#{telephone},</if>
+				<if test="email != null">email =#{email},</if>
+				<if test="lng != null">lng =#{lng},</if>
+				<if test="lat != null">lat =#{lat},</if>
+				<if test="otherBrandName != null">other_brand_name =#{otherBrandName},</if>
+				<if test="status != null">status =#{status},</if>
+				<if test="createTime != null">create_time =#{createTime},</if>
+				<if test="createStaffId != null">create_staff_id =#{createStaffId},</if>
+				<if test="registerMobile != null">register_mobile =#{registerMobile},</if>
+				<if test="dealerId != null">dealer_id =#{dealerId},</if>
+				<if test="fax != null">fax =#{fax},</if>
+				<if test="remark != null">remark =#{remark},</if>
+				<if test="isManual != null">is_manual =#{isManual},</if>
+				<if test="salesScale != null">sales_scale =#{salesScale},</if>
+				<if test="saleCustomerGroup != null">sale_customer_group =#{saleCustomerGroup},</if>
+			</set>
+		 where id = #{id}
+ </update>
+ <!-- 由商家dealerId查询客户信息的-->
+  <select id="selectMaxId"  resultType="Integer">
+  SELECT distinct id FROM crm_customer where dealer_id=#{dealerId}
+  </select>
+  <!-- 新增crm_customer-->
+ <insert id="insert"  useGeneratedKeys="true" parameterType="map" keyProperty="id">
+		insert into crm_customer
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="id != null" >id,</if>
+			<if test="rankId != null" >rank_id,</if>
+			<if test="name != null" >name,</if>
+			<if test="provinceId != null" >province_id,</if>
+			<if test="cityId != null" >city_id,</if>
+			<if test="placeId != null" >place_id,</if>
+			<if test="detailAddress != null" >detail_address,</if>
+			<if test="buyChannel != null" >buy_channel,</if>
+			<if test="telephone != null" >telephone,</if>
+			<if test="email != null" >email,</if>
+			<if test="lng != null" >lng,</if>
+			<if test="lat != null" >lat,</if>
+			<if test="otherBrandName != null" >other_brand_name,</if>
+			<if test="status != null" >status,</if>
+			<if test="1==1" >create_time,</if>
+			<if test="1==1" >create_staff_id,</if>
+			<if test="registerMobile != null" >register_mobile,</if>
+			<if test="dealerId != null" >dealer_id,</if>
+			<if test="fax != null" >fax,</if>
+			<if test="remark != null" >remark,</if>
+			<if test="isManual != null" >is_manual,</if>
+			<if test="mobile != null" >mobile,</if>
+			<if test="mobileSecret != null" >mobile_secret,</if>
+			<if test="hasInvit != null" >has_invitation,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="id != null" > #{id},</if>
+			<if test="rankId != null" > #{rankId},</if>
+			<if test="name != null" > #{name},</if>
+			<if test="provinceId != null" > #{provinceId},</if>
+			<if test="cityId != null" > #{cityId},</if>
+			<if test="placeId != null" > #{placeId},</if>
+			<if test="detailAddress != null" > #{detailAddress},</if>
+			<if test="buyChannel != null" > #{buyChannel},</if>
+			<if test="telephone != null" > #{telephone},</if>
+			<if test="email != null" > #{email},</if>
+			<if test="lng != null" > #{lng},</if>
+			<if test="lat != null" > #{lat},</if>
+			<if test="otherBrandName != null" > #{otherBrandName},</if>
+			<if test="status != null" > #{status},</if>
+			<if test="1==1" > now(),</if>
+			<if test="1==1" > 0,</if>
+			<if test="registerMobile != null" > #{registerMobile},</if>
+			<if test="dealerId != null" > #{dealerId},</if>
+			<if test="fax != null" > #{fax},</if>
+			<if test="remark != null" > #{remark},</if>
+			<if test="isManual != null" > #{isManual},</if>
+			<if test="mobile != null" >#{mobile},</if>
+			<if test="mobileSecret != null" >#{mobileSecret},</if>
+			<if test="hasInvit != null" >#{hasInvit},</if>
+		</trim>
+</insert>
+<!-- 更新客户信息表  -->
+<update id="updateByDealerId" parameterType="bmatser.model.CrmCustomer">
+  update crm_customer 
+	<set>
+		<if test="rankId != null">rank_id =#{rankId},</if>
+		<if test="name != null">name =#{name},</if>
+		<if test="provinceId != null">province_id =#{provinceId},</if>
+		<if test="cityId != null">city_id =#{cityId},</if>
+		<if test="placeId != null">place_id =#{placeId},</if>
+		<if test="detailAddress != null">detail_address =#{detailAddress},</if>
+		<if test="buyChannel != null">buy_channel =#{buyChannel},</if>
+		<if test="telephone != null">telephone =#{telephone},</if>
+		<if test="email != null">email =#{email},</if>
+		<if test="lng != null">lng =#{lng},</if>
+		<if test="lat != null">lat =#{lat},</if>
+		<if test="otherBrandName != null">other_brand_name =#{otherBrandName},</if>
+		<if test="status != null">status =#{status},</if>
+		<if test="createTime != null">create_time =#{createTime},</if>
+		<if test="createStaffId != null">create_staff_id =#{createStaffId},</if>
+		<if test="registerMobile != null">register_mobile =#{registerMobile},</if>
+		<if test="dealerId != null">dealer_id =#{dealerId},</if>
+		<if test="fax != null">fax =#{fax},</if>
+		<if test="remark != null">remark =#{remark},</if>
+		<if test="isManual != null">is_manual =#{isManual},</if>
+		<if test="mobile != null" >mobile = #{mobile},</if>
+		<if test="mobileSecret != null" >mobile_secret = #{mobileSecret},</if>
+	</set>
+  where dealer_id = #{dealerId}
+</update>
+
+<update id="updateCustomerRank" parameterType="int">
+	update crm_customer set rank_id = 1 where dealer_id=#{buyerId}
+</update>
+
+
+<update id="updateCrmCustomerCode">
+	update crm_customer set erp_customer_code = #{customerNo} where dealer_id=#{dealerId}
+</update>
+
+<select id="getCustomerByDealerId" parameterType="String" resultType="bmatser.model.CrmCustomer">
+  select cc.`name`,IFNULL(cc.mobile_secret,ccl.mobile_secret) mobileSecret,IFNULL(cc.link_man,ccl.link_man) linkMan,
+  	ccs.service_id as customerServiceId, ccm.manager_id as customerManagerId,
+  	d.province_id as provinceId,d.city_id as cityId,d.area_id as placeId,d.address as detailAddress,d.fax,d.qq,d.email,
+  	cc.erp_customer_code as erpCustomerCode
+  from crm_customer cc LEFT JOIN crm_customer_linkman ccl on cc.id =ccl.customer_id
+  LEFT JOIN crm_customer_service ccs on ccs.customer_id=cc.id
+  LEFT JOIN crm_customer_manager ccm on ccm.customer_id=cc.id
+  LEFT JOIN dealer d on cc.dealer_id =d.id
+  where cc.dealer_id=#{dealerId} limit 1
+  </select>
+</mapper>

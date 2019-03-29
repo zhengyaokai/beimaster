@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.OutInterfaceMapper" >
+	
+    <insert id="addUnitDebit">
+        insert into 
+            unit_debit
+        <trim prefix="(" suffix=")values" suffixOverrides=",">
+            <if test="debitCard != null">debit_card,</if>
+            <if test="amount != null">amount,</if>
+            <if test="payTime != null and payTime !=''">pay_time,</if>
+            <if test="useType != null">use_type,</if>
+            <if test="serialNo != null">serial_no,</if>
+            create_time
+        </trim>
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="debitCard != null">#{debitCard},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="payTime != null and payTime !=''">#{payTime},</if>
+            <if test="useType != null">#{useType},</if>
+            <if test="serialNo != null">#{serialNo},</if>
+            now()
+        </trim>
+    </insert>
+</mapper>

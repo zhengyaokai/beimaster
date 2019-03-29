@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.RegisterMapper" >
+<!-- 登录 -->
+  <select id="login" resultType="Map">
+    select 
+	    r.id loginId, r.user_name userName, d.id dealerId, d.dealer_name dealerName,ifnull(d.rank_score,0) rankScore,
+	    if(d.score is not null and d.score != '',d.score,0)score, if(d.cash is not null and d.cash != '',d.cash,0)cash,
+	    d.check_status checkStatus,sum(if(bsc.num,bsc.num,0)) cartNum,d.dealer_type dealerType,d.open_id openId ,ifnull(d.rank,1) rank,ifnull(d.bean,0)bean,
+	    r.mobile 
+    from register r, dealer d
+    left join buyer_shopping_cart bsc on bsc.buyer_id = d.id and bsc.`status` =1
+    where r.dealer_id = d.id
+    and r.status = '1' and d.status='1'
+    and dealer_type in (${dealerType})
+    and (r.user_name=#{loginName} or r.mobile=#{loginName} or r.email=#{loginName} or trim(replace(r.mobile_secret, '\r\n', '')) = #{mobileSecret} )
+    and password = #{password} 
+    group by d.id
+    limit 0,1
+  </select><!-- 增加查询dealer表中的openId 微信商城账号绑定页需要返回的openId 以此判断是否需要插入此字段 -->
+  <select id="isLicense" parameterType="map" resultType="int">
+  	select
+  		count(1) 
+  	from dealer_business_license 
+  	where status =1 and dealer_id = #{dealerId}
+  </select>
+<!-- 注册 -->
+	<insert id="add" parameterType="bmatser.pageModel.RegisterPage" useGeneratedKeys="true" keyProperty="loginId">
+		insert into register(user_name, password, dealer_id, 
+		<if test="mobile != null"> 
+			mobile, 
+		</if>
+		<if test="mobileSecret != null"> 
+			mobile_secret, 
+		</if>
+		<if test="email != null"> 
+			email, 
+		</if>
+		register_time, register_ip, status)
+		values(#{userName}, #{password}, #{dealerId}, 
+		<if test="mobile != null"> 
+			#{mobile}, 
+		</if>
+		<if test="mobileSecret != null"> 
+			#{mobileSecret}, 
+		</if>
+		<if test="email != null"> 
+			#{email}, 
+		</if>
+		now(), #{registerIp}, '1')
+	</insert>
+	
+<!-- 修改密码 -->
+	<update id="editPassword">
+		update register
+		set password=#{newPassword}
+		where id=#{loginId} and password=#{oldPassword}
+	</update>
+	
+<!-- 注册时用户名是否存在 -->
+	<select id="existUserName" resultType="long">
+		select count(1) from register r,dealer d
+		where r.dealer_id = d.id and r.user_name = #{userName} 
+		and r.status = '1' and d.status=1 and d.dealer_type=#{dealerType}
+	</select>
+	
+<!-- 注册时手机是否存在 -->
+	<select id="existMobile" resultType="long">
+		select count(1) from register r,dealer d
+		where r.dealer_id = d.id and trim(replace(r.mobile_secret, '\r\n', '')) = #{mobile} 
+		and r.status = '1' and d.status=1  and d.dealer_type in (${dealerType}) 
+	</select>
+	
+	<!-- 注册时邮箱是否存在 -->
+	<select id="existEmail" resultType="long">
+		select count(1) from register r,dealer d
+		where r.dealer_id = d.id and r.email = #{email} 
+		and r.status = '1' and d.status=1 and d.dealer_type=#{dealerType}
+	</select>
+
+    <!-- 修改新手机号发送验证码 验证新手机号是否存在 -->
+    <select id="existMallMobile" resultType="int">
+      select count(1) from register r,dealer d
+		where r.dealer_id = d.id and d.status=1 and
+		trim(replace(r.mobile_secret, '\r\n', '')) = #{newMobileSecret}
+		and r.status = '1'
+		and d.dealer_type in ('4','5')
+    </select>
+    
+<!-- 获取我的账户信息 -->
+ <resultMap type="java.util.Map" id="getUserAccountResultMap">
+  	<result column="user_name" property="userName"/>
+  	<result column="mobile" property="mobile"/>
+  	<result column="dealer_name" property="dealerName"/>
+  	<result column="email" property="email"/>
+  	<result column="rank" property="rank"/>
+  	<result column="telephone" property="telephone"/>
+  </resultMap>
+	<select id="getUserAccount" resultMap="getUserAccountResultMap">
+		select r.user_name, r.mobile, r.email, d.dealer_name, d.rank, d.telephone,d.check_status checkStatus,r.dealer_id dealerId
+		from register r, dealer d
+		where r.dealer_id = d.id and r.dealer_id=#{loginId} and d.status='1'
+	</select>
+	<update id="getPasswordBymob" parameterType="map">
+		update register r, dealer d
+		<set>
+			password=#{newPassword}
+		</set>
+		where trim(replace(r.mobile_secret, '\r\n', '')) = #{mobile} and r.dealer_id = d.id
+    and r.status = '1' and d.status='1'   and dealer_type='2'
+	</update>
+	<update id="getPasswordByMall" parameterType="map">
+		update register r, dealer d
+		<set>
+			password=#{newPassword}
+		</set>
+		where trim(replace(r.mobile_secret, '\r\n', '')) = #{mobile} and r.dealer_id = d.id
+    and r.status = '1' and d.status='1'   and dealer_type in (4,5)
+	</update>
+	
+	<select id="selectIdByDealerId" resultType="bmatser.model.Register">
+		select id,mobile,mobile_secret mobileSecret
+		from register 
+		where dealer_id=#{dealerId} and status='1'
+	</select>
+	<select id="loadUserInfo" parameterType="map" resultType="map">
+		select 
+		 r.id loginId, r.user_name userName, d.id dealerId, d.dealer_name dealerName,d.dealer_type dealerType,
+		 if(d.score is not null and d.score != '',d.score,0)score, if(d.cash is not null and d.cash != '',d.cash,0)cash,d.check_status checkStatus,sum(ifnull(x.num,0)) cartNum,ifnull(d.bean,0)bean
+		from register r, dealer d
+		left join (
+				 select 
+					bsc.buyer_id,bsc.num
+				from buyer_shopping_cart bsc
+				left join seller_goods sg on bsc.seller_goods_id = sg.id
+				left join goods g on sg.goods_id = g.id
+				where bsc.buyer_id = #{dealerId} and bsc.status = 1 and (bsc.activity_type is null or bsc.activity_type =0) and sg.`status`=1 and sg.is_show = 1
+				UNION ALL
+				select 
+					bsc.buyer_id,num
+				from buyer_shopping_cart bsc
+				left join seller_goods sg on bsc.seller_goods_id = sg.id
+				left join goods g on sg.goods_id = g.id
+				left join groupon_activity ga on ga.id = bsc.activity_id
+				left join groupon_goods gg on gg.groupon_id = bsc.activity_id and gg.seller_goods_id = bsc.seller_goods_id
+				where bsc.buyer_id = #{dealerId} and bsc.status = 1 and bsc.activity_type =1 and ga.start_time &lt;= now() and ga.end_time &gt;= now() and gg.status =1 and ga.groupon_status != 5 
+				UNION ALL
+				select 
+					bsc.buyer_id,num
+				from buyer_shopping_cart bsc
+				left join seller_goods sg on bsc.seller_goods_id = sg.id
+				left join goods g on sg.goods_id = g.id
+				left join goods_package gp on gp.id = bsc.activity_id
+				left join combination c  on gp.combination_id = c.id
+				where bsc.buyer_id = #{dealerId} and bsc.status = 1 and bsc.activity_type =3 and 
+					c.start_time &lt;=now() 
+					and c.end_time &gt;=now() 
+					and c.status = 1 
+					and gp.status = 1 
+		)x on x.buyer_id = d.id
+		 where r.dealer_id = d.id and r.status = '1' and d.status='1'   and d.id = #{dealerId}
+		 limit 0,1
+	</select>
+	
+	<update id="updateLastTime" parameterType="java.lang.String">
+		update register
+		<set>
+			last_login_time = now()
+		</set>
+		where id = #{id}
+	</update>
+	
+	<select id="existMallUserName" resultType="int">
+		select count(1) from register r,dealer d
+		where r.dealer_id = d.id and r.user_name = #{userName} 
+		and r.status = '1' and d.status=1 and d.dealer_type in (4,5)
+	</select>
+	
+	<select id="getBalance" resultType="double">
+		select
+		 	ifnull(balance,0) 
+		 from dealer
+		where id = #{dealerId}
+	</select>
+	
+	<select id="getDealerInfo" resultType="map">
+		select r.id loginId,d.id dealerId,d.dealer_name dealerName,r.user_name userName 
+		 from dealer d,register r 
+		 where r.dealer_id = d.id and  d.open_id = #{openId} and d.status = '1' and d.dealer_type in ('4','5')
+	</select>
+	
+	<update id="updateMobile">
+		update register
+		 <set >
+	      <if test="mobileSecret != null and mobileSecret != ''" >
+	        mobile_secret = #{mobileSecret},
+	      </if>
+	      <if test="mobile != null and mobile !=''" >
+	        mobile = #{mobile},
+	      </if>	      	            
+	    </set>
+	    where dealer_id = #{dealerId} and status = '1'
+	</update>
+	
+	<select id="getSaasUserInfo"  resultType="map">
+		select 
+		 d.dealer_name customerName,
+		 if(d.cash is not null and d.cash != '',d.cash,0)cash,ifnull(d.bean,0) coin,d.dealer_type as type 
+		from  dealer d
+		 left join crm_customer cc on cc.dealer_id = d.id and cc.status = 1
+		 left join crm_customer_rank ccr on cc.rank_id = ccr.id and ccr.status = 1
+		 left join crm_customer_service ccs on ccs.customer_id = cc.id and ccs.status = 1	
+		 left join sys_staff ss on ss.id = ccs.service_id and ss.status = 1
+		where d.status='1' and d.id = #{dealerId}
+	</select><!-- saas页面顶部的信息返回增加商务专员的qq -->
+</mapper>

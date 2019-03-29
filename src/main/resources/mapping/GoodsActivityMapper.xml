@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GoodsActivityMapper" >
+  
+<!-- 获取今日特价 -->
+	<select id="findGoodsActivity" resultType="Map">
+		select 
+			ga.id, concat('${@bmatser.util.Constants@IMAGE_URL}',ga.banner_image) bannerImage,
+ ga.brief, if(ga.banner_deduction_rate,ga.banner_deduction_rate,'') rate, 
+if(ga.banner_deduction_price,ga.banner_deduction_price,'') price, 
+if(( ga.end_time &gt;= now() and ga.start_time &lt;= now()),ga.end_time,ga.next_end_time) endTime, now() nowTime,
+IF(( ga.end_time &gt;= now() and ga.start_time &lt;= now()),unix_timestamp(ga.end_Time)-unix_timestamp(now()),unix_timestamp(ga.next_end_time)-unix_timestamp(now())) overTime,
+concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo,if(( ga.end_time &gt;= now() and ga.start_time &lt;= now()),ga.start_time,ga.next_start_time) startTime
+
+		from goods_activity ga
+		left join goods_activity_brand gab on gab.goods_activity_id = ga.id
+		left join brand b on gab.brand_id = b.id 
+		where ga.status = '1' 
+		<if test="activityChannel != null">
+			and ga.activity_channel = #{activityChannel} 
+		</if>
+		<if test="activityChannel == null">
+			and (ga.activity_channel =1 or ga.activity_channel is null)
+		</if>
+		and (( ga.end_time &gt;= now() and ga.start_time &lt;= now())
+    or (ga.next_end_time &gt;= now() and ga.next_start_time &lt;= now())) and ga.activity_type=0 
+		order by ga.order_sn desc
+	</select><!-- 20160718 saas 首页 查询 显示 已到下次开始时间的今日特买 -->
+	
+	<!-- saas获取楼层 -->
+	<select id="getFloor" resultType="Map">
+		select id, concat('${@bmatser.util.Constants@IMAGE_URL}',f.floor_logo) logo,f.floor_name floorName from  floor f
+		where  f.is_enable = '1' 
+		   and f.status = '1' 
+		order by f.order_sn
+	</select>
+	
+	<!-- saas获取楼层活动 -->
+	<select id="findFloorActivity" resultType="Map">
+		select 
+			ga.id, concat('${@bmatser.util.Constants@IMAGE_URL}',ga.banner_image) bannerImage,
+ ga.brief, if(ga.banner_deduction_rate,ga.banner_deduction_rate,'') rate, 
+if(ga.banner_deduction_price,ga.banner_deduction_price,'') price, 
+if(( ga.end_time &gt;= now() and ga.start_time &lt;= now()),ga.end_time,ga.next_end_time) endTime, now() nowTime,
+IF(( ga.end_time &gt;= now() and ga.start_time &lt;= now()),unix_timestamp(ga.end_Time)-unix_timestamp(now()),unix_timestamp(ga.next_end_time)-unix_timestamp(now())) overTime,
+concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo,if(( ga.end_time &gt;= now() and ga.start_time &lt;= now()),ga.start_time,ga.next_start_time) startTime
+
+		from goods_activity ga
+		left join goods_activity_brand gab on gab.goods_activity_id = ga.id
+		left join brand b on gab.brand_id = b.id 
+		left join floor_activity fa on fa.activity_id = ga.id
+		where ga.status = '1' and fa.status = '1'
+			and ga.activity_channel = '1'
+			and fa.floor_id = #{floorId}
+		and (( ga.end_time &gt;= now() and ga.start_time &lt;= now())
+    or (ga.next_end_time &gt;= now() and ga.next_start_time &lt;= now())) and ga.activity_type=0 
+		order by fa.order_sn
+	</select>
+	
+<!-- 获取特价商品 -->
+	<select id="findGoodsActivitySales" resultType="Map">
+		select 
+			gas.seller_goods_id sellerGoodsId, g.id goodsId, ${@bmatser.util.SQLUtil@GOODS_IMG} image, g.title,g.buy_no, g.model, g.market_price marketPrice, gas.sale_price salePrice,
+			gas.per_limt_num perLimitNum, gas.stock, gas.surplus_stock surplusStock,format(gas.deduction_rate,2) rate,g.measure,
+			if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1)orderQuantity,if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1)batchQuantity 
+		from goods_activity_sale gas
+		left join goods g on gas.goods_no = g.goods_no
+		left join seller_goods sg on sg.id = gas.seller_goods_id
+		where  gas.`status`='1' and g.`status`='1' and sg.`status` = 1 and sg.is_show = 1 and sg.channel = 1
+		and gas.goods_activity_id =  #{goodsActivityId}
+		<if test="cateId != null">
+			and g.cate_id = #{cateId}
+		</if>
+		<choose>
+			<when test="priceOrder != null">
+				order by gas.sale_price ${priceOrder}
+			</when>
+			<when test="rateOrder != null">
+				order by gas.deduction_rate ${rateOrder}
+			</when>
+			<otherwise>
+				order by sg.sales_volume desc
+			</otherwise>
+		</choose>
+		limit #{page}, #{rows}
+	</select><!-- modify 20160706  查询特卖商品根据order_sn改为根据销量降序 -->
+	<select id="countGoodsActivitySales" resultType="long">
+		select count(1)
+		from goods_activity_sale gas
+		left join goods g on gas.goods_no = g.goods_no
+		left join seller_goods sg on sg.id = gas.seller_goods_id
+		where  gas.`status`='1' and g.`status`='1' and sg.`status` = 1 and sg.is_show = 1 and sg.channel = 1
+		and gas.goods_activity_id =  #{goodsActivityId}
+		<if test="cateId != null">
+			and g.cate_id = #{cateId}
+		</if>
+	</select>
+	
+<!-- 		select 0 id, '全部商品' name, count(1) count
+		from goods_activity_sale gas
+		left join goods g on gas.goods_no = g.goods_no
+		left join seller_goods sg on sg.id = gas.seller_goods_id
+		left join category cate on g.cate_id = cate.id
+		where gas.`status`='1' and g.`status`='1' and cate.status=1 and sg.`status` = 1 and sg.is_show = 1 and sg.channel = 1
+		and gas.goods_activity_id =  #{goodsActivityId}
+		union -->
+	<select id="findGoodsActivityCategory" resultType="Map">
+		select cate.id, cate.name, count(1) count
+		from goods_activity_sale gas
+		left join goods g on gas.goods_no = g.goods_no
+		left join seller_goods sg on sg.id = gas.seller_goods_id
+		left join category cate on g.cate_id = cate.id
+		where gas.`status`='1' and g.`status`='1' and cate.status=1 and sg.`status` = 1 and sg.is_show = 1 and sg.channel = 1
+		and gas.goods_activity_id =  #{goodsActivityId}
+		group by cate.id
+	</select>
+
+<!-- 获取满减活动 -->
+	<select id="findGoodsActivityFullcut" resultType="Map">
+		select gas.seller_goods_id sellerGoodsId, gaf.full_amount fullAmount, gaf.cut_ext sutExt, ga.id activityId
+		from goods_activity_sale gas, goods_activity ga, goods_activity_fullcut gaf,(
+			select gas.seller_goods_id,max(ga.start_time)start_time,ga.end_time from goods_activity ga
+			left join goods_activity_sale gas  on gas.goods_activity_id = ga.id
+			where ga.activity_type = 2 and ga.`status`  = 1 and gas.`status` = 1 and ga.start_time &lt;= now() and ga.end_time &gt;= now() and gas.seller_goods_id in 
+			<foreach collection="sellerGoodsIds" item="sellerGoodsId" open="(" close=")" separator=",">
+				#{sellerGoodsId}
+			</foreach>
+			group by gas.seller_goods_id
+		)fulla
+		where gas.goods_activity_id = ga.id and ga.id = gaf.goods_activity_id 
+		and ga.activity_type=2 and ga.`status`=1 and gas.`status`=1 and gaf.`status`=1
+		and ga.start_time &lt;= now() and ga.end_time &gt;= now() and `fulla`.seller_goods_id =gas.seller_goods_id and `fulla`.start_time = ga.start_time
+		and gas.seller_goods_id in 
+		<foreach collection="sellerGoodsIds" item="sellerGoodsId" open="(" close=")" separator=",">
+			#{sellerGoodsId}
+		</foreach>
+	</select>
+	<select id="findGoodsActivityTime" resultType="map">
+		select  
+			IF(( end_time &gt;= now() and start_time &lt;= now()),unix_timestamp(end_Time)-unix_timestamp(now()),unix_timestamp(next_end_time)-unix_timestamp(now())) overTime,
+activity_name activityName,
+if(( end_time &gt;= now() and start_time &lt;= now()),end_time,next_end_time) endTime,
+if(( end_time &gt;= now() and start_time &lt;= now()),start_time,next_start_time) startTime,
+			if(banner_deduction_rate is not null and banner_deduction_rate!='',banner_deduction_rate,'') rate, if(banner_deduction_price is not null and banner_deduction_price != '',banner_deduction_price,'') price,
+			concat('${@bmatser.util.Constants@IMAGE_URL}',banner_image) bannerImage,concat('${@bmatser.util.Constants@IMAGE_URL}',big_banner_image) bigBannerImage,
+			big_banner_url bigBannerUrl
+		from goods_activity
+		where id = #{id} 
+	</select><!-- 20160718 点击今日特卖 修改返回 startTime，endTime，overTime-->
+	
+	<!-- 获取商城特卖商品 -->
+	<select id="findMallActivityGoods" resultType="Map">
+		select gas.seller_goods_id sellerGoodsId, g.id goodsId, ${@bmatser.util.SQLUtil@GOODS_IMG} image, g.title, g.model,
+		g.market_price marketPrice, gas.sale_price salePrice,gas.per_limt_num perLimitNum, gas.stock, gas.surplus_stock surplusStock, gas.deduction_rate rate,b.name_cn brandName
+		from goods_activity ga
+		left join goods_activity_sale gas on ga.id=gas.goods_activity_id and gas.status=1
+		left join seller_goods sg on gas.seller_goods_id=sg.id and sg.status=1
+		left join goods g on sg.goods_id=g.id and g.status=1
+		left join brand b on g.brand_id = b.id and b.status=1
+		where ga.status=1
+		<if test="activityChannel != null">
+			and ga.activity_channel = #{activityChannel}
+		</if>
+		and ga.start_time &lt;= now() and ga.end_time &gt;= now()
+	</select>
+		<!-- 店铺特卖活动 -->
+	<select id="findGoodsActivityByAlias" parameterType="map" resultType="map">
+		select
+			sg.id,sg.goods_name goodsName,g.model,if(sg.sale_price,sg.sale_price,sg.price)price,${@bmatser.util.SQLUtil@GOODS_IMG} image
+		from goods_activity ga
+		left join dealer d on d.id = ga.seller_id
+		LEFT JOIN goods_activity_sale gas on gas.goods_activity_id = ga.id 
+		left join seller_goods sg on sg.id = gas.seller_goods_id 
+		left join goods g on g.id = sg.goods_id
+		where ga.status = 1 and d.alias = #{alias}
+		limit 0,4
+	</select>
+	<select id="findFullCut" parameterType="map" resultType="map">
+		select 
+			gaf.full_amount fullAmount,gaf.cut_ext cutExt
+		from goods_activity_fullcut gaf,goods_activity_sale gas,goods_activity ga
+		where  gas.goods_activity_id = gaf.goods_activity_id and gaf.goods_activity_id = ga.id
+		and gaf.`status` = 1 and gas.`status` = 1 and gas.seller_goods_id = #{id} and gas.activity_type = 2
+		and ga.start_time &lt;= now() and ga.end_time &gt;= now()
+		order by ga.start_time desc
+		limit 0,1
+	</select>
+	<select id="findFullgiveDesc" resultType="java.lang.String">
+		select 
+			if(count(1)>0 and ga.brief is not null,ga.brief,'') 
+		from goods_activity_sale gas
+		left join goods_activity ga on ga.id = gas.goods_activity_id
+		where  
+		 gas.`status` = 1 and gas.seller_goods_id = #{sellerGoodsId} and ga.activity_type = 4
+		and ga.start_time &lt;= now() and ga.end_time &gt;= now()
+		limit 0,1
+	</select>
+</mapper>

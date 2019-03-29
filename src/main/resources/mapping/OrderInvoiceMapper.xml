@@ -1,0 +1,617 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.OrderInvoiceMapper" >
+  <resultMap id="BaseResultMap" type="bmatser.model.OrderInvoice" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="buyer_id" property="buyerId" jdbcType="INTEGER" />
+    <result column="order_id" property="orderId" jdbcType="BIGINT" />
+    <result column="inv_type" property="invType" jdbcType="CHAR" />
+    <result column="inv_amount" property="invAmount" jdbcType="DECIMAL" />
+    <result column="inv_title" property="invTitle" jdbcType="VARCHAR" />
+    <result column="inv_content" property="invContent" jdbcType="VARCHAR" />
+    <result column="taxpaye_rno" property="taxpayeRno" jdbcType="VARCHAR" />
+    <result column="reg_address" property="regAddress" jdbcType="VARCHAR" />
+    <result column="reg_telphone" property="regTelphone" jdbcType="VARCHAR" />
+    <result column="bank" property="bank" jdbcType="VARCHAR" />
+    <result column="bank_account" property="bankAccount" jdbcType="VARCHAR" />
+    <result column="recv_name" property="recvName" jdbcType="VARCHAR" />
+    <result column="recv_mobile" property="recvMobile" jdbcType="VARCHAR" />
+    <result column="recv_province" property="recvProvince" jdbcType="INTEGER" />
+    <result column="recv_city" property="recvCity" jdbcType="INTEGER" />
+    <result column="recv_area" property="recvArea" jdbcType="INTEGER" />
+    <result column="recv_address" property="recvAddress" jdbcType="VARCHAR" />
+    <result column="check_time" property="checkTime" jdbcType="TIMESTAMP" />
+    <result column="check_user_id" property="checkUserId" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="status" property="status" jdbcType="CHAR" />
+    <result column="inv_title_type" property="invTitleType" jdbcType="CHAR" />
+  </resultMap>
+   <sql id="orderInvoiceManual"> 
+	  oi.id,oi.buyer_id buyerId,oi.order_id orderId,oi.inv_type invType,oi.inv_amount invAmount,oi.inv_title invTitle,oi.inv_content invContent,
+	  oi.taxpaye_rno taxpayeRno,oi.reg_address regAddress,oi.reg_telphone regTelphone,oi.bank,oi.bank_account bankAccount,oi.recv_name recvName,
+	  oi.recv_mobile recvMobile,oi.recv_province recvProvince,oi.recv_city recvCity,oi.recv_area recvArea,oi.recv_address recvAddress,oi.check_time checkTime,
+	  oi.check_user_id checkUserId,oi.create_time createTime,oi.status
+	</sql>
+  <sql id="Base_Column_List" >
+    id, buyer_id, order_id, inv_type, inv_amount, inv_title, inv_content, taxpaye_rno, 
+    reg_address, reg_telphone, bank, bank_account, recv_name, recv_mobile, recv_province, 
+    recv_city, recv_area, recv_address, check_time, check_user_id, create_time, status
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from order_invoice
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from order_invoice
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.OrderInvoice" >
+    insert into order_invoice (id, buyer_id, order_id, 
+      inv_type, inv_amount, inv_title, 
+      inv_content, taxpaye_rno, reg_address, 
+      reg_telphone, bank, bank_account, 
+      recv_name, recv_mobile, recv_province, 
+      recv_city, recv_area, recv_address, 
+      check_time, check_user_id, create_time, 
+      status)
+    values (#{id,jdbcType=INTEGER}, #{buyerId,jdbcType=INTEGER}, #{orderId,jdbcType=BIGINT}, 
+      #{invType,jdbcType=CHAR}, #{invAmount,jdbcType=DECIMAL}, #{invTitle,jdbcType=VARCHAR}, 
+      #{invContent,jdbcType=VARCHAR}, #{taxpayeRno,jdbcType=VARCHAR}, #{regAddress,jdbcType=VARCHAR}, 
+      #{regTelphone,jdbcType=VARCHAR}, #{bank,jdbcType=VARCHAR}, #{bankAccount,jdbcType=VARCHAR}, 
+      #{recvName,jdbcType=VARCHAR}, #{recvMobile,jdbcType=VARCHAR}, #{recvProvince,jdbcType=INTEGER}, 
+      #{recvCity,jdbcType=INTEGER}, #{recvArea,jdbcType=INTEGER}, #{recvAddress,jdbcType=VARCHAR}, 
+      #{checkTime,jdbcType=TIMESTAMP}, #{checkUserId,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{status,jdbcType=CHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.model.OrderInvoice" >
+    insert into order_invoice
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="buyerId != null" >
+        buyer_id,
+      </if>
+      <if test="orderId != null" >
+        order_id,
+      </if>
+      <if test="invType != null" >
+        inv_type,
+      </if>
+      <if test="invAmount != null" >
+        inv_amount,
+      </if>
+      <if test="invTitle != null" >
+        inv_title,
+      </if>
+      <if test="invContent != null" >
+        inv_content,
+      </if>
+      <if test="taxpayeRno != null" >
+        taxpaye_rno,
+      </if>
+      <if test="regAddress != null" >
+        reg_address,
+      </if>
+      <if test="regTelphone != null" >
+        reg_telphone,
+      </if>
+      <if test="bank != null" >
+        bank,
+      </if>
+      <if test="bankAccount != null" >
+        bank_account,
+      </if>
+      <if test="recvName != null" >
+        recv_name,
+      </if>
+      <if test="recvMobile != null" >
+        recv_mobile,
+      </if>
+      <if test="recvProvince != null" >
+        recv_province,
+      </if>
+      <if test="recvCity != null" >
+        recv_city,
+      </if>
+      <if test="recvArea != null" >
+        recv_area,
+      </if>
+      <if test="recvAddress != null" >
+        recv_address,
+      </if>
+      <if test="checkTime != null" >
+        check_time,
+      </if>
+      <if test="checkUserId != null" >
+        check_user_id,
+      </if>
+        create_time,
+        status,
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="buyerId != null" >
+        #{buyerId,jdbcType=INTEGER},
+      </if>
+      <if test="orderId != null" >
+        #{orderId,jdbcType=BIGINT},
+      </if>
+      <if test="invType != null" >
+        #{invType,jdbcType=CHAR},
+      </if>
+      <if test="invAmount != null" >
+        #{invAmount,jdbcType=DECIMAL},
+      </if>
+      <if test="invTitle != null" >
+        #{invTitle,jdbcType=VARCHAR},
+      </if>
+      <if test="invContent != null" >
+        #{invContent,jdbcType=VARCHAR},
+      </if>
+      <if test="taxpayeRno != null" >
+        #{taxpayeRno,jdbcType=VARCHAR},
+      </if>
+      <if test="regAddress != null" >
+        #{regAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="regTelphone != null" >
+        #{regTelphone,jdbcType=VARCHAR},
+      </if>
+      <if test="bank != null" >
+        #{bank,jdbcType=VARCHAR},
+      </if>
+      <if test="bankAccount != null" >
+        #{bankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="recvName != null" >
+        #{recvName,jdbcType=VARCHAR},
+      </if>
+      <if test="recvMobile != null" >
+        #{recvMobile,jdbcType=VARCHAR},
+      </if>
+      <if test="recvProvince != null" >
+        #{recvProvince,jdbcType=INTEGER},
+      </if>
+      <if test="recvCity != null" >
+        #{recvCity,jdbcType=INTEGER},
+      </if>
+      <if test="recvArea != null" >
+        #{recvArea,jdbcType=INTEGER},
+      </if>
+      <if test="recvAddress != null" >
+        #{recvAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="checkTime != null" >
+        #{checkTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="checkUserId != null" >
+        #{checkUserId,jdbcType=INTEGER},
+      </if>
+      now(),1,
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.OrderInvoice" >
+    update order_invoice
+    <set >
+      <if test="buyerId != null" >
+        buyer_id = #{buyerId,jdbcType=INTEGER},
+      </if>
+      <if test="orderId != null" >
+        order_id = #{orderId,jdbcType=BIGINT},
+      </if>
+      <if test="invType != null" >
+        inv_type = #{invType,jdbcType=CHAR},
+      </if>
+      <if test="invAmount != null" >
+        inv_amount = #{invAmount,jdbcType=DECIMAL},
+      </if>
+      <if test="invTitle != null" >
+        inv_title = #{invTitle,jdbcType=VARCHAR},
+      </if>
+      <if test="invContent != null" >
+        inv_content = #{invContent,jdbcType=VARCHAR},
+      </if>
+      <if test="taxpayeRno != null" >
+        taxpaye_rno = #{taxpayeRno,jdbcType=VARCHAR},
+      </if>
+      <if test="regAddress != null" >
+        reg_address = #{regAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="regTelphone != null" >
+        reg_telphone = #{regTelphone,jdbcType=VARCHAR},
+      </if>
+      <if test="bank != null" >
+        bank = #{bank,jdbcType=VARCHAR},
+      </if>
+      <if test="bankAccount != null" >
+        bank_account = #{bankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="recvName != null" >
+        recv_name = #{recvName,jdbcType=VARCHAR},
+      </if>
+      <if test="recvMobile != null" >
+        recv_mobile = #{recvMobile,jdbcType=VARCHAR},
+      </if>
+      <if test="recvProvince != null" >
+        recv_province = #{recvProvince,jdbcType=INTEGER},
+      </if>
+      <if test="recvCity != null" >
+        recv_city = #{recvCity,jdbcType=INTEGER},
+      </if>
+      <if test="recvArea != null" >
+        recv_area = #{recvArea,jdbcType=INTEGER},
+      </if>
+      <if test="recvAddress != null" >
+        recv_address = #{recvAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="checkTime != null" >
+        check_time = #{checkTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="checkUserId != null" >
+        check_user_id = #{checkUserId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.OrderInvoice" >
+    update order_invoice
+    set buyer_id = #{buyerId,jdbcType=INTEGER},
+      order_id = #{orderId,jdbcType=BIGINT},
+      inv_type = #{invType,jdbcType=CHAR},
+      inv_amount = #{invAmount,jdbcType=DECIMAL},
+      inv_title = #{invTitle,jdbcType=VARCHAR},
+      inv_content = #{invContent,jdbcType=VARCHAR},
+      taxpaye_rno = #{taxpayeRno,jdbcType=VARCHAR},
+      reg_address = #{regAddress,jdbcType=VARCHAR},
+      reg_telphone = #{regTelphone,jdbcType=VARCHAR},
+      bank = #{bank,jdbcType=VARCHAR},
+      bank_account = #{bankAccount,jdbcType=VARCHAR},
+      recv_name = #{recvName,jdbcType=VARCHAR},
+      recv_mobile = #{recvMobile,jdbcType=VARCHAR},
+      recv_province = #{recvProvince,jdbcType=INTEGER},
+      recv_city = #{recvCity,jdbcType=INTEGER},
+      recv_area = #{recvArea,jdbcType=INTEGER},
+      recv_address = #{recvAddress,jdbcType=VARCHAR},
+      check_time = #{checkTime,jdbcType=TIMESTAMP},
+      check_user_id = #{checkUserId,jdbcType=INTEGER},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=CHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+
+	<select id="findAll" parameterType="bmatser.model.OrderInvoice" resultType="bmatser.model.OrderInvoice">
+		select
+		<include refid="orderInvoiceManual" />
+		from order_invoice oi
+		where status = 1
+	</select>
+
+	<select id="findByPage" parameterType="bmatser.model.OrderInvoice" resultType="bmatser.model.OrderInvoice">
+		select
+		<include refid="orderInvoiceManual" />
+		from order_invoice oi
+		where status = 1
+	   <if test="id != null" >
+        	and id like '%${id}%'
+      </if>
+	   <if test="buyerId != null" >
+        	and buyer_id like '%${buyerId}%'
+      </if>
+      <if test="orderId != null" >
+        	and order_id like '%${orderId}%'
+      </if>
+      <if test="invType != null" >
+        	and inv_type like '%${invType}%'
+      </if>
+      <if test="invAmount != null" >
+        	and inv_amount like '%${invAmount}%'
+      </if>
+      <if test="invTitle != null" >
+        	and inv_title like '%${invTitle}%'
+      </if>
+      <if test="invContent != null" >
+        	and inv_content like '%${invContent}%'
+      </if>
+      <if test="taxpayeRno != null" >
+        	and taxpaye_rno like '%${taxpayeRno}%'
+      </if>
+      <if test="regAddress != null" >
+        	and reg_address like '%${regAddress}%'
+      </if>
+      <if test="regTelphone != null" >
+        	and reg_telphone like '%${regTelphone}%'
+      </if>
+      <if test="bank != null" >
+        	and bank like '%${bank}%'
+      </if>
+      <if test="bankAccount != null" >
+        	and bank_account like '%${bankAccount}%'
+      </if>
+      <if test="recvName != null" >
+        	and recv_name like '%${recvName}%'
+      </if>
+      <if test="recvMobile != null" >
+        	and recv_mobile like '%${recvMobile}%'
+      </if>
+      <if test="recvProvince != null" >
+        	and recv_province like '%${recvProvince}%'
+      </if>
+      <if test="recvCity != null" >
+        	and recv_city like '%${recvCity}%'
+      </if>
+      <if test="recvArea != null" >
+        	and recv_area like '%${recvArea}%'
+      </if>
+      <if test="recvAddress != null" >
+        	and recv_address like '%${recvAddress}%'
+      </if>
+      <if test="checkTime != null" >
+        	and check_time like '%${checkTime}%'
+      </if>
+      <if test="checkUserId != null" >
+        	and check_user_id like '%${checkUserId}%'
+      </if>
+      <if test="createTime != null" >
+        	and create_time like '%${createTime}%'
+      </if>
+      <if test="status != null" >
+        	and status like '%${status}%'
+      </if>
+	</select>
+
+	<select id="findById" parameterType="java.lang.Integer" resultType="bmatser.model.OrderInvoice">
+		select
+		<include refid="orderInvoiceManual" />
+		from order_invoice oi
+		where status = 1 and id = #{id}
+	</select>
+	
+	<select id="findByOrderId" parameterType="java.lang.Long" resultType="bmatser.model.OrderInvoice">
+		select
+		<include refid="orderInvoiceManual" />
+		from order_invoice oi
+		where status = 1 and order_id = #{id}
+	</select>
+
+	<insert id="save" parameterType="bmatser.model.OrderInvoice" useGeneratedKeys="true" keyProperty="id">
+	      insert into order_invoice 
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="id != null" >
+	        id,
+	      </if>
+	      <if test="buyerId != null" >
+	        buyer_id,
+	      </if>
+	      <if test="orderId != null" >
+	        order_id,
+	      </if>
+	      <if test="invType != null" >
+	        inv_type,
+	      </if>
+	      <if test="invAmount != null" >
+	        inv_amount,
+	      </if>
+	      <if test="invTitle != null" >
+	        inv_title,
+	      </if>
+	      <if test="invContent != null" >
+	        inv_content,
+	      </if>
+	      <if test="taxpayeRno != null" >
+	        taxpaye_rno,
+	      </if>
+	      <if test="regAddress != null" >
+	        reg_address,
+	      </if>
+	      <if test="regTelphone != null" >
+	        reg_telphone,
+	      </if>
+	      <if test="regTelphoneSecret != null" >
+	        reg_telphone_secret,
+	      </if>
+	      <if test="bank != null" >
+	        bank,
+	      </if>
+	      <if test="bankAccount != null" >
+	        bank_account,
+	      </if>
+	      <if test="recvName != null" >
+	        recv_name,
+	      </if>
+	      <if test="recvMobile != null" >
+	        recv_mobile,
+	      </if>
+	      <if test="recvMobileSecret != null" >
+	        recv_mobile_secret,
+	      </if>
+	      <if test="recvProvince != null" >
+	        recv_province,
+	      </if>
+	      <if test="recvCity != null" >
+	        recv_city,
+	      </if>
+	      <if test="recvArea != null" >
+	        recv_area,
+	      </if>
+	      <if test="recvAddress != null" >
+	        recv_address,
+	      </if>
+	      <if test="checkTime != null" >
+	        check_time,
+	      </if>
+	      <if test="checkUserId != null" >
+	        check_user_id,
+	      </if>
+	      <if test="1==1" >
+	        create_time,
+	      </if>
+	      <if test="1==1" >
+	        status,
+	      </if>
+	    </trim>
+	    <trim prefix="values (" suffix=")" suffixOverrides="," >
+	       <if test="id != null" >
+	        #{id},
+	      </if>
+	      <if test="buyerId != null" >
+	        #{buyerId},
+	      </if>
+	      <if test="orderId != null" >
+	        #{orderId},
+	      </if>
+	      <if test="invType != null" >
+	        #{invType},
+	      </if>
+	      <if test="invAmount != null" >
+	        #{invAmount},
+	      </if>
+	      <if test="invTitle != null" >
+	        #{invTitle},
+	      </if>
+	      <if test="invContent != null" >
+	        #{invContent},
+	      </if>
+	      <if test="taxpayeRno != null" >
+	        #{taxpayeRno},
+	      </if>
+	      <if test="regAddress != null" >
+	        #{regAddress},
+	      </if>
+	      <if test="regTelphone != null" >
+	        #{regTelphone},
+	      </if>
+	      <if test="regTelphoneSecret != null" >
+	        #{regTelphoneSecret},
+	      </if>
+	      <if test="bank != null" >
+	        #{bank},
+	      </if>
+	      <if test="bankAccount != null" >
+	        #{bankAccount},
+	      </if>
+	      <if test="recvName != null" >
+	        #{recvName},
+	      </if>
+	      <if test="recvMobile != null" >
+	        #{recvMobile},
+	      </if>
+	      <if test="recvMobileSecret != null" >
+	        #{recvMobileSecret},
+	      </if>
+	      <if test="recvProvince != null" >
+	        #{recvProvince},
+	      </if>
+	      <if test="recvCity != null" >
+	        #{recvCity},
+	      </if>
+	      <if test="recvArea != null" >
+	        #{recvArea},
+	      </if>
+	      <if test="recvAddress != null" >
+	        #{recvAddress},
+	      </if>
+	      <if test="checkTime != null" >
+	       #{checkTime},
+	      </if>
+	      <if test="checkUserId != null" >
+	       #{checkUserId},
+	      </if>
+	      <if test="1==1" >
+	        now(),
+	      </if>
+	      <if test="1==1" >
+	        1,
+	      </if>
+	    </trim>
+	</insert>
+
+	<update id="update" parameterType="bmatser.model.OrderInvoice">
+	    update order_invoice
+	    <set>
+	      <if test="buyerId != null" >
+	        buyer_id = #{buyerId},
+	      </if>
+	      <if test="orderId != null" >
+	        order_id = #{orderId},
+	      </if>
+	      <if test="invType != null" >
+	        inv_type = #{invType},
+	      </if>
+	      <if test="invAmount != null" >
+	        inv_amount = #{invAmount},
+	      </if>
+	      <if test="invTitle != null" >
+	        inv_title = #{invTitle},
+	      </if>
+	      <if test="invContent != null" >
+	        inv_content = #{invContent},
+	      </if>
+	      <if test="taxpayeRno != null" >
+	        taxpaye_rno = #{taxpayeRno},
+	      </if>
+	      <if test="regAddress != null" >
+	        reg_address = #{regAddress},
+	      </if>
+	      <if test="regTelphone != null" >
+	        reg_telphone = #{regTelphone},
+	      </if>
+	      <if test="bank != null" >
+	        bank = #{bank},
+	      </if>
+	      <if test="bankAccount != null" >
+	        bank_account = #{bankAccount},
+	      </if>
+	      <if test="recvName != null" >
+	        recv_name = #{recvName},
+	      </if>
+	      <if test="recvMobile != null" >
+	        recv_mobile = #{recvMobile},
+	      </if>
+	      <if test="recvProvince != null" >
+	        recv_province = #{recvProvince},
+	      </if>
+	      <if test="recvCity != null" >
+	        recv_city = #{recvCity},
+	      </if>
+	      <if test="recvArea != null" >
+	        recv_area = #{recvArea},
+	      </if>
+	      <if test="recvAddress != null" >
+	        recv_address = #{recvAddress},
+	      </if>
+	      <if test="checkTime != null" >
+	        check_time = #{checkTime},
+	      </if>
+	      <if test="checkUserId != null" >
+	        check_user_id = #{checkUserId},
+	      </if>
+	      <if test="createTime != null" >
+	        create_time = #{createTime},
+	      </if>
+	      <if test="status != null" >
+	        status = #{status},
+	      </if>
+	    </set> 
+	    where id = #{id}
+	</update>
+
+	<update id="delete" parameterType="java.lang.Integer">
+		update order_invoice
+		<set>
+			status = 2
+		</set>
+		where id = #{id}
+	</update>
+</mapper>

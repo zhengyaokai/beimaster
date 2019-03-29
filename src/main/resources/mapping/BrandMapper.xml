@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.BrandMapper" >
+ 
+<!-- 获取已上架品牌 -->
+	<select id="findBrands" resultType="Map">
+<!-- 		select 
+			b.id,b.name_cn name,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+		from category_brand cb, brand b
+		where cb.brand_id = b.id
+		and cb.`status`=1 and b.`status`=1
+		GROUP BY b.id
+		order by b.id asc -->
+		select 
+			b.id,b.name_cn name,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+		from seller_goods sg 
+		left join goods g on g.id = sg.goods_id
+		left join brand b on b.id = g.brand_id
+		where sg.status = 1 and g.status = 1 and sg.is_show = 1 and sg.channel = 1 
+		group by b.id
+		order by b.order_sn desc
+	</select>
+	<!-- 查询精选品牌 -->
+	<select id="findChoiceBrands" resultType="Map">
+		select 
+			b.id,b.name_cn name,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+		from brand b 
+		inner join choice_brand  cb on cb.brand_id = b.id
+		where cb.status = 1 and b.status =1 
+		order by cb.order_sn asc
+	</select>
+
+    <!-- 查询精选品牌ForIos -->
+    <select id="findChoiceBrandsForIos" resultType="Map">
+        select
+        b.id,b.name_cn name,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+        from brand b
+        inner join choice_brand  cb on cb.brand_id = b.id
+        where 1 = 1 and b.status =1
+        order by cb.order_sn asc
+    </select>
+ 
+ <!-- 根据标记类型获取品牌 -->
+ 	<select id="findBrandsByMark" resultType="Map">
+ 		select b.id,b.name_cn name,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo from brand_mark bm, brand b
+		where bm.brand_id = b.id
+		and bm.`status`=1 and b.`status`=1
+		and mark_type=#{markType}
+		order by bm.order_sn desc
+ 	</select>
+ <!-- 获取有效品牌 -->
+ 	<select id="findValidBrands" resultType="Map">
+ 		select id, name_cn name from brand where status=1
+ 	</select>
+
+    <!--findValidBrandsForIos 获得ios的品牌-->
+    <select id="findValidBrandsForIos" resultType="Map">
+        select id, name_cn name from brand where status=1
+    </select>
+<!-- 获取品牌库 -->
+	<select id="findAllBrands" resultType="Map">
+		select 
+			b.id,b.name_cn nameCn,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo,name_en nameEn,cb.cate_id cateId
+		from category_brand cb, brand b
+		where cb.brand_id = b.id <!-- and cb.`status`=1 --> and b.`status`=1
+		order by cb.order_sn desc
+	</select>
+<!-- 获得品牌详细内容 -->
+	<select id="findBrandsById" parameterType="map" resultType="map">
+		select 
+			id,name_en nameEn,name_cn nameCn,mark,maker,make_date makeDate,country_id countryId,
+			concat('${@bmatser.util.Constants@IMAGE_URL}',logo) logo
+		from brand
+		where id = #{id}
+	</select>
+	
+	<!-- 查询出当前在售的所有品牌-->
+	<select id="selectForSaleBrands" resultType="Map">
+		SELECT b.id id,b.name_cn nameCn,b.name_en nameEn,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+		from seller_goods sg 
+		left join goods g on g.id = sg.goods_id
+		left join brand b on b.id = g.brand_id
+		where sg.status = 1 and g.status = 1 and sg.is_show = 1 and sg.channel = 1 
+		group by b.id
+		ORDER BY b.order_sn desc
+	</select>
+	
+		<!-- 查询推荐的所有品牌-->
+	<select id="selectRecommendBrands" resultType="Map">
+	SELECT b.id id,b.name_cn nameCn,b.name_en nameEn,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+         FROM brand b
+         LEFT JOIN category_brand c ON b.id=c.brand_id
+         LEFT JOIN brand_mark m ON m.brand_id=b.id
+         WHERE b.status='1' AND c.status='1' AND m.mark_type=3 and m.status=1 and m.channel=2
+         ORDER BY c.order_sn desc
+	</select>
+	<!-- 面价品牌 -->
+	<select id="selectfaceBrands" resultType="Map">
+		select 
+			b.id id,b.name_cn nameCn,b.name_en nameEn,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+		from brand b,goods g
+		where g.brand_id = b.id and g.status = 1 and b.id not in(257,266)
+		group by b.id
+		having count(1) > 0
+		order by count(1) desc
+	</select>
+	<!-- 上架品牌 -->
+	<select id="selectsaleBrands" resultType="Map">
+		SELECT b.id id,b.name_cn nameCn,b.name_en nameEn,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+		from seller_goods sg 
+		left join goods g on g.id = sg.goods_id
+		left join brand b on b.id = g.brand_id
+		where sg.status = 1 and g.status = 1 and sg.is_show = 1 and sg.channel = 1 
+		group by b.id
+		ORDER BY b.order_sn desc
+	</select>
+	<select id="selectERPbrand" resultType="java.lang.String">
+		select brand_id from goods
+		where ifnull(syn_code,buy_no) = #{id}
+		limit 0,1
+	</select>
+	<!-- appmall所有上架品牌 -->
+	<select id="selectappMallBrands" resultType="Map">
+		SELECT b.id id,b.name_cn nameCn,b.name_en nameEn,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+		from seller_goods sg 
+		left join goods g on g.id = sg.goods_id
+		left join brand b on b.id = g.brand_id
+		where sg.status = 1 and g.status = 1 and sg.is_show = 1 and sg.channel = 2 
+		and sg.seller_id!='9407609'
+        and g.brand_id!=0
+		group by b.id
+		ORDER BY b.order_sn desc
+	</select><!--modify 20161215 appmall所有上架品牌查询去除京东商品 -->
+</mapper>

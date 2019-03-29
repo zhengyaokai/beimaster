@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.CustomerServiceMapper" >
+  <resultMap id="BaseResultMap" type="bmatser.model.CrmCustomerService" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="customer_id" property="customerId" jdbcType="INTEGER" />
+    <result column="service_id" property="serviceId" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="create_staff_id" property="createStaffId" jdbcType="INTEGER" />
+    <result column="end_time" property="endTime" jdbcType="TIMESTAMP" />
+    <result column="end_staff_id" property="endStaffId" jdbcType="INTEGER" />
+    <result column="status" property="status" jdbcType="CHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, customer_id, service_id, create_time, create_staff_id, end_time, end_staff_id, 
+    status
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from crm_customer_service
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+   <select id="getCustomerServiceByCustomerId" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from crm_customer_service
+    where status='1' and customer_id = #{customerId,jdbcType=INTEGER}
+  </select>
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from crm_customer_service
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.CrmCustomerService" >
+    insert into crm_customer_service (id, customer_id, service_id, 
+      create_time, create_staff_id, end_time, 
+      end_staff_id, status,is_auto_assign)
+    values (#{id,jdbcType=INTEGER}, #{customerId,jdbcType=INTEGER}, #{serviceId,jdbcType=INTEGER}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{createStaffId,jdbcType=INTEGER}, #{endTime,jdbcType=TIMESTAMP}, 
+      #{endStaffId,jdbcType=INTEGER}, #{status,jdbcType=CHAR}, #{isAutoAssign,jdbcType=CHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.model.CrmCustomerService" >
+    insert into crm_customer_service
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="customerId != null" >
+        customer_id,
+      </if>
+      <if test="serviceId != null" >
+        service_id,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="createStaffId != null" >
+        create_staff_id,
+      </if>
+      <if test="endTime != null" >
+        end_time,
+      </if>
+      <if test="endStaffId != null" >
+        end_staff_id,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="isAutoAssign != null" >
+        is_auto_assign,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="customerId != null" >
+        #{customerId,jdbcType=INTEGER},
+      </if>
+      <if test="serviceId != null" >
+        #{serviceId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createStaffId != null" >
+        #{createStaffId,jdbcType=INTEGER},
+      </if>
+      <if test="endTime != null" >
+        #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endStaffId != null" >
+        #{endStaffId,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=CHAR},
+      </if>
+      <if test="isAutoAssign != null" >
+        #{isAutoAssign,jdbcType=CHAR},
+      </if>
+    </trim>
+  </insert>
+  <!-- 更新客户所对应的客服 表-->
+  <update id="updateByCustomerId" parameterType="bmatser.model.CrmCustomerService" >
+     update crm_customer_service
+    <set >
+      <if test="customerId != null" >
+        customer_id = #{customerId,jdbcType=INTEGER},
+      </if>
+      <if test="serviceId != null" >
+        service_id = #{serviceId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createStaffId != null" >
+        create_staff_id = #{createStaffId,jdbcType=INTEGER},
+      </if>
+      <if test="endTime != null" >
+        end_time = #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endStaffId != null" >
+        end_staff_id = #{endStaffId,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+      <if test="isAutoAssign != null" >
+        is_auto_assign = #{isAutoAssign,jdbcType=CHAR},
+      </if>
+    </set>
+    where customer_id = #{customerId,jdbcType=INTEGER}
+  </update>
+  
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.CrmCustomerService" >
+    update crm_customer_service
+    <set >
+      <if test="customerId != null" >
+        customer_id = #{customerId,jdbcType=INTEGER},
+      </if>
+      <if test="serviceId != null" >
+        service_id = #{serviceId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createStaffId != null" >
+        create_staff_id = #{createStaffId,jdbcType=INTEGER},
+      </if>
+      <if test="endTime != null" >
+        end_time = #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endStaffId != null" >
+        end_staff_id = #{endStaffId,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <update id="updateCustomerService" parameterType="bmatser.model.CrmCustomerService" >
+    update crm_customer_service
+   	set status = '2', end_time = now(), end_staff_id = #{createStaffId,jdbcType=INTEGER}
+    where customer_id = #{customerId,jdbcType=INTEGER} and status='1'
+  </update>
+  
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.CrmCustomerService" >
+    update crm_customer_service
+    set customer_id = #{customerId,jdbcType=INTEGER},
+      service_id = #{serviceId,jdbcType=INTEGER},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_staff_id = #{createStaffId,jdbcType=INTEGER},
+      end_time = #{endTime,jdbcType=TIMESTAMP},
+      end_staff_id = #{endStaffId,jdbcType=INTEGER},
+      status = #{status,jdbcType=CHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

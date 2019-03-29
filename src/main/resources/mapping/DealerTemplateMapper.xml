@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.DealerTemplateMapper" >
+
+<!-- 通过别名获得店铺使用的模板 20160808 tiw -->
+	<select id="selectTemplates" resultType="map">
+select dt.id,dt.dealer_id dealerId,dt.name,
+concat('${@bmatser.util.Constants@IMAGE_URL}','dealerImg/templateImg/',dt.top_image) topImage,
+dt.template_type templateType,dt.create_time templateTime
+from  dealer_template dt 
+LEFT JOIN dealer d on dt.dealer_id = d.id
+where dt.is_show = '1'
+and d.alias = #{alias}
+GROUP BY dt.id
+ORDER BY dt.order_sn 
+	</select>
+	
+<!-- 通过店铺模板id查询模板数据  20160808 tiw  'dealerImg/templateImg/' -->	
+	<select id="selectTemplateDate" resultType="map">
+select concat('${@bmatser.util.Constants@IMAGE_URL}','dealerImg/templateImg/',dtd.image) image,
+dtd.url,dtd.create_time dataTime from dealer_template_data dtd
+LEFT JOIN dealer_template dt on dt.id = dtd.template_id
+where dtd.template_id = #{id}
+ORDER BY dtd.order_sn 
+	</select>
+	
+</mapper>

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GoodsActivitySaleMapper" >
+  <resultMap id="BaseResultMap" type="bmatser.model.GoodsActivitySale" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="seller_goods_id" property="sellerGoodsId" jdbcType="BIGINT" />
+    <result column="goods_no" property="goodsNo" jdbcType="VARCHAR" />
+    <result column="activity_brand_id" property="activityBrandId" jdbcType="BIGINT" />
+    <result column="stock" property="stock" jdbcType="INTEGER" />
+    <result column="surplus_stock" property="surplusStock" jdbcType="INTEGER" />
+    <result column="per_limt_num" property="perLimtNum" jdbcType="INTEGER" />
+    <result column="deduction_rate" property="deductionRate" jdbcType="VARCHAR" />
+    <result column="sale_price" property="salePrice" jdbcType="DECIMAL" />
+    <result column="order_sn" property="orderSn" jdbcType="INTEGER" />
+    <result column="status" property="status" jdbcType="CHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="create_user_id" property="createUserId" jdbcType="INTEGER" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, seller_goods_id, goods_no, activity_brand_id, stock, surplus_stock, per_limt_num, 
+    deduction_rate, sale_price, order_sn, status, create_time, create_user_id
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select 
+    <include refid="Base_Column_List" />
+    from goods_activity_sale
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from goods_activity_sale
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.GoodsActivitySale" >
+    insert into goods_activity_sale (id, seller_goods_id, goods_no, 
+      activity_brand_id, stock, surplus_stock, 
+      per_limt_num, deduction_rate, sale_price, 
+      order_sn, status, create_time, 
+      create_user_id)
+    values (#{id,jdbcType=BIGINT}, #{sellerGoodsId,jdbcType=BIGINT}, #{goodsNo,jdbcType=VARCHAR}, 
+      #{activityBrandId,jdbcType=BIGINT}, #{stock,jdbcType=INTEGER}, #{surplusStock,jdbcType=INTEGER}, 
+      #{perLimtNum,jdbcType=INTEGER}, #{deductionRate,jdbcType=VARCHAR}, #{salePrice,jdbcType=DECIMAL}, 
+      #{orderSn,jdbcType=INTEGER}, #{status,jdbcType=CHAR}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{createUserId,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.model.GoodsActivitySale" >
+    insert into goods_activity_sale
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="sellerGoodsId != null" >
+        seller_goods_id,
+      </if>
+      <if test="goodsNo != null" >
+        goods_no,
+      </if>
+      <if test="activityBrandId != null" >
+        activity_brand_id,
+      </if>
+      <if test="stock != null" >
+        stock,
+      </if>
+      <if test="surplusStock != null" >
+        surplus_stock,
+      </if>
+      <if test="perLimtNum != null" >
+        per_limt_num,
+      </if>
+      <if test="deductionRate != null" >
+        deduction_rate,
+      </if>
+      <if test="salePrice != null" >
+        sale_price,
+      </if>
+      <if test="orderSn != null" >
+        order_sn,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="createUserId != null" >
+        create_user_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="sellerGoodsId != null" >
+        #{sellerGoodsId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsNo != null" >
+        #{goodsNo,jdbcType=VARCHAR},
+      </if>
+      <if test="activityBrandId != null" >
+        #{activityBrandId,jdbcType=BIGINT},
+      </if>
+      <if test="stock != null" >
+        #{stock,jdbcType=INTEGER},
+      </if>
+      <if test="surplusStock != null" >
+        #{surplusStock,jdbcType=INTEGER},
+      </if>
+      <if test="perLimtNum != null" >
+        #{perLimtNum,jdbcType=INTEGER},
+      </if>
+      <if test="deductionRate != null" >
+        #{deductionRate,jdbcType=VARCHAR},
+      </if>
+      <if test="salePrice != null" >
+        #{salePrice,jdbcType=DECIMAL},
+      </if>
+      <if test="orderSn != null" >
+        #{orderSn,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=CHAR},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUserId != null" >
+        #{createUserId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.GoodsActivitySale" >
+    update goods_activity_sale
+    <set >
+      <if test="sellerGoodsId != null" >
+        seller_goods_id = #{sellerGoodsId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsNo != null" >
+        goods_no = #{goodsNo,jdbcType=VARCHAR},
+      </if>
+      <if test="activityBrandId != null" >
+        activity_brand_id = #{activityBrandId,jdbcType=BIGINT},
+      </if>
+      <if test="stock != null" >
+        stock = #{stock,jdbcType=INTEGER},
+      </if>
+      <if test="surplusStock != null" >
+        surplus_stock = #{surplusStock,jdbcType=INTEGER},
+      </if>
+      <if test="perLimtNum != null" >
+        per_limt_num = #{perLimtNum,jdbcType=INTEGER},
+      </if>
+      <if test="deductionRate != null" >
+        deduction_rate = #{deductionRate,jdbcType=VARCHAR},
+      </if>
+      <if test="salePrice != null" >
+        sale_price = #{salePrice,jdbcType=DECIMAL},
+      </if>
+      <if test="orderSn != null" >
+        order_sn = #{orderSn,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUserId != null" >
+        create_user_id = #{createUserId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.GoodsActivitySale" >
+    update goods_activity_sale
+    set seller_goods_id = #{sellerGoodsId,jdbcType=BIGINT},
+      goods_no = #{goodsNo,jdbcType=VARCHAR},
+      activity_brand_id = #{activityBrandId,jdbcType=BIGINT},
+      stock = #{stock,jdbcType=INTEGER},
+      surplus_stock = #{surplusStock,jdbcType=INTEGER},
+      per_limt_num = #{perLimtNum,jdbcType=INTEGER},
+      deduction_rate = #{deductionRate,jdbcType=VARCHAR},
+      sale_price = #{salePrice,jdbcType=DECIMAL},
+      order_sn = #{orderSn,jdbcType=INTEGER},
+      status = #{status,jdbcType=CHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user_id = #{createUserId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.AmountAlgorithmMapper" >
+	
+    <select id="getFreightAmountInfo"  resultType="bmatser.model.FreightAmountInfo">
+        select 
+            sg.fare_temp_id fareTempId,
+            sum(ifnull(sg.sale_price,sg.price) * ifnull(bsc.num,0)) amount,
+            lst.order_amount orderAmount,
+            lst.freight_amount freightAmount,
+            lst.bill_rule billRule,
+            lsm.first_item firstItem,
+            lsm.renew_item renewItem,
+            lsm.renew_charge renewCharge,
+            sum(ifnull(g.weight,0)* ifnull(bsc.num,0)) weight,
+            sum(ifnull(g.cubage,0)* ifnull(bsc.num,0)) cubage,
+            lsm.province_id provinceId,
+            lsm.charge
+        from buyer_shopping_cart bsc
+        left join seller_goods sg on sg.id = bsc.seller_goods_id 
+        left join goods g on g.id = sg.goods_id
+		left join logistics_shop_temp lst on lst.id = sg.fare_temp_id
+		left join logistics_shipping_method lsm on lsm.temp_id = sg.fare_temp_id and lst.bill_rule = 3 and (lsm.province_id = #{provinceId} or lsm.is_defalut = 1) and lsm.status = 1
+		where bsc.id in
+		<foreach collection="cartIdParam" item="id" open="(" close=")" separator=",">
+			 #{id}
+		</foreach>
+		and  sg.id is not null and lst.id is not null
+		GROUP BY sg.fare_temp_id,lsm.is_defalut
+    </select>
+    
+    <select id="getEditFreightAmountInfo" resultType="bmatser.model.FreightAmountInfo">
+        select 
+            sg.fare_temp_id fareTempId,
+            sum(ifnull(sg.price,0)) amount,
+            lst.order_amount orderAmount,
+            lst.freight_amount freightAmount,
+            lst.bill_rule billRule,
+            lsm.first_item firstItem,
+            lsm.renew_item renewItem,
+            lsm.renew_charge renewCharge,
+            sum(ifnull(sg.weight,0)) weight,
+            sum(ifnull(sg.cubage,0)) cubage,
+            lsm.province_id provinceId,
+            lsm.charge
+        from  (
+                <foreach collection="goodsParam" item="id" separator="union all">
+                select sg.fare_temp_id,(sg.sale_price*${id.num})price, ifnull(g.weight,0)*${id.num} weight,ifnull(g.cubage,0)*${id.num} cubage
+                from seller_goods sg
+                left join goods g on g.id = sg.goods_id
+                where sg.id =#{id.sellerGoodsId} and sg.fare_temp_id is not null 
+                </foreach>
+        )sg
+        left join logistics_shop_temp lst on lst.id = sg.fare_temp_id
+        left join logistics_shipping_method lsm on lsm.temp_id = sg.fare_temp_id and lst.bill_rule = 3 and (lsm.province_id = #{provinceId} or lsm.is_defalut = 1) and lsm.status = 1
+        where  lst.id is not null
+        GROUP BY sg.fare_temp_id,lsm.is_defalut
+    </select>
+
+</mapper> 

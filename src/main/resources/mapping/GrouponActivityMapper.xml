@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GrouponActivityMapper">
+	<select id="isGroupGoods" parameterType="map" resultType="int">
+		select 
+			count(1)as count 
+		from groupon_goods gg
+		left join groupon_activity ga on ga.id = gg.groupon_id
+		left join groupon_buyer gb on gb.groupon_id = ga.id
+		where gg.status = 1 
+			and ga.start_time &lt;= now() 
+			and ga.end_time &gt;= now() 
+			and gb.status = 1 
+			and ga.groupon_open_condition &lt;= (ga.groupon_amount+ga.virtual_num)
+			and gg.seller_goods_id = #{sellerGoodsId} 
+			and gb.groupon_buyer_id = #{grouponBuyerId}
+			and ga.groupon_status != 5 
+	</select>
+	
+	<select id="isGroupActivity" parameterType="map" resultType="int">
+		select 
+			count(1)as count 
+		from groupon_activity ga
+		left join groupon_buyer gb on gb.groupon_id = ga.id
+		where gb.status = 1 
+			and gb.groupon_buyer_id = #{grouponBuyerId} 
+			and ga.id = #{groupActivityId}  
+			and ga.groupon_open_condition &lt;= (ga.groupon_amount+ga.virtual_num)
+			and ga.start_time &lt;= now() 
+			and ga.end_time &gt;= now()
+			and ga.groupon_status != 5 
+	</select>
+	
+	<select id="findGrouponDesc"  parameterType="map" resultType="java.lang.String">
+		select 
+			ga.groupon_desc grouponDesc 
+		from groupon_goods gg
+		left join groupon_activity ga on ga.id = gg.groupon_id
+		where gg.status = 1 
+			and gg.seller_goods_id = #{sellerGoodsId}  
+			and ga.end_time &gt;= now() 
+			and ga.groupon_status != 5 
+		limit 0,1
+	</select>
+	
+	<select id="findGrouponActivityId"  parameterType="map" resultType="java.lang.String">
+		select 
+			ga.id id
+		from groupon_goods gg
+		left join groupon_activity ga on ga.id = gg.groupon_id
+		left join groupon_buyer gb on gb.groupon_id = ga.id
+		where gg.status = 1 and ga.start_time &lt;= now() and ga.end_time &gt;= now() and gb.status = 1  and ga.groupon_open_condition &lt;= (ga.groupon_amount+ga.virtual_num)
+			and gg.seller_goods_id = #{sellerGoodsId} and gb.groupon_buyer_id = #{grouponBuyerId}
+		limit 0,1
+	</select>
+	
+	<select id="isExistActivity" parameterType="map" resultType="int">
+		select 
+			count(1) 
+		from groupon_activity 
+		where  online_time &lt;=NOW() and end_time &gt;=now() and groupon_status !=5 and id= #{id}
+	</select><!-- 20160713修改 去掉and groupon_open_condition != groupon_amount   start_time &lt;= now() 改为ga.online_time &lt;=NOW() 条件 -->
+	
+	<update id="updateGroupClick" parameterType="map" >
+		update groupon_activity 
+		<set>
+			groupon_click = groupon_click + 1
+		</set>
+		where id = #{id}
+	</update>
+	
+	<insert id="addGroupBuyer" parameterType="map" >
+	insert  into 
+		groupon_buyer 
+		(groupon_id,groupon_buyer_id,create_time,status) 
+		values 
+		(#{groupId},#{buyerId},now(),1);
+	</insert>
+	
+	<update id="updateGroupAmount" parameterType="map">
+		update 
+			groupon_activity 
+		set groupon_amount = ifnull(groupon_amount,0) + 1
+		where id = #{id}
+	</update>
+	
+	<select id="isActivityExistBuyer" parameterType="map" resultType="int">
+		select 
+			count(1) 
+		from groupon_buyer 
+		where groupon_id = #{groupId} and groupon_buyer_id = #{buyerId} and status = 1
+	</select>
+	
+	<select id="findGrouponId" resultType="java.lang.String">
+		select 
+			ga.id
+		from groupon_goods gg
+		left join groupon_activity ga on ga.id = gg.groupon_id
+		where gg.status = 1 and gg.seller_goods_id = #{sellerGoodsId} 
+		limit 0,1
+	</select>
+	
+	<update id="updateGroupGoodsStatus" >
+			update 
+				seller_goods sg, groupon_goods gas, groupon_activity ga
+			set sg.is_groupon = 1,sg.modify_time=now()
+			where sg.status=1 and gas.`status`=1  and ga.groupon_status!=5
+			and sg.id = gas.seller_goods_id and gas.groupon_id = ga.id
+			and ga.start_time &lt;= now() and ga.end_time &gt;= now()
+			and ga.groupon_amount=ga.groupon_open_condition
+			and ga.id = #{id}
+	</update>
+	<select id="isGroupGoodsBysellerGoodsId" resultType="int">
+		select 
+			if(count(1)>0,1,0)as count 
+		from groupon_goods gg
+		left join groupon_activity ga on ga.id = gg.groupon_id
+		where gg.status = 1 and ga.start_time &lt;= now() and ga.end_time &gt;= now()  and ga.groupon_status != 5 
+			and gg.seller_goods_id = #{sellerGoodsId}
+	</select>
+	
+	<select id="getGroupInfoByApp" resultType="map">
+		select 
+			ga.id grouponId, ga.start_time groupStartTime,ga.end_time groupEndTime,if(count(gb.id)>0,1,0)isSignUp from  groupon_goods gg
+		left join groupon_activity ga on ga.id = gg.groupon_id
+		left join groupon_buyer gb on gb.groupon_id = ga.id and gb.status = 1 and gb.groupon_buyer_id = #{dealerId}
+		where gg.status = 1 
+					and ga.end_time &gt;= now()
+					and gg.seller_goods_id = #{sellerGoodsId}
+					and ga.groupon_status != 5
+		group by ga.id
+		limit 0,1
+	</select>
+	
+	<!-- 报名后返回此团购信息 -->
+	<select id="getGroupBuyInfo" resultType="map">
+	SELECT IF(gb.groupon_buyer_id IS NULL OR ''=gb.groupon_buyer_id,'0','1') activitySinkStatus,
+ga.groupon_open_condition grouponOpenCondition,
+ga.id,ga.groupon_desc grouponDesc,ga.groupon_name grouponName,IFNULL(ga.groupon_amount+ga.virtual_num+0,0) grouponAmount,
+concat('${@bmatser.util.Constants@IMAGE_URL}',ga.banner_image) bannerImage,ga.banner_url bannerUrl,
+IF(IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0) &lt;0,0,IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0)) needGroupAmount,
+ga.start_time startTime,ga.end_time endTime,
+(CASE 
+WHEN ga.start_time &gt;NOW() and ga.online_time &lt;=NOW() 
+THEN '1'
+WHEN  (ga.groupon_open_condition+0) &lt;=(ga.groupon_amount+ga.virtual_num+0) and  ga.end_time &gt;NOW() AND ga.start_time &lt;= NOW()
+THEN '3' 
+WHEN ga.end_time &gt;NOW() AND ga.start_time &lt;= NOW()
+THEN '2'
+WHEN ga.end_time &lt;=NOW() 
+THEN '4'
+END) activityStatus 
+         FROM groupon_activity ga
+         LEFT JOIN groupon_buyer gb ON gb.groupon_id=ga.id AND gb.groupon_buyer_id=#{dealerId}
+         WHERE ga.groupon_status!='5'
+         AND ga.id=#{groupId}
+         GROUP BY ga.id
+         ORDER BY ga.order_sn desc
+	</select>
+</mapper>

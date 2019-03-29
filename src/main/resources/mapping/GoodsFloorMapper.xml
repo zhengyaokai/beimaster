@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GoodsFloorMapper" >
+<!-- 楼层商品 -->
+	<select id="findFloorGoods" resultType="Map">
+		select gf.id,p.id floorCode,p.floor_name floorName,p.order_sn flooerOrder,sg.seller_id sellerId,
+		gf.order_sn goodsOrder,sg.id goodsId,sg.goods_name goodsName,sg.sale_price salePrice,${@bmatser.util.SQLUtil@GOODS_IMG} image,ifnull(g.market_price,0) marketPrice
+		from page_floor p
+		LEFT JOIN goods_floor gf on p.id = gf.floor_id and gf.status=1
+		LEFT JOIN seller_goods sg on gf.object_id=sg.id and sg.status=1
+		LEFT JOIN goods g on sg.goods_id = g.id and g.status=1
+		where p.status=1 and gf.object_type=1 and p.id = #{code}
+		and sg.status=1
+		order by p.order_sn,gf.order_sn
+		limit 0,6
+	</select>
+	
+	<!-- 楼层分类 -->
+	<select id="findFloorCategorys" resultType="Map">
+		select p.floor_code floorCode,p.floor_name floorName,p.order_sn floorOrder,p.floor_img floorImg,p.floor_logo floorLogo,
+		gf.order_sn cateOrder,c.id cateId,c.cate_no cateNo,c.name cateName
+		from page_floor p
+		LEFT JOIN goods_floor gf on p.id = gf.floor_id and gf.status=1
+		LEFT JOIN category c on gf.object_id=c.id and c.status=1
+		where p.status=1 and gf.object_type=2
+		and gf.floor_id = #{id}     
+		order by p.order_sn,gf.order_sn
+		limit 0,10
+	</select>
+	
+	<!-- 楼层品牌 -->
+	<select id="findFloorBrands" resultType="Map">
+		select p.floor_code floorCode,p.floor_name floorName,p.order_sn flooerOrder,
+		gf.order_sn brandOrder,b.id brandId,b.name_cn brandNameCn,b.name_en brandNameEn,
+		concat('${@bmatser.util.Constants@IMAGE_URL}','',b.logo) logo
+		from page_floor p
+		LEFT JOIN goods_floor gf on p.id = gf.floor_id and gf.status=1
+		LEFT JOIN brand b on gf.object_id=b.id and b.status=1
+		where p.status=1 and gf.object_type=3
+		order by p.order_sn,gf.order_sn
+	</select>
+	
+	<!-- 获取所有楼层 -->
+	<select id="findFloors" resultType="Map">
+		select p.id,p.id floorCode,p.floor_name floorName,p.order_sn flooerOrder,
+		p.floor_logo floorLogo,concat('${@bmatser.util.Constants@IMAGE_URL}','',p.floor_img) floorImg,p.cate_id cateId
+		from page_floor p
+		where p.status=1 and p.page_sn=1
+		order by p.order_sn
+	</select>
+
+	<select id="findPageFloorDetail" parameterType="string" resultType="Map">
+		select
+		pg.id floorId,pg.floor_name floorName,CONCAT(#{imagePrefix},pg.floor_img) floorImg,
+		GROUP_CONCAT(sg.id order by g.order_sn asc ) sellerGoodIds,
+		GROUP_CONCAT(c.name order by g.order_sn asc ) categoryNames,
+		GROUP_CONCAT(CONCAT(b.id,'#',b.name_cn,'#',CONCAT(#{imagePrefix},b.logo)) order by g.order_sn asc) brandIdAndNames
+		from goods_floor g
+		LEFT JOIN page_floor pg
+		on g.floor_id=pg.id
+		LEFT JOIN seller_goods sg
+		on g.object_type=1 and g.object_id=sg.id
+		LEFT JOIN category c
+		on g.object_type=2 and g.object_id=c.id
+		LEFT JOIN brand b
+		on g.object_type=3 and g.object_id=b.id
+		where g.`status`=1 and pg.`status`=1
+		<if test="floorId !=null and floorId !=''">
+			and g.floor_id=#{floorId}
+		</if>
+		group by floorId,floorName,floorImg
+		order by pg.order_sn
+	</select>
+
+    <select id="findPageFloorDetailForIos" parameterType="string" resultType="Map">
+        select
+        pg.id floorId,pg.floor_name floorName,CONCAT(#{imagePrefix},pg.floor_img) floorImg,
+        GROUP_CONCAT(sg.id order by g.order_sn asc ) sellerGoodIds,
+        GROUP_CONCAT(c.name order by g.order_sn asc ) categoryNames,
+        GROUP_CONCAT(c.cate_no order by g.order_sn asc ) categoryIds,
+        GROUP_CONCAT(CONCAT(b.id,'#',b.name_cn,'#',CONCAT(#{imagePrefix},b.logo)) order by g.order_sn asc) brandIdAndNames
+        from goods_floor g
+        LEFT JOIN page_floor pg
+        on g.floor_id=pg.id
+        LEFT JOIN seller_goods sg
+        on g.object_type=1 and g.object_id=sg.id
+        LEFT JOIN category c
+        on g.object_type=2 and g.object_id=c.id
+        LEFT JOIN brand b
+        on g.object_type=3 and g.object_id=b.id
+        where g.`status`=1 and pg.`status`=1
+        <if test="floorId !=null and floorId !=''">
+            and g.floor_id=#{floorId}
+        </if>
+        group by floorId,floorName,floorImg
+        order by pg.order_sn
+    </select>
+
+	<select id="findFloorGoodsDetail" parameterType="string" resultType="Map">
+		select sg.id,sg.goods_id,sg.goods_name,sg.price,sg.sku_unit,g.image,g.buy_no,g.model from seller_goods sg
+		left join goods g on sg.goods_id=g.id
+		where sg.status = 1 and g.status=1
+		and sg.id in (${sellerGoodIds})
+		order by FIELD(sg.id,${sellerGoodIds})
+	</select>
+
+<!--
+  热卖商品表
+CREATE TABLE `hot_activity_goods` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `seller_goods_id` int(11) NOT NULL  COMMENT '在售热卖商品id',
+  `order_sn` int(11) NOT NULL COMMENT '排序',
+  `create_id` int(11) NOT NULL COMMENT '创建人id',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `modify_id` int(11) DEFAULT NULL COMMENT '修改人id',
+  `modify_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `status` char(1) NOT NULL DEFAULT '1' COMMENT '状态（1：有效  2：删除）',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='商城首页热卖商品管理';
+	-->
+
+	<select id="getHotSaleGoodsInfo"  resultType="String">
+		select
+			GROUP_CONCAT(hg.seller_goods_id order by hg.order_sn) hotSaleGoodIds
+		from hot_sale_goods hg ,seller_goods sg
+		where hg.status=1
+		and sg.status=1
+		and hg.seller_goods_id = sg.id
+	</select>
+
+
+
+
+</mapper>

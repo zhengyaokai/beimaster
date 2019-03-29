@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GoldMantisMapper" >
+	
+	<insert id="addCreditFeedback">
+		insert into
+			jtl_credit_feedback
+		<trim prefix="(" suffix=") values"  suffixOverrides=",">
+			<if test="customerName != null">customer_name,</if>
+			<if test="lastCreditNo != null">last_credit_no,</if>
+			<if test="applyNote != null">apply_note,</if>
+			<if test="rateType != null">rate_type,</if>
+			<if test="startDate != null">start_date,</if>
+			<if test="updateTime != null">update_time,</if>
+			<if test="creditLimit != null">credit_limit,</if>
+			<if test="endDate != null">end_date,</if>
+			<if test="creditStatus != null">credit_status,</if>
+			<if test="currency != null">currency,</if>
+			<if test="creditNo != null">credit_no,</if>
+			<if test="rate != null">rate,</if>
+			<if test="repaymentWay != null">repayment_way,</if>
+			<if test="dealerId !=null">dealer_id,</if>
+			<if test="lastCreditStatus != null">last_credit_status,</if>
+			<if test="applyCode != null">apply_code,</if>
+			create_time
+		</trim>	
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="customerName != null">#{customerName},</if>
+			<if test="lastCreditNo != null">#{lastCreditNo},</if>
+			<if test="applyNote != null">#{applyNote},</if>
+			<if test="rateType != null">#{rateType},</if>
+			<if test="startDate != null">#{startDate},</if>
+			<if test="updateTime != null">#{updateTime},</if>
+			<if test="creditLimit != null">#{creditLimit},</if>
+			<if test="endDate != null">#{endDate},</if>
+			<if test="creditStatus != null">#{creditStatus},</if>
+			<if test="currency != null">#{currency},</if>
+			<if test="creditNo != null">#{creditNo},</if>
+			<if test="rate != null">#{rate},</if>
+			<if test="repaymentWay != null">#{repaymentWay},</if>
+			<if test="dealerId !=null">#{dealerId},</if>
+			<if test="lastCreditStatus != null">#{lastCreditStatus},</if>
+			<if test="applyCode != null">#{applyCode},</if>
+			now()
+		</trim>
+	</insert>
+
+	<select id="getOrderByGoldMantis" resultType="map">
+		select 
+			oi.buyer_id customerCode,
+			d.dealer_name customerName,
+			oi.id orderNo,
+			${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} orderAmount,
+			oi.order_time orderDate,
+			joa.account_no accountNo
+		from order_info oi
+		left join dealer d on d.id = oi.buyer_id
+		left join jtl_order_apply joa on oi.id = joa.order_no
+		where oi.id = #{orderId} and oi.buyer_id = #{dealerId}
+	</select>
+	<insert id="addOrderApply">
+		insert into 
+			jtl_order_apply
+		<trim prefix="(" suffix=") values" suffixOverrides=",">
+			<if test="accountNo != null">account_no,</if>
+			<if test="orderNo != null">order_no,</if>
+			<if test="principal != null">principal,</if>
+			<if test="interest != null">interest,</if>
+			<if test="totalAmount != null">total_amount,</if>
+			<if test="currency != null">currency,</if>
+			<if test="endDate != null and endDate !=''">end_date,</if>
+			create_time
+		</trim>	
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="accountNo != null">#{accountNo},</if>
+			<if test="orderNo != null">#{orderNo},</if>
+			<if test="principal != null">#{principal},</if>
+			<if test="interest != null">#{interest},</if>
+			<if test="totalAmount != null">#{totalAmount},</if>
+			<if test="currency != null">#{currency},</if>
+			<if test="endDate != null and endDate !=''">#{endDate},</if>
+			now()
+		</trim>	
+	</insert>
+	<select id="getOrderDeal" resultType="map">
+		select 
+			d.id customerCode,d.dealer_name customerName,joa.account_no accountNo,ro.id returnNO,
+			oi.id orderNo,${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} returnAmount,ro.create_time returnDate,ro.interest interestPaidAmount
+		from order_info oi
+		left join dealer d on d.id = oi.buyer_id
+		left join jtl_order_apply joa on joa.order_no = oi.id
+		left join refund_order ro on ro.order_id = oi.id
+		where oi.id = #{orderId} and oi.buyer_id = #{dealerId} and ro.status = 3
+	</select>
+	<!-- 获取用户贷款状态 -->
+	<select id="getJtlStatus" resultType="int">
+		select 
+			 if(count(1)>0,ifnull(jtl_status,0),0)
+		from dealer_business_license
+		where dealer_id = #{dealerId} and status = 1
+		limit 0,1
+	</select>
+	<!-- 获取金螳螂用户注册用户信息 -->
+	<select id="getJtlRegisterInfo" resultType="bmatser.model.JtlRegisterInfo">
+		SELECT
+		  	d.dealer_name dealerName,
+			dbl.reg_capital regCapital,
+			dbl.corporate_name corporateName,
+			ifnull(dbl.business_scope,d.operate_scope) operateScope,
+			ifnull(dbl.sale_customer_group,d.sale_customer_group) saleCustomerGroup
+<!-- 			,dbl.link_man linkMan,dbl.mobile -->
+		from dealer d
+		left join dealer_business_license dbl on d.id = dbl.dealer_id and dbl.status = 1
+		where d.id = #{dealerId}
+	</select>
+	<insert id="addJtlRegisterInfo">
+		insert into
+			dealer_business_license
+		<trim prefix="(" suffix=")values" suffixOverrides=",">
+			<if test="dealerId != null">dealer_id,</if>
+			<if test="o.businessLicenseNo != null">jtl_license_no,</if>
+			<if test="o.businessLicenseFile != null">jtl_license_file,</if>
+			<if test="o.regCapital != null and o.regCapital != ''">reg_capital,</if>
+			<if test="o.regCapital == null and o.regCapital == ''">reg_capital,</if>
+			<if test="o.corporateName != null">corporate_name,</if>
+			<if test="o.idCardFile != null">id_card_file,</if>
+			<if test="o.linkMan != null">link_man,</if>
+			<if test="o.mobile != null">mobile,</if>
+			<if test="o.mobileSecret != null">mobile_secret,</if>
+			<if test="o.operateScope != null">business_scope,</if>
+			<if test="o.idCardBackFile != null">id_card_back_file,</if>
+			<if test="o.saleCustomerGroup != null and o.saleCustomerGroup !=''">sale_customer_group,</if>
+			<if test="o.saleCustomerGroup == null and o.saleCustomerGroup ==''">sale_customer_group,</if>
+		</trim>
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="dealerId != null">#{dealerId},</if>
+			<if test="o.businessLicenseNo != null">#{o.businessLicenseNo},</if>
+			<if test="o.businessLicenseFile != null">#{o.businessLicenseFile},</if>
+			<if test="o.regCapital != null and o.regCapital != ''">#{o.regCapital},</if>
+			<if test="o.regCapital == null and o.regCapital == ''">null,</if>
+			<if test="o.corporateName != null">#{o.corporateName},</if>
+			<if test="o.idCardFile != null">#{o.idCardFile},</if>
+			<if test="o.linkMan != null">#{o.linkMan},</if>
+			<if test="o.mobile != null">#{o.mobile},</if>
+			<if test="o.mobileSecret != null">#{o.mobileSecret},</if>
+			<if test="o.operateScope != null">#{o.operateScope},</if>
+			<if test="o.idCardBackFile != null">#{o.idCardBackFile},</if>
+			<if test="o.saleCustomerGroup != null and o.saleCustomerGroup !=''">#{o.saleCustomerGroup},</if>
+			<if test="o.saleCustomerGroup== null and o.saleCustomerGroup !=''">null,</if>
+		</trim>
+	</insert>
+	<!-- 保存金螳螂用户注册用户信息 -->
+	<update id="updateJtlRegisterInfo">
+		update
+			dealer_business_license
+			set
+			<if test="o.businessLicenseNo != null">jtl_license_no = #{o.businessLicenseNo},</if>
+			<if test="o.businessLicenseFile != null">jtl_license_file = #{o.businessLicenseFile},</if>
+			<if test="o.regCapital != null and o.regCapital != ''">reg_capital = #{o.regCapital},</if>
+			<if test="o.regCapital == null and o.regCapital == ''">reg_capital = null,</if>
+			<if test="o.corporateName != null">corporate_name = #{o.corporateName},</if>
+			<if test="o.idCardFile != null">id_card_file = #{o.idCardFile},</if>
+			<if test="o.linkMan != null">link_man=#{o.linkMan},</if>
+			<if test="o.mobile != null">mobile=#{o.mobile},</if>
+			<if test="o.mobileSecret != null">mobile_secret=#{o.mobileSecret},</if>
+			<if test="o.operateScope != null">business_scope=#{o.operateScope},</if>
+			<if test="o.idCardBackFile != null and o.idCardBackFile !=''">id_card_back_file=#{o.idCardBackFile},</if>
+			<if test="o.saleCustomerGroup != null and o.saleCustomerGroup !=''">sale_customer_group=#{o.saleCustomerGroup},</if>
+			<if test="o.saleCustomerGroup == null and o.saleCustomerGroup ==''">sale_customer_group=null,</if>
+			jtl_status = 1
+		where dealer_id = #{dealerId} and status = 1
+	</update>
+	 
+	 <select id="isExistBusinessLicense" resultType="int">
+	 	select count(1) from dealer_business_license
+	 	where dealer_id = #{dealerId} and status = 1
+	 </select>
+	<select id="getRefundInfo" resultType="map">
+		select 
+			oi.id,${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} amount,sum(og.num) count
+		from order_info oi
+		left join order_goods og on og.order_id = oi.id 
+		where oi.id = #{orderId} and oi.buyer_id = #{dealerId} and oi.order_status in (2,3,4,6) and oi.pay_type = 7
+		group by oi.id
+	</select>
+	<select id="getRefundGoods" resultType="map">
+		select 
+			sg.id,
+			if(sg.goods_name is not null and sg.goods_name != '',sg.goods_name,g.title)title,
+			og.num,
+			${@bmatser.util.SQLUtil@GOODS_IMG} image
+		from order_goods og
+		left join seller_goods sg on sg.id = og.seller_goods_id
+		left join goods g on g.id = sg.goods_id
+		where og.order_id = #{orderId}
+	</select>
+	<!-- 新增退款申请 -->
+	<insert id="addRefundOrder" useGeneratedKeys="true" keyProperty="id">
+		insert into
+			refund_order
+		(order_id,create_time,status,remark,refund_reason,refund_type,original_status,refund_amount)
+		select #{orderId},now(),5,#{remark},#{refundReason},#{refundType},order_status,${@bmatser.util.SQLUtil@PAY_AMOUNT} from order_info where id =#{orderId}
+	</insert>
+	<!-- 更新订单状态： 退货 -->
+	<update id="updateOrderToRefund">
+		update 
+			order_info
+		set
+			order_status = 7
+		where id = #{orderId}	
+	</update>
+	
+	
+	<delete id="updateRefundToDel">
+		delete from refund_order where order_id = #{orderId}
+	</delete>
+	
+	<insert id="addRefundImage">
+		insert into 
+			refund_order_info
+		(refund_id,image,create_time)
+		values
+		(#{id},#{image},now())
+	</insert>
+	
+	<select id="getRefundList" resultType="map">
+		select 
+			ro.id,ro.order_id orderId,ro.create_time createTime,ro.status 
+		from refund_order ro
+		left join order_info oi on oi.id = ro.order_id
+		where oi.pay_type = 7 and oi.buyer_id = #{dealerId} and ro.status != 7
+		<if test="type==1">and  ro.create_time &gt;= date_sub(now(),interval 3 month)</if>
+		<if test="type==2">and  ro.create_time &lt;= date_sub(now(),interval 3 month)</if>
+		<if test="status ==1 ">and ro.status = 6</if>
+		<if test="status ==2 ">and ro.status not in (4,6)</if>
+		order by ro.create_time desc
+		limit ${page},${row}
+	</select>
+	<select id="getRefundListCount" resultType="int">
+		select 
+			count(1)
+		from refund_order ro
+		left join order_info oi on oi.id = ro.order_id
+		where oi.pay_type = 7 and oi.buyer_id = #{dealerId} and ro.status != 7
+		<if test="type==1">and  ro.create_time &gt;= date_sub(now(),interval 3 month)</if>
+		<if test="type==2">and  ro.create_time &lt;= date_sub(now(),interval 3 month)</if>
+		<if test="status ==1 ">and ro.status = 6</if>
+		<if test="status ==2 ">and ro.status not in (4,6)</if>
+	</select>
+	<update id="updateOrderToComplete">
+		update 
+			order_info
+		set 
+			order_status =2,
+			pay_status = 2,
+			pay_time = now(),
+			pay_type = 7
+		where id = #{orderId}
+	</update>
+	<update id="updatePaymentToComplete">
+		update 
+			payment_bill_order pbo,payment_bill pb
+		set
+			pay_type = 7,
+			pay_status =1,
+			pay_time=now()
+		where pbo.order_id= #{orderId} and pbo.payment_bill_id = pb.id
+	</update>
+	<update id="updateDealerIdStatus" >
+		update 
+			dealer_business_license
+		set	
+			jtl_status=2
+		where dealer_id = #{dealerId}
+	</update>
+</mapper>

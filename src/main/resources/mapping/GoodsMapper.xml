@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GoodsMapper" >
+<!-- 热销商品 -->
+	<select id="findHotGoods" resultType="Map">
+		select og.goods_id goodsId, og.seller_goods_id sellerGoodsId, ${@bmatser.util.SQLUtil@GOODS_IMG} image,
+		g.title, g.model, 0 as activityPrice, if(sg.sale_price,sg.sale_price,sg.price)price, count(1) count,g.buy_no buyNo,sg.stock,g.market_price marketPrice  
+		from order_goods og, order_info oi, goods g, seller_goods sg
+		where og.order_id = oi.id and og.goods_id = g.id and og.seller_goods_id = sg.id and oi.pay_time >= #{payTime}  and sg.channel = 1 and sg.`status`='1' and sg.is_show='1' and g.`status`='1'
+		group by og.goods_id
+		order by count desc
+		limit #{page}, #{rows}
+	</select>
+	
+	<!-- 商城热门搜索  add  20160603 -->
+	<select id="findHotSearch" resultType="Map">
+	   SELECT
+	        id,
+			word,
+			target_url targetUrl
+	   FROM
+			hot_search
+	   WHERE
+			`STATUS`='1'
+	   ORDER BY
+			order_sn
+	   LIMIT 0,6
+	</select>
+	
+	<!-- 商城首页每日推荐   add  20160606 -->
+	<select id="getDailyRecommendation" resultType="Map">
+		SELECT
+		r.id,
+		sg.id sellerGoodsId,
+		sg.seller_id sellerId,
+    sg.goods_name goodsName,
+    sg.sale_price salePrice,
+    g.market_price marketPrice,
+		${@bmatser.util.SQLUtil@GOODS_IMG} image
+		FROM
+			recommend_goods r,
+			seller_goods sg,
+			goods g
+		WHERE
+			r.seller_goods_id = sg.id
+		AND sg.goods_id = g.id
+        AND DATE_FORMAT(r.belong_date,'%Y-%m-%d') &lt;= DATE_FORMAT(NOW(),'%Y-%m-%d')
+        AND r.`status` = '1'
+        AND sg.`status` = '1'
+		ORDER BY r.belong_date desc,r.order_sn desc
+		LIMIT 0,5
+	</select>
+
+
+
+<!-- 关键词搜索直发区商品 -->
+	<select id="findSellGoodsByKeyword" resultType="Map">
+		select sg.goods_id goodsId, sg.id sellerGoodsId, sg.sale_price salePrice, sg.price, sg.stock,g.market_price marketPrice,
+		g.title, g.model, ${@bmatser.util.SQLUtil@GOODS_IMG} image,g.buy_no buyNo
+		from seller_goods sg, goods g
+		where sg.goods_id = g.id
+		and sg.`status`='1' and sg.is_show='1' and g.`status`='1' and sg.channel = 1
+		<if test="cateId != null"> 
+			and g.cate_id = #{cateId}
+		</if>
+		<if test="brandId != null">
+			and g.brand_id = #{brandId}
+		</if>
+		<if test="keywords != null">
+			and
+			<foreach collection="keywords" item="keyword" index="index"
+            	open="" close="" separator=" and ">
+            	(upper(g.title) like "%"#{keyword}"%" or upper(g.model) like "%"#{keyword}"%" or upper(g.buy_no) like "%"#{keyword}"%")
+        	</foreach>
+		</if>
+		<choose>
+			<when test="priceOrder != null">
+				order by sg.price ${priceOrder}
+			</when>
+			<when test="stockOrder != null">
+				order by sg.stock ${stockOrder}
+			</when>
+			<otherwise>
+				order by sg.is_recomm desc, sg.order_sn desc
+			</otherwise>
+		</choose>
+		limit #{page}, #{rows}
+	</select>
+	
+<!-- 关键词搜索直发区商品分类 -->
+	<select id="findSellGoodsCategory" resultType="Map">
+		select  c.id, c.name, count(1) count
+		from seller_goods sg, goods g, category c
+		where sg.goods_id = g.id and g.cate_id = c.id
+		and sg.`status`='1' and sg.is_show='1' and g.`status`='1' and c.status='1'
+		<if test="brandId != null">
+			and g.brand_id = #{brandId}
+		</if>
+		<if test="keywords != null">
+			and
+			<foreach collection="keywords" item="keyword" index="index"
+            	open="" close="" separator=" and ">
+            	(upper(g.title) like "%"#{keyword}"%" or upper(g.model) like "%"#{keyword}"%" or upper(g.buy_no) like "%"#{keyword}"%")
+        	</foreach>
+		</if>
+		group by c.id
+		limit #{page}, #{rows}
+	</select>
+	
+<!-- 关键词搜索面价查询区商品 -->
+	<select id="findBaseGoodsByKeyword" resultType="Map">
+		select g.id goodsId, g.market_price marketPrice, g.title, g.model, concat('${@bmatser.util.Constants@IMAGE_URL}','goodsImg/',g.image) image,g.buy_no buyNo
+		from goods g
+		where g.`status`='1'
+		<if test="cateId != null">
+			and g.cate_id = #{cateId}
+		</if>
+		<if test="brandId != null">
+			and g.brand_id = #{brandId}
+		</if>
+		<if test="keywords != null">
+			and
+			<foreach collection="keywords" item="keyword" index="index"
+	            open="" close="" separator=" and ">
+	            (upper(g.title) like "%"#{keyword}"%" or upper(g.model) like "%"#{keyword}"%" or upper(g.buy_no) like "%"#{keyword}"%")
+	        </foreach>
+		</if>
+		order by g.order_sn desc
+		limit #{page}, #{rows}
+	</select>
+	
+<!-- 关键词搜索面价查询区商品 -->
+	<select id="findBaseGoodsCategory" resultType="Map">
+		select c.id, c.name, count(1) count
+		from goods g, category c
+		where g.`status`='1' and g.cate_id = c.id and c.status='1'
+		<if test="brandId != null">
+			and g.brand_id = #{brandId}
+		</if>
+		<if test="keywords != null">
+			and
+			<foreach collection="keywords" item="keyword" index="index"
+	            open="" close="" separator=" and ">
+	            (upper(g.title) like "%"#{keyword}"%" or upper(g.model) like "%"#{keyword}"%" or upper(g.buy_no) like "%"#{keyword}"%")
+	        </foreach>
+		</if>
+		group by c.id
+		limit #{page}, #{rows}
+	</select>
+
+<!-- 获取商品详情 -->
+	<select id="getGoodsDetail" resultType="bmatser.pageModel.GoodsDetail">
+		select g.id gId,sg.id saleGId,${@bmatser.util.SQLUtil@GOODS_IMG} image, g.title, g.model,g.series,  g.market_price marketPrice,
+		b.name_cn brandName, sg.price, sg.stock, IF(sg.sku_unit is not null and sg.sku_unit!='',sg.sku_unit,g.measure) measure, sg.remark, gd.images, gd.detail,g.buy_no orderNum,
+		sg.goods_no goodsNo,if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1) leastNum,if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1) batchNum,ifnull(sg.is_sale,0) isSale,
+		if(sg.is_sale!=1 or sg.is_sale is null ,ifnull(sg.is_rate,0),0) isRate,sg.sale_price salePrice,if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1) orderCount,
+		if(sg.is_groupon is not null and sg.is_groupon !='',sg.is_groupon,0) isJhs,sg.rate,sg.channel
+		from seller_goods sg
+		left join goods g on g.id = sg.goods_id
+		left join category c on g.cate_id=c.id 
+		left join brand b on g.brand_id = b.id
+		left join goods_detail gd on g.id = gd.goods_id 
+		left join dealer d on sg.seller_id = d.id
+		left join dealer_design dd on dd.dealer_id = d.id
+		left join ${@bmatser.util.SQLUtil@GROUP_STATUS} on groupStatus.id = sg.id
+		where sg.id = #{sellerGoodsId} and sg.status=1 and g.status = 1 and channel = #{channel}
+	</select><!-- modify 20161013 商品详情 增加返回字段 店铺描述  dd.note-->
+	<!-- modify 20161213 saas商品详情 增加返回字段 cateNo -->
+	
+	<!-- 友众trusco品牌(brandId=266)商品详情-->
+	<select id="getTruscoGoodsDetail" resultType="bmatser.pageModel.GoodsDetail">
+		select g.id goodsId,sg.seller_id sellerId,sg.id sellerGoodsId,c.cate_no cateNo,
+         g.title, g.model, b.id brandId, g.market_price marketPrice,
+         b.name_cn brandName, b.telphone telephone,${@bmatser.util.SQLUtil@GOODS_IMG} image,
+         sg.price,IF(sg.sku_unit is not null and sg.sku_unit!='',sg.sku_unit,g.measure) measure,
+         gd.images, gd.detail,g.buy_no buyNo,sg.goods_no goodsNo,sg.sale_price salePrice,sg.channel
+		from goods g
+		left join seller_goods sg on g.id = sg.goods_id and sg.status=1 and sg.channel = '1' and sg.is_show = '1'
+		left join category c on g.cate_id=c.id 
+		left join brand b on g.brand_id = b.id
+		left join goods_detail gd on g.id = gd.goods_id 
+		where g.id = #{goodsId} 
+         and g.status = 1 
+	</select>
+	
+	<!-- 商城商品详情 增加返回字段 活动描述List-->
+	<select id="getActivityDescList" resultType="map">
+	  select da.activity_desc activityDesc from dealer_activity da
+       LEFT JOIN dealer_activity_goods dag on da.id  = dag.dealer_activity_id
+       LEFT JOIN seller_goods sg on sg.id  = dag.seller_goods_id 
+     where da.status = '1'
+      and sg.`status`='1' and sg.is_show='1' and dag.status='1'  
+      and da.start_time &lt;= now() 
+	  and da.end_time &gt;= now() 
+      and sg.channel = 2 
+      and sg.id = #{sellerGoodsId} 
+	</select>
+	
+<!-- 获取商品属性 -->
+	<select id="getGoodsAttr" resultType="Map">
+		select attr_name attrName, attr_value attrValue,concat(attr_value_id,'') attrValueId from goods_attr
+		where goods_id = #{goodsId} and status = 1
+		order by order_sn desc
+	</select>
+	<!--获得seller_goods 表中商品的售卖属性-->
+    <select id="getSellerGoods" parameterType="java.lang.Integer" resultType="java.util.Map">
+      select * from seller_goods where goods_id = #{goodsId}
+    </select>
+
+
+
+<!-- 获取代理证书 -->
+	<select id="getProxyCertificate" resultType="java.lang.String">
+		select if(authorization is not null and authorization!='',concat('${@bmatser.util.Constants@IMAGE_URL}',authorization),null) proxyCertificate from dealer_brand
+		where brand_id = #{brandId} and authorize_date > now() and status = 1 and seller_id = #{sellerId}
+		limit 1
+	</select>
+	<select id="getProxyCertificateByMall" resultType="java.lang.String">
+		select if(dd.company_img is not null and dd.company_img!='',concat('${@bmatser.util.Constants@IMAGE_URL}',dd.company_img),null)companyImg from dealer_design dd
+		left join seller_goods sg on sg.seller_id = dd.dealer_id
+		where sg.id = #{sellerGoodsId}
+		limit 1 
+	</select>
+	<select id="getShelvesGoods" parameterType="map" resultType="bmatser.model.SellerGoods">
+		select 
+			sg.goods_name goodsName,sg.goods_no goodsNo,sg.id,if(sg.sale_price,sg.sale_price,sg.price)price,
+			sg.stock,g.model,sg.modify_time createTime,g.market_price marketPrice
+		from seller_goods sg
+		left join goods g on g.id = sg.goods_id 
+		where sg.status = 1 and g.status = 1
+		limit ${page},${rows}
+	</select>
+	<select id="findByMobPage" parameterType="map" resultType="map">
+		SELECT sg.id,sg.goods_name goodsName,if(sg.sale_price,sg.sale_price,sg.price)price,g.goods_no goodsNo,g.buy_no buyNo,sg.sku_unit measure,
+		sg.sales_volume salesVolume,g.model,${@bmatser.util.SQLUtil@GOODS_IMG} image,sg.stock,g.market_price marketPrice
+			from seller_goods sg 
+		left join goods g on sg.goods_id = g.id 
+		<if test="brandId != null and brandId !=''"> left join brand b on g.brand_id = b.id  </if>
+		<if test="cateId != null and cateId !=''"> left join category c on g.cate_id = c.id </if>
+		where sg.`status` = 1 and sg.is_show =1 and g.status = 1 and sg.channel = 1
+		<if test="keyword != null and keyword !=''"> and (sg.goods_name like '%${keyword}%' or g.buy_no  like '%${keyword}%' or g.model  like '%${keyword}%' )  </if>
+		<if test="cateId != null and cateId !=''"> and c.id = #{cateId} </if>
+		<if test="brandId != null and brandId !=''"> and b.id = #{brandId}  </if>
+		<if test="sort != null"> ${sort} </if>
+		limit ${page},${rows}
+	</select>
+	<select id="findByMobPageCount" parameterType="map" resultType="int">
+		SELECT
+			 count(1)
+		from seller_goods sg 
+		left join goods g on sg.goods_id = g.id 
+		<if test="brandId != null and brandId !=''"> left join brand b on g.brand_id = b.id  </if>
+		<if test="cateId != null and cateId !=''"> left join category c on g.cate_id = c.id </if>
+		where sg.`status` = 1 and sg.is_show =1 and g.status = 1 and sg.channel = 1
+		<if test="keyword != null and keyword !=''"> and (sg.goods_name like '%${keyword}%' or g.buy_no  like '%${keyword}%' or g.model  like '%${keyword}%') </if>
+		<if test="cateId != null and cateId !=''"> and c.id = #{cateId} </if>
+		<if test="brandId != null and brandId !=''"> and b.id = #{brandId}  </if>
+	</select>
+	<select id="findByMobPricePage" parameterType="map" resultType="map">
+		SELECT g.id,g.title goodsName,g.market_price price,g.goods_no goodsNo,g.buy_no buyNo,
+		g.model,concat('${@bmatser.util.Constants@IMAGE_URL}','goodsImg/',g.image) image,g.measure
+		from goods g 
+		<if test="brandId != null and brandId !=''"> left join brand b on g.brand_id = b.id  </if>
+		<if test="cateId != null and cateId !=''"> left join category c on g.cate_id = c.id </if>
+		where g.`status` = 1 
+		<if test="keyword != null and keyword !=''"> and ( g.title like '%${keyword}%' or g.buy_no  like '%${keyword}%' or g.model  like '%${keyword}%') </if>
+		<if test="cateId != null and cateId !=''"> and c.id = #{cateId} </if>
+		<if test="brandId != null and brandId !=''"> and b.id = #{brandId}  </if>
+		<if test="sort != null"> ${sort} </if>
+		limit ${page},${rows}
+	</select>
+	<select id="findByMobPricePageCount" parameterType="map" resultType="int">
+		SELECT count(1)
+		from goods g 
+		<if test="brandId != null and brandId !=''"> left join brand b on g.brand_id = b.id  </if>
+		<if test="cateId != null and cateId !=''"> left join category c on g.cate_id = c.id </if>
+		where g.`status` = 1 
+		<if test="keyword != null and keyword !=''"> and ( g.title like '%${keyword}%' or g.buy_no  like '%${keyword}%' or g.model  like '%${keyword}%')  </if>
+		<if test="cateId != null and cateId !=''"> and c.id = #{cateId} </if>
+		<if test="brandId != null and brandId !=''"> and b.id = #{brandId}  </if>
+	</select>
+	<select id="findGoodsCategory" resultType="map">
+		select  c.id, c.name, count(1) count
+		from goods g, category c
+		where  g.cate_id = c.id
+		and  g.`status`='1' and c.status='1'
+		<if test="brandId != null">
+			and g.brand_id = #{brandId}
+		</if>
+		group by c.id
+		limit #{page}, #{rows}
+	</select>
+	
+	<!-- 查询商品销售记录-->
+	<select id="selectGoodsSalesRecords" resultType="map">
+	select oi.buyer_id buyerId,g.model model,og.num num,ifnull(sg.sku_unit,g.measure) danwei,oi.order_time orderTime,d.dealer_name dealerName,
+	bca.consignee linkMan,oi.consign_address_info consignAddressInfo from order_goods og 
+LEFT JOIN order_info oi on og.order_id = oi.id 
+LEFT JOIN seller_goods sg on sg.id = og.seller_goods_id 
+LEFT JOIN goods g on g.id = og.goods_id 
+LEFT JOIN dealer d on oi.buyer_id = d.id 
+LEFT JOIN buyer_consign_address bca on oi.consign_address_id = bca.id 
+where  oi.order_status !='8' and (oi.original_order_id is null or oi.original_order_id = '') and og.goods_id = #{goodsId} 
+order by orderTime desc 
+limit #{page}, #{rows}
+	</select>
+	
+	<!-- 查询商品销售记录总数-->
+	<select id="getGoodsSalesRecordsCount" resultType="int">
+	select count(1) from order_goods og 
+LEFT JOIN order_info oi on og.order_id = oi.id 
+where oi.order_status !='8' and (oi.original_order_id is null or oi.original_order_id = '')  and og.goods_id = #{goodsId} 
+	</select>
+	
+	<!-- 查询不同购买人累计购买商品总数 -->
+	<select id="getGoodsSumNumByBuyerId" resultType="int">
+	select sum(og.num) num from order_goods og 
+LEFT JOIN order_info oi on og.order_id = oi.id 
+where oi.buyer_id = #{buyerId}
+and og.goods_id = #{goodsId} 
+and oi.order_status !='8'
+and (oi.original_order_id is null or oi.original_order_id = '') 
+GROUP BY oi.buyer_id
+	</select>
+	<!-- 商城 热销排行 -->
+	<!-- <select id="selectHotGoods" resultType="map">
+	 select sg.seller_id,sg.id,ifnull(sg.goods_name,g.title) goodName,g.model,
+t.salesVolume salesVolume,
+concat('${@bmatser.util.Constants@IMAGE_URL}','goodsImg/',g.image) image,sg.sale_price salePrice from  seller_goods sg
+LEFT JOIN dealer d on sg.seller_id = d.id 
+LEFT JOIN goods g on sg.goods_id = g.id 
+LEFT JOIN (
+	select g.id,sum(if(sg.channel=1,sg.sales_volume*2,sg.sales_volume))as salesVolume from seller_goods sg LEFT JOIN goods g on sg.goods_id = g.id 
+	where sg.`status`='1' and sg.is_show='1' and g.`status`='1'
+	GROUP BY g.id
+ ) t
+on sg.goods_id = t.id
+where sg.`status`='1' and sg.is_show='1' and g.`status`='1'
+and d.alias = #{alias}
+ORDER BY salesVolume desc,if(LENGTH(image)>10,1,0) desc,sg.stock desc
+LIMIT 0,8
+	</select> --><!--根据店铺查销售排行 -->
+	<select id="selectHotGoods" resultType="map">
+	 select sg.seller_id,sg.id,ifnull(sg.goods_name,g.title) goodName,g.model,
+sum(if(x.channel=1,x.sales_volume*2,x.sales_volume))as salesVolume,
+${@bmatser.util.SQLUtil@GOODS_IMG} image,sg.sale_price salePrice   from seller_goods sg
+left join dealer d on sg.seller_id = d.id 
+LEFT JOIN goods g on sg.goods_id = g.id and g.`status`='1'
+left join seller_goods x on x.goods_id = sg.goods_id and sg.`status`='1' and sg.is_show='1'
+where sg.`status`='1' and sg.is_show='1'
+and d.alias = #{alias}
+group by sg.id
+ORDER BY salesVolume desc,if(LENGTH(image)>10,1,0) desc,sg.stock desc
+LIMIT 0,8
+	</select><!-- modify 20160805  根据店铺查销售排行  (替换上面查询)-->
+	
+	<select id="selectHotGoods1" resultType="map">
+	  select sg.id,ifnull(sg.goods_name,g.title) goodName,g.model,
+sum(case sg.channel when 1 then sg.sales_volume*2  when 2 then sg.sales_volume else 0   end) salesVolume,
+${@bmatser.util.SQLUtil@GOODS_IMG} image,sg.sale_price salePrice
+from  seller_goods sg
+LEFT JOIN goods g on sg.goods_id = g.id
+inner JOIN dealer_category_goods dcg on dcg.seller_goods_id = sg.id 
+where sg.`status`='1' and sg.is_show='1' and g.`status`='1' and (sg.sales_volume=0 or sg.sales_volume is null or sg.sales_volume ='')
+GROUP BY g.id 
+order by if(LENGTH(image)>10,1,0) desc,sg.stock desc
+limit 0, #{rows}
+	</select>
+	
+	<select id="getGoodsActivityDec" parameterType="map" resultType="java.lang.String">
+		select 
+			ga.brief
+		from goods_activity_sale gas
+		left join goods_activity ga on gas.goods_activity_id = ga.id 
+		where gas.seller_goods_id = #{sellerGoodsId} and ga.activity_type = #{activityType} and ga.status = 1 and ga.activity_channel = 1 and gas.status = 1
+		and ((
+				ga.start_time &lt;= now() 
+				and 
+				ga.end_time &gt;= now() 
+			)or(
+				ga.next_start_time &lt;= now() 
+				and 
+				ga.next_end_time &gt;= now()
+				and 
+				ga.next_start_time is not null
+				and 
+				ga.next_end_time is not null
+			)) 
+		limit 0,1
+	</select>
+	<select id="getGoodsRateDec" parameterType="map" resultType="java.lang.String">
+		select CONCAT('使用工电宝抵用券可抵扣金额:',FLOOR(price*rate),'元') from seller_goods 
+		where id = #{sellerGoodsId}
+	</select>
+	<select id="getRecommendGoods" resultType="map">
+			select 
+				sg.id sellerGoodsId,sg.goods_name title,g.model,sg.sale_price salePrice,
+				${@bmatser.util.SQLUtil@GOODS_IMG} image
+			from dealer_category_goods dcg
+			left join seller_goods sg on sg.id = dcg.seller_goods_id 
+			left join goods g on g.id = sg.goods_id
+			where dcg.dealer_category_id in (
+				select x.dealer_category_id from dealer_category_goods x
+				where x.seller_goods_id = #{sellerGoodsId}
+			)
+			and dcg.seller_goods_id != #{sellerGoodsId} and sg.channel = 2 and sg.status = 1
+			group by sg.id
+			order by sg.sales_volume desc
+			limit 0,9
+	</select>
+	
+	<select id="findSpuIdById" resultType="java.lang.String">
+		select 
+			g.spu_id
+		from seller_goods sg
+		left join goods g on sg.goods_id = g.id
+		where sg.id = #{id}
+	</select>
+	
+	<select id="getBrandCertificate" resultType="java.lang.String">
+		SELECT concat('${@bmatser.util.Constants@IMAGE_URL}',img)  FROM brand_certificate WHERE brand_id = #{brandId} and status =1 order by order_sn
+	</select>
+	<select id="getGoodsView" resultType="bmatser.pageModel.MallGoodsInfo">
+		select 
+			id,goods_id goodsId,title,goods_name goodsName,model,buy_no buyNo,image,shop_name,price,brand_id brandId,cate_id cateId,seller_cate_id sellerCateId,order_sn orderSn,dealer_id dealerId,measure,sale_price salePrice,sales_volume salesVolume,alias,orderQuantity,batchQuantity,seller_id sellerId,keywords,spuId,isSale,isFullcut,goodsNo 
+		from view_seller_goods
+		where id in (${ids})
+	</select>
+	<select id="getGoodsViewAttr" resultType="java.lang.Integer">
+		select 
+			attr_id
+		from goods_attr 
+		where status=1 and is_defined=0 and attr_value_id >0 and goods_id=#{goodsId}
+	</select>
+	<select id="getGoodsViewAttrValue" resultType="java.lang.Integer">
+		select 
+			attr_value_id 
+		from goods_attr 
+		where status=1 and is_defined=0 and attr_value_id >0 and goods_id=#{goodsId}
+	</select>
+	
+	<select id="getMallGoodsActivityDec" resultType="java.lang.String">
+		select activity_desc from 		
+		dealer_activity_goods dag
+		left join dealer_activity da on dag.dealer_activity_id = da.id
+		where da.start_time &lt;= now() 
+					and da.end_time &gt;=now() and (
+					<if test="activityType == 0">
+						da.type = 2 or 
+					</if>
+					<if test="activityType == 2">
+						da.type = 3 or
+					</if>
+						da.type = -1
+						)
+					and da.status = 1 and   dag.seller_goods_id = #{sellerGoodsId}
+		limit 1
+	</select>
+
+
+	<select id="selectNoSynCodeGoods" resultType="bmatser.model.Goods">
+		select goods.id,brand.id as brandId,brand.name_cn brandName,goods.series,goods.model,goods.title,
+		goods.buy_no buyNo,goods.measure,goods.market_price marketPrice,goods.weight from goods
+		LEFT JOIN brand on goods.brand_id=brand.id where (goods.syn_code is null or goods.syn_code='') and goods.`status`=1
+		limit #{page}, #{rows}
+	</select>
+
+	<select id="selectTheNoSynCodeGoods"  parameterType="java.lang.String" resultType="bmatser.model.Goods">
+		select goods.id,brand.id as brandId,brand.name_cn brandName,goods.series,goods.model,goods.title,
+		goods.buy_no buyNo,goods.measure,goods.market_price marketPrice,goods.weight from goods
+		LEFT JOIN brand on goods.brand_id=brand.id
+		where  goods.`status`=1
+		and goods.id in (${goodsIdList})
+	</select>
+
+
+	<select id="selectNoSynCodeGoodsTotal" resultType="java.lang.Long">
+		select count(*) as total from goods
+		LEFT JOIN brand on goods.brand_id=brand.id where (goods.syn_code is null or goods.syn_code='') and goods.`status`=1
+	</select>
+
+	<update id="updateSynCodeById">
+		update goods set syn_code=#{proID},modify_time=now() where id=#{id}
+	</update>
+
+    <select id="getDiscountByGoodsNo" resultType="java.math.BigDecimal">
+        select discount from dealer_goods_discount where goods_no = #{goodsNo} and dealer_id = #{dealerId}
+    </select>
+
+    <select id="getDiscountBySeries" resultType="java.math.BigDecimal">
+        select discount from dealer_goods_discount where series = #{series} and dealer_id = #{dealerId}
+    </select>
+
+	<select id="getGoodsDetailInPackage" resultType="map">
+		select g.id goodsId,sg.seller_id sellerId,sg.id sellerGoodsId,c.cate_no cateNo,
+			 g.title, g.model, b.id brandId, g.market_price marketPrice,
+			 b.name_cn brandName, b.telphone telephone,${@bmatser.util.SQLUtil@GOODS_IMG} image,
+			 sg.price,IF(sg.sku_unit is not null and sg.sku_unit!='',sg.sku_unit,g.measure) measure,
+			 gd.images, gd.detail,g.buy_no buyNo,sg.goods_no goodsNo,sg.sale_price salePrice,sg.channel
+		from goods g
+		left join seller_goods sg on g.id = sg.goods_id and sg.status=1 and sg.channel = '1' and sg.is_show = '1'
+		left join category c on g.cate_id=c.id
+		left join brand b on g.brand_id = b.id
+		left join goods_detail gd on g.id = gd.goods_id
+		where
+      		g.status = 1
+		and g.syn_code = #{goodSynCode}
+	</select>
+
+
+</mapper>

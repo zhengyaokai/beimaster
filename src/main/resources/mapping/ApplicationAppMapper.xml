@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.ApplicationAppMapper">
+	<select id="findByPage" parameterType="map" resultType="map" >
+		select aa.id,aa.type,aa.is_update isUpdate,aa.app_version appVersion,
+		<if test="channel != null and channel !=''">
+			if(au.url !='' and au.url is not null,au.url,aa.download) download,
+		</if>
+		<if test="channel == null or channel ==''">
+			aa.download,
+		</if>
+		aa.build,ifnull(aa.version_content,'') versionContent
+		from application_app aa
+		left join application_app_url au on au.application_id = aa.id
+		where aa.type = #{type}  and ifnull(aa.platform,0)=${platform}
+		<if test="build !=null and build !=''">
+	        and aa.build > ${build}
+		</if>
+		<if test="version != null and version !=''">
+			and aa.app_version = #{version}
+		</if>
+		<if test="channel != null and channel !=''">
+			and au.channel = #{channel}
+		</if>
+		order by aa.build desc
+		limit 1
+	</select>
+	
+	<select id="findIsUpdate" parameterType="map" resultType="java.lang.String">
+		select 
+		  max(aa.is_update) isUpdate
+		from application_app aa
+		left join application_app_url au on au.application_id = aa.id
+		where aa.type = #{type} and ifnull(aa.platform,0)=${platform} 
+		<if test="build !=null and build !=''">
+          and aa.build > ${build}
+        </if>
+		<if test="version != null and version !=''">
+			and aa.app_version = #{version}
+		</if>
+		<if test="channel != null and channel !=''">
+			and au.channel = #{channel}
+		</if>
+	</select>
+</mapper>

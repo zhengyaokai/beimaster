@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.EnquiryPriceGoodsMapper" >
+  <resultMap id="BaseResultMap" type="bmatser.model.EnquiryPriceGoods" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="enquiry_price_id" property="enquiryPriceId" jdbcType="INTEGER" />
+    <result column="brand_name" property="brandName" jdbcType="VARCHAR" />
+    <result column="model" property="model" jdbcType="VARCHAR" />
+    <result column="num" property="num" jdbcType="INTEGER" />
+    <result column="goods_id" property="goodsId" jdbcType="INTEGER" />
+    <result column="price" property="price" jdbcType="DECIMAL" />
+    <result column="delivery_time" property="deliveryTime" jdbcType="VARCHAR" />
+    <result column="remarks" property="remarks" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, enquiry_price_id, brand_name, model, num, goods_id, price, delivery_time,remarks
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from enquiry_price_goods
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from enquiry_price_goods
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.EnquiryPriceGoods" useGeneratedKeys="true" keyProperty="id">
+    insert into enquiry_price_goods (id, enquiry_price_id, brand_name, 
+      model, num, goods_id, 
+      price, delivery_time)
+    values (#{id,jdbcType=INTEGER}, #{enquiryPriceId,jdbcType=INTEGER}, #{brandName,jdbcType=VARCHAR}, 
+      #{model,jdbcType=VARCHAR}, #{num,jdbcType=INTEGER}, #{goodsId,jdbcType=INTEGER}, 
+      #{price,jdbcType=DECIMAL}, #{deliveryTime,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.model.EnquiryPriceGoods" useGeneratedKeys="true" keyProperty="id">
+    insert into enquiry_price_goods
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="enquiryPriceId != null" >
+        enquiry_price_id,
+      </if>
+      <if test="brandName != null" >
+        brand_name,
+      </if>
+      <if test="model != null" >
+        model,
+      </if>
+      <if test="num != null" >
+        num,
+      </if>
+      <if test="goodsId != null" >
+        goods_id,
+      </if>
+      <if test="price != null" >
+        price,
+      </if>
+      <if test="deliveryTime != null" >
+        delivery_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="enquiryPriceId != null" >
+        #{enquiryPriceId,jdbcType=INTEGER},
+      </if>
+      <if test="brandName != null" >
+        #{brandName,jdbcType=VARCHAR},
+      </if>
+      <if test="model != null" >
+        #{model,jdbcType=VARCHAR},
+      </if>
+      <if test="num != null" >
+        #{num,jdbcType=INTEGER},
+      </if>
+      <if test="goodsId != null" >
+        #{goodsId,jdbcType=INTEGER},
+      </if>
+      <if test="price != null" >
+        #{price,jdbcType=DECIMAL},
+      </if>
+      <if test="deliveryTime != null" >
+        #{deliveryTime,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+
+  <!--批量插入-->
+  <insert id="insertGoodsList">
+      insert into enquiry_price_goods
+      (enquiry_price_id,brand_name,model,num)
+      values
+    <foreach collection="list" item="it" separator=",">
+      <trim prefix=" (" suffix=")" suffixOverrides="," >
+          #{batchEpId,jdbcType=INTEGER},
+          #{it.brandName,jdbcType=VARCHAR},
+          #{it.model,jdbcType=VARCHAR},
+          #{it.num,jdbcType=INTEGER},
+      </trim>
+    </foreach>
+  </insert>
+  <!--批量插入-->
+
+
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.EnquiryPriceGoods" >
+    update enquiry_price_goods
+    <set >
+      <if test="enquiryPriceId != null" >
+        enquiry_price_id = #{enquiryPriceId,jdbcType=INTEGER},
+      </if>
+      <if test="brandName != null" >
+        brand_name = #{brandName,jdbcType=VARCHAR},
+      </if>
+      <if test="model != null" >
+        model = #{model,jdbcType=VARCHAR},
+      </if>
+      <if test="num != null" >
+        num = #{num,jdbcType=INTEGER},
+      </if>
+      <if test="goodsId != null" >
+        goods_id = #{goodsId,jdbcType=INTEGER},
+      </if>
+      <if test="price != null" >
+        price = #{price,jdbcType=DECIMAL},
+      </if>
+      <if test="deliveryTime != null" >
+        delivery_time = #{deliveryTime,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.EnquiryPriceGoods" >
+    update enquiry_price_goods
+    set enquiry_price_id = #{enquiryPriceId,jdbcType=INTEGER},
+      brand_name = #{brandName,jdbcType=VARCHAR},
+      model = #{model,jdbcType=VARCHAR},
+      num = #{num,jdbcType=INTEGER},
+      goods_id = #{goodsId,jdbcType=INTEGER},
+      price = #{price,jdbcType=DECIMAL},
+      delivery_time = #{deliveryTime,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="findEnquiryPriceGoods" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from enquiry_price_goods
+    where enquiry_price_id = #{enquiryPriceId,jdbcType=INTEGER}
+  </select>
+  
+</mapper>

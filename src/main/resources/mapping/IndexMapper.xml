@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.IndexMapper" >
+  <update id="updateclickVolume" parameterType="string">
+   update 
+			${modular} 
+	set 
+	 ${click} = ifnull(${click},0)+1
+   where id = #{id}	 
+  </update>
+  
+  <!-- 微信商城查询所有店铺logo和别名 -->
+  <select id="getAllStoreLogo" resultType="map">
+    select concat('${@bmatser.util.Constants@IMAGE_URL}','dealerImg/',dd.logo) logo,d.alias
+     from dealer_design dd LEFT JOIN dealer d ON dd.dealer_id = d.id 
+    where d.dealer_type = 1
+     and d.status = 1
+     and d.alias is not null 
+  </select>
+	
+</mapper>

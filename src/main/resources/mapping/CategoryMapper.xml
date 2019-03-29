@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.CategoryMapper" >
+<!-- 获取有效分类 -->
+	<select id="findValidCategories" resultType="Map">
+		select cate_no as id, name from category where status=1
+	</select>
+	
+<!-- 获取分类属性 -->
+	<select id="findCategoryAttrs" resultType="Map">
+		select ca.id attrId, ca.attr_name attrName, cav.id attrValueId, cav.attr_value attrValue,ifnull(cav.order_sn,0) orderSn
+		from category_attr ca, category_attr_value cav
+		where ca.id = cav.attr_id and ca.status = 1 and cav.status = 1
+		GROUP BY cav.id
+	</select>
+	
+<!-- 获取八大类 -->
+	<select id="findEightToCategory" resultType="map">
+		select 
+			id,name 
+		from category
+		where parent_id = 0 and status = 1
+		order by order_sn
+	</select>	
+	
+	<!-- 获取首页所有分类 -->
+	<select id="findCategories" resultType="bmatser.model.Category">
+		select id, name,parent_id parentId,is_leaf isLeaf from category where status=1
+		and parent_id=#{parentId} order by id
+	</select>
+	<select id="getFirstCategory" parameterType="map" resultType="bmatser.model.Category">
+		SELECT DISTINCT c.id id,c.parent_id parentId,c.cate_no cateNo,c.name name,c.short_name shortName,c.has_initial_goods hasGoods
+       FROM category c
+       WHERE c.parent_id=0 and c.has_initial_goods =1
+</select>
+	
+	<!-- 获取分类商品数 -->
+	<select id="findCategoryGoods" resultType="java.lang.Integer">
+		select count(1) from view_category_goods where (cate_id=#{cateId} or parent_id=#{cateId});
+	</select>
+	
+	<!-- 查询所有存在上架商品的系统分类 -->
+<select id="selectCategory"  resultType="bmatser.pageModel.SelectCategory">
+		SELECT DISTINCT c.id id,c.parent_id parentId,c.cate_no cateNo,c.name name,concat('${@bmatser.util.Constants@IMAGE_URL}',c.icon) icon,
+		c.short_name shortName,c.has_goods hasGoods,c.has_initial_goods hasInitialGoods,c.has_mall_goods hasMallGoods
+        FROM category c
+        WHERE c.status='1' and 
+        (
+	        <foreach collection="idList" item="id" separator="or" >
+	        	c.cate_no like '${id}%'
+	        </foreach>
+        ) and (
+        <if test="type==1">  c.has_goods = 1 or</if>
+        <if test="type==2">  c.has_initial_goods = 1 or</if>
+        <if test="type==3">  c.has_mall_goods = 1 or</if>
+	        <foreach collection="idList" item="id" separator="or" >
+	        	c.cate_no = #{id}
+	        </foreach>
+        )
+		order by c.parent_id,ifnull(c.order_sn,c.cate_no) asc
+</select>
+
+
+<select id="getChildCate" parameterType="map" resultType="map">
+	select 
+		c.id id,c.parent_id parentId,c.cate_no cateNo,c.name name,c.short_name shortName,c.is_leaf isLeaf
+	from category c
+	where parent_id like '${cateId}%' and has_initial_goods = 1 and is_leaf != 1 and status =1
+</select>
+<select id="isExistGoods" parameterType="map" resultType="map">
+select * from (
+	<foreach collection="idList" item="list" separator="UNION all" >
+		select #{list.id} id,count(1) as count  from (
+			select 
+				g.id
+			from goods g  
+			where g.cate_Id like '${list.id}%' and g.brand_Id = #{brandId} and g.status  =1
+			limit 0,1
+			)x
+	</foreach>
+		)x
+		where x.count > 0
+</select>
+<select id="findCategoryBrand" parameterType="map" resultType="map">
+select b.id brandId,b.name_cn nameCh,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo from category_brand cb
+left join brand b on cb.brand_id = b.id 
+left join brand_mark bm on bm.brand_id = b.id 
+where cb.cate_id = #{id} and cb.`status` = 1 and b.`status` = 1 and bm.mark_type = 3 and bm.channel = 1 and bm.status = 1
+order by cb.order_sn
+</select>
+<select id="findCategoryIsLeaf" parameterType="map" resultType="int">
+	select if(is_leaf is not null and count(1)>0,is_leaf,0) from category
+	where cate_no = #{cateNo}  
+</select>
+<select id="findCateBylist" parameterType="map" resultType="map">
+	select 
+		c.id id,c.parent_id parentId,c.cate_no cateNo,c.name name,c.short_name shortName,c.is_leaf isLeaf
+	from category c
+	where c.id in 
+	<foreach collection="idList"  item="id" open="(" separator="," close=")">
+		#{id}
+	</foreach>
+	order by ifnull(order_sn,c.cate_no) asc
+</select><!-- 面价查询页面分类根据分类表中的order_sn字段正序排列  modify 20160613-->
+<!-- 对brandId去重  20160614-->
+<select id="findCateBrandList" parameterType="map" resultType="map">
+	select 
+		DISTINCT b.id brandId,b.name_cn brandName,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+	from brand b
+	left join category_brand c on c.brand_id = b.id
+	where c.cate_id = #{cateId} and b.id in 
+	<foreach collection="idList"  item="id" open="(" separator="," close=")">
+		#{id.brandId}
+	</foreach>
+	order by  c.order_sn desc 
+</select>
+	<select id="findMallCateFloor" resultType="map">
+		select 
+			c.id,c.name,pf.id floorCode
+		 from category c 
+		,page_floor pf 
+		where c.parent_id = 0  and pf.cate_id = c.id and pf.status = 1 and c.status = 1 and pf.page_sn=1
+	</select>
+	<select id="findMallChildCateFloor" resultType="map">
+		select 
+			c.id,c.name from category c
+		where c.parent_id like '${cateId}%'  and c.status = 1 
+		ORDER BY LENGTH(c.id) asc
+		limit 0,10
+	</select>
+	<select id="getMoCate" parameterType="map" resultType="java.lang.String">
+		select 
+			x.cate_id cateId 
+		from (
+			select g.cate_id from goods g
+			where brand_id = #{brandId} 
+			GROUP BY g.cate_id
+		)x,category c 
+		where c.cate_no like '${cateId}%' and c.id = x.cate_id
+	</select>
+	<select id="getParentCate" parameterType="map" resultType="java.lang.String">
+		select 
+			c.parent_id parentId 
+		from category c
+		where  c.id != #{cateId} and c.parent_id !=0 and c.parent_id != #{cateId}
+		and c.id in
+		<foreach collection="idList"  item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+		GROUP BY c.parent_id
+	</select>
+	
+	<select id="findBrandList" resultType="map">
+			select 
+				 b.id brandId,b.name_cn brandName,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo
+			from brand b,goods g
+			left join category c on c.id = g.cate_id
+			where g.brand_id = b.id 
+			and g.status = 1 and b.id not in(257,266) and c.cate_no like '${cateId}%' 
+			and ifnull(g.is_manual,0)=0
+			group by b.id
+			having count(1) > 0
+			order by count(1) desc
+	</select>
+	
+	<select id="findFourCate" resultType="map">
+		select c.cate_no categoryId,c.name categoryName 
+		from category c
+		where  length(c.cate_no) = 8 and c.cate_no in
+		<foreach collection="idList"  item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+		group by c.cate_no
+	</select>
+	
+	<select id="findThreeCate" resultType="map">
+		select
+            c.cate_no categoryId,
+			c.name categoryName  
+		from category c
+		inner join (
+				select c.parent_id id from category c
+				where c.cate_no in 
+					<foreach collection="idList"  item="id" open="(" separator="," close=")">
+						#{id}
+					</foreach>
+			union all 
+				select c.cate_no id from category c
+				where c.cate_no in 
+					<foreach collection="idList"  item="id" open="(" separator="," close=")">
+						#{id}
+					</foreach>
+		) x on x.id = c.id
+		where length(c.cate_no) = 6 
+		group by c.cate_no
+	</select>
+	<select id="findCate" resultType="map">
+		select c.name categoryName 
+		from category c
+		where c.cate_no = #{cateNo}
+	</select>
+    <select id="findAppCategoryBrand" resultType="map">
+		select b.id brandId,b.name_cn nameCh,b.name_cn nameCn,concat('${@bmatser.util.Constants@IMAGE_URL}',b.logo) logo from category_brand cb
+		left join brand b on cb.brand_id = b.id 
+		left join brand_mark bm on bm.brand_id = b.id 
+		where cb.cate_id = #{id} and cb.`status` = 1 and b.`status` = 1 and bm.mark_type = 3 and bm.channel = 1 and bm.status = 1
+		order by cb.order_sn
+		limit ${row}
+ 	 </select>
+ 	 <select id="findCategoryNoByCateName" resultType="integer">
+		select cate_no from category where name = #{categoryName}
+ 	 </select>
+ 	 
+ 	 <select id="getFirstModelSelectionCategory"  parameterType="int"  resultType="bmatser.model.ModelSelectionCategory">
+		select model_selection_category.id,model_selection_category.cate_id as cateId,cate_name as cateName,parent_id as parentId,is_root_node as isRootNode
+		from model_selection_category left join model_selection_brand_category on 
+		model_selection_category.cate_id =model_selection_brand_category.cate_id 
+		where model_selection_brand_category.brand_id=#{brandId} and model_selection_category.status=1 and model_selection_brand_category.status=1
+ 	 </select>
+ 	 
+ 	 <select id="getNoTopModelSelectionCategory"   resultType="bmatser.model.ModelSelectionCategory">
+		select model_selection_category.id,model_selection_category.cate_id as cateId,cate_name as cateName,parent_id as parentId,is_root_node as isRootNode
+		from model_selection_category where parent_id!=0 and status=1
+ 	 </select>
+
+
+    <!--查找该节点是否为末节点-->
+ 	 <select id="findNodeByCateId"  parameterType="java.lang.Integer" resultType="java.util.Map">
+        select is_root_node isRootNode  from model_selection_category where cate_id = #{cateId}
+     </select>
+
+
+</mapper>

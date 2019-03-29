@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.DealerCashMapper" >
+  <resultMap id="findByBuyerIdResultMap" type="java.util.Map" >
+    <id column="id" property="id"/>
+    <result column="cash" property="cash"/>
+    <result column="create_time" property="createTime"/>
+    <result column="remark" property="remark"/>
+    <result column="related_id" property="relatedId"/>
+    <result column="type" property="type"/>
+  </resultMap>
+ 
+<!-- 获取指定用户的现金券充值/使用记录 -->
+	<select id="findByBuyerId" resultMap="findByBuyerIdResultMap">
+		select id, cash, create_time, related_id, type, remark,
+		CASE type WHEN 1 THEN '充值' WHEN 2 THEN '抵货款' ELSE '订单取消返还' END as name 
+		 from dealer_cash
+		where status = '1' and dealer_id = #{buyerId} and cash != 0
+		order by create_time desc
+		limit #{page}, #{rows} 
+	</select>
+	<select id="countByBuyerId" resultType="long">
+		select count(1) from dealer_cash
+		where status = '1' and dealer_id = #{buyerId} and cash != 0
+	</select>
+	<!-- 查看零售商现金券余额 -->
+	<select id="findCash" parameterType="map"  resultType="int">
+		select 
+			if(cash is not null and cash !='',cash,0)
+		from dealer 
+		where id = #{id}
+	</select>
+	
+	<!-- 插入充值数据 -->
+	<insert id="insertDealerCash" parameterType="bmatser.model.DealerCash" useGeneratedKeys="true" keyProperty="id">
+	insert into dealer_cash
+	<trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="dealerId != null" >
+        dealer_id,
+      </if>
+      <if test="cash != null" >
+        cash,
+      </if>
+      <if test="createUserId != null" >
+        create_user_id,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="type != null" >
+        type,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="relatedId != null" >
+        related_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="dealerId != null" >
+        #{dealerId,jdbcType=INTEGER},
+      </if>
+       <if test="cash != null" >
+        #{cash,jdbcType=INTEGER},
+      </if>
+      <if test="createUserId != null" >
+        #{createUserId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="type != null" >
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=CHAR},
+      </if>
+      <if test="relatedId != null" >
+        #{relatedId,jdbcType=CHAR},
+      </if>
+      </trim>
+	</insert>
+	<insert id="addByMallRegister">
+		insert into dealer_cash 
+		(
+			dealer_id,
+			cash,
+			create_user_id,
+			create_time,
+			type,
+			status
+		)values
+		(
+			#{dealerId,jdbcType=INTEGER},
+			#{cash,jdbcType=INTEGER},
+			0,
+			now(),
+			1,
+			1
+		)
+	</insert>
+</mapper>

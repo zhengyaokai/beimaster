@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd 
+">
+	
+	<!-- 要调用的工作类 --> 
+	<bean id="jiQingErpJob" class="bmatser.job.JiQingErpOrderJob"></bean>
+
+	<!-- 定义调用对象和调用对象的方法 --> 
+	<bean id="jiQingErpJobTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<!-- 调用的类 --> 
+		<property name="targetObject"> 
+			<ref bean="jiQingErpJob"/>
+		</property> 
+		<!-- 调用类中的方法 --> 
+		<property name="targetMethod"> 
+			<value>updateOrdersLogisJob</value>
+		</property> 
+	</bean>
+
+
+	<bean id="jiQingErpGoodJobTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<!-- 调用的类 -->
+		<property name="targetObject">
+			<ref bean="jiQingErpJob"/>
+		</property>
+		<!-- 调用类中的方法 -->
+		<property name="targetMethod">
+			<value>updateErpGoodSku</value>
+		</property>
+	</bean>
+
+	<!-- 定义触发时间 --> 
+	<bean id="jiQingErpDoTime" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail"> 
+			<ref bean="jiQingErpJobTask"/>
+		</property> 
+		<!-- cron表达式 -->
+		<property name="cronExpression">
+			<value>0 0/5 * * * ?</value>
+		</property> 
+	</bean>
+
+	<bean id="jiQingErpGoodDoTime" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail">
+			<ref bean="jiQingErpGoodJobTask"/>
+		</property>
+		<!-- cron表达式 -->
+		<property name="cronExpression">
+			<value>0 0/30 * * * ?</value>
+		</property>
+	</bean>
+
+</beans>

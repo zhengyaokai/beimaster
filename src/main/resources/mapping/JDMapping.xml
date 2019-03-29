@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.JDMapping" >
+
+	<select id="findOrderAddrJson" resultType="java.lang.String">
+		select 
+			consign_address_info_secret
+		from order_info
+		where id = #{id}
+	</select>
+	<select id="findOrderAddr" resultType="map">
+		select 
+			bca.consignee,bca.province_id provinceId,bca.city_id cityId,bca.area_Id areaId,bca.address,bca.mobile_secret mobile,ifnull(bca.town_id,0)townId 
+		from buyer_consign_address bca
+		left join order_info oi on oi.consign_address_id = bca.id
+		where oi.id = #{id}
+	</select>
+	<select id="findGoods" resultType="map">
+		select 
+			sg.goods_no skuid,og.num from order_goods og
+		left join seller_goods sg on og.seller_goods_id = sg.id 
+		where sg.seller_id = '9407609' and sg.status = 1 and og.order_id = #{id}
+	</select>
+	
+	<update id="saveJDOrderId">
+		update 
+			order_info 
+			set
+				jd_order_id= #{jdOrderId}
+			where id = #{id}
+	</update>
+	
+	<select id="findArea" resultType="map">
+		select 
+			id,region_name name,parent_id pId 
+		from jd_region
+	</select>
+	
+	<select id="findSkuId" resultType="java.lang.String">
+		select goods_no from seller_goods 
+		where id = #{sellerGoodsId}
+	</select>
+</mapper>

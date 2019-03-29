@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.RegionMapper" >
+  <resultMap id="BaseResultMap" type="bmatser.model.Region" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="region_code" property="regionCode" jdbcType="BIGINT" />
+    <result column="region_name" property="regionName" jdbcType="VARCHAR" />
+    <result column="parent_id" property="parentId" jdbcType="INTEGER" />
+    <result column="post_code" property="postCode" jdbcType="VARCHAR" />
+    <result column="tele_code" property="teleCode" jdbcType="VARCHAR" />
+    <result column="big_region" property="bigRegion" jdbcType="CHAR" />
+    <result column="rank" property="rank" jdbcType="CHAR" />
+    <result column="status" property="status" jdbcType="CHAR" />
+  </resultMap>
+
+
+
+  <sql id="Base_Column_List" >
+    id, region_code, region_name, parent_id, post_code, tele_code, big_region, rank, 
+    status
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from region
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from region
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.Region" >
+    insert into region (id, region_code, region_name, 
+      parent_id, post_code, tele_code, 
+      big_region, rank, status)
+    values (#{id,jdbcType=INTEGER}, #{regionCode,jdbcType=BIGINT}, #{regionName,jdbcType=VARCHAR}, 
+      #{parentId,jdbcType=INTEGER}, #{postCode,jdbcType=VARCHAR}, #{teleCode,jdbcType=VARCHAR}, 
+      #{bigRegion,jdbcType=CHAR}, #{rank,jdbcType=CHAR}, #{status,jdbcType=CHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.model.Region" >
+    insert into region
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="regionCode != null" >
+        region_code,
+      </if>
+      <if test="regionName != null" >
+        region_name,
+      </if>
+      <if test="parentId != null" >
+        parent_id,
+      </if>
+      <if test="postCode != null" >
+        post_code,
+      </if>
+      <if test="teleCode != null" >
+        tele_code,
+      </if>
+      <if test="bigRegion != null" >
+        big_region,
+      </if>
+      <if test="rank != null" >
+        rank,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="regionCode != null" >
+        #{regionCode,jdbcType=BIGINT},
+      </if>
+      <if test="regionName != null" >
+        #{regionName,jdbcType=VARCHAR},
+      </if>
+      <if test="parentId != null" >
+        #{parentId,jdbcType=INTEGER},
+      </if>
+      <if test="postCode != null" >
+        #{postCode,jdbcType=VARCHAR},
+      </if>
+      <if test="teleCode != null" >
+        #{teleCode,jdbcType=VARCHAR},
+      </if>
+      <if test="bigRegion != null" >
+        #{bigRegion,jdbcType=CHAR},
+      </if>
+      <if test="rank != null" >
+        #{rank,jdbcType=CHAR},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=CHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.Region" >
+    update region
+    <set >
+      <if test="regionCode != null" >
+        region_code = #{regionCode,jdbcType=BIGINT},
+      </if>
+      <if test="regionName != null" >
+        region_name = #{regionName,jdbcType=VARCHAR},
+      </if>
+      <if test="parentId != null" >
+        parent_id = #{parentId,jdbcType=INTEGER},
+      </if>
+      <if test="postCode != null" >
+        post_code = #{postCode,jdbcType=VARCHAR},
+      </if>
+      <if test="teleCode != null" >
+        tele_code = #{teleCode,jdbcType=VARCHAR},
+      </if>
+      <if test="bigRegion != null" >
+        big_region = #{bigRegion,jdbcType=CHAR},
+      </if>
+      <if test="rank != null" >
+        rank = #{rank,jdbcType=CHAR},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.Region" >
+    update region
+    set region_code = #{regionCode,jdbcType=BIGINT},
+      region_name = #{regionName,jdbcType=VARCHAR},
+      parent_id = #{parentId,jdbcType=INTEGER},
+      post_code = #{postCode,jdbcType=VARCHAR},
+      tele_code = #{teleCode,jdbcType=VARCHAR},
+      big_region = #{bigRegion,jdbcType=CHAR},
+      rank = #{rank,jdbcType=CHAR},
+      status = #{status,jdbcType=CHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <!-- 查询省市地区 -->
+	<select id="selectRegion" resultType="map" parameterType="map">
+        SELECT r.region_name province_id_name,e.region_name city_id_name,g.region_name area_id_name 
+        FROM region r,region e ,region g
+        WHERE r.id=#{province_id} AND e.id=#{city_id} AND g.id=#{area_id}
+        and r.status='1' and e.status='1' and g.status='1'
+	</select>
+	<select id="selectRegionString" resultType="java.lang.String">
+		select region_name  from region
+		where id = #{id}
+	</select>
+	<select id="selectJDRegionString" resultType="java.lang.String">
+		select region_name  from jd_region
+		where id = #{id}
+	</select>
+
+<!-- 地区表的in 查询-->
+  <select id="findNamesInIds" resultType="bmatser.model.Region" parameterType="java.util.Set">
+    SELECT
+    id,region_code regionCode,region_name regionName
+    FROM region
+    WHERE status = '1' and id IN
+    <foreach collection="set" item="id" open="(" separator="," close=")">
+      #{id,jdbcType=INTEGER}
+    </foreach>
+  </select>
+
+</mapper>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<section name="system_options">
+<!-- 		<entry key="SOLR_URL" value="http://localhost:8080/solr/"></entry> -->
+		<entry key="KUAIDI_URL" value="http://www.kuaidi100.com/applyurl?key=51ec6d652d9ae7e0&amp;com=%s&amp;nu=%s"></entry>
+		<entry key="URL_UPLOAD" value="http://localhost:8080/gdb_mall"></entry>
+		<entry key="WX_URL" value="http://com.gdbmromall.com/"></entry><!--微信跳转URl  -->
+		<entry key="netReferer" value="http://www.bmatser.com/"></entry>
+		<entry key="comReferer" value="http://192.168.1.193:8080/emro_mall/"></entry>
+		<entry key="BASE_URL_NET" value="http://www.bmatser.cn/"></entry>
+		<entry key="BASE_URL_COM" value="http://www.bmatser.cn/"></entry>
+		<entry key="IMAGE_URL" value="http://images.bmatser.com/"></entry>
+		<!-- <entry key="DOMAIN" value=".bmatser.cn"></entry> -->
+	</section>
+	
+	<!-- 支付返回地址设置 -->
+	<section name="pay_options">
+		<entry key="NOTIFY_URL" value="http://gdbzyk.vicp.io:1099/gdbmro_serviceApi/payment/notify/"></entry>
+		<entry key="RETURN_URL" value="http://gdbzyk.vicp.io:1099/mall/customer/center/orderList"></entry>
+		<entry key="WXRETURN_URL" value="http://www.bmatser.com/emro_push/vpush?key=${key}&amp;excPushUrl=127.0.0.1:8080/gdb_mall/page/wxReturn.jsp"></entry>
+	</section>
+	
+	<section name="solr_options">
+        <entry key="MALL_SOLR_URL" value="http://192.168.1.193:8081/solr/core2"></entry> 
+		<entry key="FACE_SOLR_URL" value="http://192.168.1.193:8081/solr/core2"></entry>
+		<entry key="SAAS_SOLR_URL" value="http://192.168.1.193:8081/solr/core2"></entry>
+		<entry key="MALLSHOP_SOLR_URL" value="http://192.168.1.193:8081/solr/core5"></entry>
+		<entry key="SAAS_SERIES_URL" value="http://192.168.1.193:8081/solr/core6"></entry>
+		<entry key="SAAS_MODEL_SELECTION_URL" value="http://192.168.1.193:8081/solr/core3"></entry>
+		<entry key="MAX_PAGE_NUM" value="15"></entry>
+		<entry key="MAX_ROWS_NUM" value="20"></entry>
+	</section>
+	
+	
+	<section name="UPLOAD_PATH">
+		<entry key="PERSION_IMAGE" value="D:/headImg"></entry><!-- /var/www/emro/headImg -->
+		<entry key="LICENSE_IMAGE" value="D:/licenseImg"></entry><!-- /var/www/emro/licenseImg -->
+		<entry key="SHOW_IMAGE" value="http://images.bmatser.com/"></entry>
+		<entry key="GOODS_SHOW_IMAGE" value="http://images.bmatser.com/goodsImg/"></entry>
+	</section>
+	<!-- ERP推送测试库配置 -->
+ 	<section name="erp_options">
+		<entry key="SESSIONURL" value="http://115.28.165.183:215/"/>
+		<entry key="URL" value="http://115.28.165.183:215/"/>
+		<entry key="CID" value="pro20"/>
+		<entry key="SECRET" value="24146893575553025"/>
+		<entry key="USERNAME" value="t"/>
+		<entry key="PASSWORD" value="123"/>
+	</section>
+
+	<!-- ERP本地库配置 内网 192.168.1.253-->
+	<!--<section name="erp_options">-->
+		<!--<entry key="SESSIONURL" value="http://gdbzyk.vicp.io/"/>-->
+		<!--<entry key="URL" value="http://gdbzyk.vicp.io/"/>-->
+		<!--<entry key="CID" value="pro20"/>-->
+		<!--<entry key="SECRET" value="24146893575553025"/>-->
+		<!--<entry key="USERNAME" value="t"/>-->
+		<!--<entry key="PASSWORD" value="123"/>-->
+	<!--</section>-->
+
+	<!-- E助推送配置 -->
+<!--	 <section name="erp_options">
+		<entry key="SESSIONURL" value="http://192.168.1.78:30005/Router/Authorize"/>
+		<entry key="URL" value="http://192.168.1.78:30005/router/rest"/>
+		<entry key="CID" value="gphez"/>
+		<entry key="SECRET" value="24146893575553025"/>
+		<entry key="USERNAME" value="download"/>
+		<entry key="PASSWORD" value="123"/>
+	</section>-->
+	
+	<section name="email_options">
+		<entry key="ORDER_PAY_ADDRESS" value="158988372@qq.com"/>
+	</section> 
+	<section name="rank_score">  
+		<entry key="DRS" value="99999,399999,799999,1199999,1200000"></entry>
+		<entry key="DEALER_RANK_SCORE" value="1"></entry>
+	</section>
+	<!-- 顺丰下单 -->
+  	<section name="shunfeng">
+		<entry key="URL" value="http://bsp-oisp.sf-express.com/bsp-oisp/sfexpressService"/>
+		<entry key="CHECKWORD" value="95lAp6M4wNDXSnE829KpYvFuda3qNPnQ"/>
+		<entry key="PRINTURL" value="http://bmatser.com:4040/sf/waybill/print?type=V2.0_poster_100mm150mm&amp;output=image"/>
+		
+	</section>   
+  	<section name="safeAccess">
+  		<!-- 	 访问次数  -->
+		<entry key="ACCESS_COUNT" value="2"/>
+		<!-- 查询间隔时间阀值,单位：毫秒 -->
+		<entry key="ACCESS_BETWEEN_TIME" value="1000000"/>
+		<!-- 安全访问时间,单位：毫秒 -->
+		<entry key="ACCESS_SAFE_TIME" value="100000"/>
+		<!-- 黑名单访问次数阀值 -->
+		<entry key="ACCESS_SAFE_COUNT" value="3"/>
+	</section> 
+	
+	<section name="beeCloud">
+		<entry key="appID" value="b370fd36-1c02-41e1-a0d6-3fe9285ad4a6"/>
+<!-- 	//测试 
+			//正式  -->
+		<entry key="appSecret" value="4bb00bc4-fe78-4e2f-8732-f28613763371"/>
+		<entry key="masterSecret" value="07cf0b4e-8405-4a70-85c9-1123f5920477"/>
+	</section> 
+	
+	<section name="wftPay">
+	    <entry key="mchId" value="7551000001"/>
+		<entry key="key" value="9d101c97133837e13dde2d32a5054abb"/>
+	</section>
+</configuration>

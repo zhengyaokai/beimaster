@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.ShopFloorMapper" >
+	<!-- 查询店铺的楼层 -->
+	<select id="getShopFloorList" resultType="map">
+	select sf.id,sf.floor_name name,dc.cate_no cateNo from shop_floor sf 
+     LEFT JOIN dealer d on sf.dealer_id = d.id
+     LEFT JOIN dealer_category dc on dc.id  = sf.category_id
+         where sf.status = 1
+          and d.alias = #{alias}
+          and dc.status = 1
+         ORDER BY sf.order_sn
+	</select>
+	<!-- 店铺楼层下的商品 -->
+	<select id="getShopFloorGoods" resultType="map">
+	    select
+		 	g.buy_no buyNo,sum(x.sales_volume*2) salesVolume,sg.id,sg.goods_name goodsName,if(sg.sale_price,sg.sale_price,sg.price)price,g.model,${@bmatser.util.SQLUtil@GOODS_IMG} image
+		from shop_floor_goods sfg 
+		left join seller_goods sg on sg.id = sfg.seller_good_id
+		left join seller_goods x on x.goods_id = sg.goods_id and sg.`status`='1' and sg.is_show='1'
+		left join goods g on g.id = sg.goods_id
+		where sfg.shop_floor_id = #{id} 
+         and sg.channel =2  
+         and sfg.status = 1 
+         and sg.status  = 1 and sg.is_show = 1 and g.status = 1 
+        GROUP BY sg.id
+        order by salesVolume desc
+		limit 0,8
+	</select>
+	
+
+</mapper>

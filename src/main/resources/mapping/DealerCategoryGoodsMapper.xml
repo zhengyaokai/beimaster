@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.DealerCategoryGoodsMapper" >
+<!-- 查询店铺分类下的商品 -->
+	<!-- <select id="findStoreCateGoods" parameterType="map" resultType="map">
+		select
+		 	g.buy_no buyNo,t.salesVolume,sg.id,sg.goods_name goodsName,if(sg.sale_price,sg.sale_price,sg.price)price,g.model,concat('${@bmatser.util.Constants@IMAGE_URL}','goodsImg/',g.image) image
+		from dealer_category_goods dcg 
+		left join seller_goods sg on sg.id = dcg.seller_goods_id
+		LEFT JOIN (
+	select g.id,sum(sg.sales_volume*2) as salesVolume from seller_goods sg LEFT JOIN goods g on sg.goods_id = g.id 
+	where sg.`status`='1' and sg.is_show='1' and g.`status`='1'
+	GROUP BY g.id
+ ) t
+on sg.goods_id = t.id 
+		left join goods g on g.id = sg.goods_id
+		left join dealer_category dc on dc.id = dcg.dealer_category_id
+		left join dealer d on d.id = sg.seller_id
+		where dcg.status = 1 and dc.cate_no like '${cateNo}%' and sg.channel =2 and d.alias = #{alias} and sg.status  = 1
+		limit 0,12
+	</select> --><!-- 增加查询销量 订货号 -->
+	<select id="findStoreCateGoods" parameterType="map" resultType="map">
+	select
+		 	g.buy_no buyNo,sum(x.sales_volume*2) salesVolume,sg.id,sg.goods_name goodsName,if(sg.sale_price,sg.sale_price,sg.price)price,g.model,${@bmatser.util.SQLUtil@GOODS_IMG} image
+		from dealer_category_goods dcg 
+		left join seller_goods sg on sg.id = dcg.seller_goods_id
+		left join seller_goods x on x.goods_id = sg.goods_id and sg.`status`='1' and sg.is_show='1'
+		left join goods g on g.id = sg.goods_id
+		left join dealer_category dc on dc.id = dcg.dealer_category_id
+		left join dealer d on d.id = sg.seller_id
+		where dcg.status = 1 and dc.cate_no like '${cateNo}%' and sg.channel =2 and d.alias = #{alias}  
+and sg.status  = 1 and sg.is_show = 1 and g.status = 1 and dc.status = '1' 
+GROUP BY sg.id
+order by salesVolume desc
+		limit 0,12
+	</select>
+	
+<!-- 查询店铺分类下的商品 -->	
+<!-- 	<select id="findStoreCateGoodsByCateId" parameterType="map" resultType="map">
+		select
+			g.buy_no buyNo,t.salesVolume,sg.id,sg.goods_name goodsName,if(sg.sale_price,sg.sale_price,sg.price)price,g.model,concat('${@bmatser.util.Constants@IMAGE_URL}','goodsImg/',g.image) image
+		from seller_goods sg 
+		left join goods g on sg.goods_id = g.id
+		LEFT JOIN (
+	select g.id,sum(sg.sales_volume*2) as salesVolume from seller_goods sg LEFT JOIN goods g on sg.goods_id = g.id 
+	where sg.`status`='1' and sg.is_show='1' and g.`status`='1'
+	GROUP BY g.id
+ ) t
+on sg.goods_id = t.id 
+		<if test="cateNo !=0">
+			left join dealer_category_goods dcg on sg.id = dcg.seller_goods_id 
+			left join dealer_category dc  on dcg.dealer_category_id =dc.id
+			left join dealer d on dc.seller_id = d.id
+		</if>
+		<if test="cateNo ==0">
+			left join dealer d on sg.seller_id = d.id
+		</if>
+		where d.alias =#{alias} and sg.channel =2 and sg.status=1
+		<if test="cateNo !=0">
+			and dc.cate_no like '${cateNo}%' and dc.`status`=1 and dcg.`status`=1 
+		</if>
+		order by g.image desc
+		limit ${page},${rows}
+	</select> -->
+	
+	<select id="findStoreCateGoodsByCateId" parameterType="map" resultType="map">
+		select
+			g.buy_no buyNo,sum(x.sales_volume*2) salesVolume,sg.id,sg.goods_name goodsName,if(sg.sale_price,sg.sale_price,sg.price)price,g.model,${@bmatser.util.SQLUtil@GOODS_IMG} image,
+			ifnull(sg.stock,0)stock,ifnull(sg.sku_unit,g.measure)measure,if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1)orderQuantity,if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1)batchQuantity
+		from seller_goods sg 
+		left join goods g on sg.goods_id = g.id
+		left join seller_goods x on x.goods_id = sg.goods_id and sg.`status`='1' and sg.is_show='1'
+		<if test="cateNo !=0">
+			left join dealer_category_goods dcg on sg.id = dcg.seller_goods_id 
+			left join dealer_category dc  on dcg.dealer_category_id =dc.id
+			left join dealer d on dc.seller_id = d.id
+		</if>
+		<if test="cateNo ==0">
+			left join dealer d on sg.seller_id = d.id
+		</if>
+		where d.alias =#{alias} and sg.channel =2 and sg.status=1
+		<if test="cateNo !=0">
+			and dc.cate_no like '${cateNo}%' and dc.`status`=1 and dcg.`status`=1 
+		</if>
+		GROUP BY sg.id 
+		order by salesVolume desc,g.image desc
+		limit ${page},${rows}
+	</select>
+
+	
+<!-- 查询店铺分类下的商品数量 -->	
+	<select id="findStoreCateGoodsByCateIdCount" parameterType="map" resultType="int">
+		select
+			count(1)
+		from seller_goods sg 
+		left join goods g on sg.goods_id = g.id		
+		<if test="cateNo !=0">
+			left join dealer_category_goods dcg on sg.id = dcg.seller_goods_id 
+			left join dealer_category dc  on dcg.dealer_category_id =dc.id
+			left join dealer d on dc.seller_id = d.id
+		</if>
+		<if test="cateNo ==0">
+			left join dealer d on sg.seller_id = d.id
+		</if>
+		where d.alias =#{alias} and sg.channel =2 and sg.status=1
+		<if test="cateNo !=0">
+			and dc.cate_no like '${cateNo}%' and dc.`status`=1 and dcg.`status`=1 
+		</if>
+	</select>
+	<select id="findCateByCateNo" parameterType="map" resultType="java.lang.String">
+		select
+			dc.name
+		from dealer_category dc 
+		left join dealer d on dc.seller_id = d.id
+		where d.alias =#{alias} and dc.cate_no = #{cateNo}
+		and dc.status = 1 
+		limit 0,1
+	</select>
+</mapper>

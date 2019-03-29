@@ -1,0 +1,59 @@
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:amq="http://activemq.apache.org/schema/core"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:tx="http://www.springframework.org/schema/tx"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
+  http://www.springframework.org/schema/tx 
+  http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+  
+  	<!-- 配置ConnectionFactory -->
+	 <bean id="connectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" destroy-method="stop">  
+	    <property name="connectionFactory" ref="innerConnectionFactory" />  
+	    <property name="maxConnections" value="1"></property>
+	</bean> 
+	<bean id="innerConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+	    <property name="brokerURL" value="tcp://192.168.1.211:61616?wireFormat.maxInactivityDuration=30000&amp;wireFormat.maxInactivityDuration=0" />
+	</bean>
+	
+	<!-- 配置一个Destination作为默认投递目标 -->
+	<bean id="defaultDestination" class="org.apache.activemq.command.ActiveMQQueue">
+	    <constructor-arg index="0" value="default.queue.dest" />
+	</bean>
+	
+	<bean id="pushDestination" class="org.apache.activemq.command.ActiveMQQueue">
+	    <constructor-arg index="0" value="push.queue.dest" />
+	</bean>
+	
+	<!-- 核心JmsTemplate -->
+	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+	    <property name="connectionFactory" ref="connectionFactory" />
+	    <property name="defaultDestination" ref="defaultDestination" />
+	</bean>
+	
+	<bean id="pushJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+	    <property name="connectionFactory" ref="connectionFactory" />
+	    <property name="defaultDestination" ref="pushDestination" />
+	</bean>
+	
+	<bean id="receiver" class="bmatser.service.impl.MQReceiver">
+	</bean>
+	
+	<!-- 监听接收方 -->
+	<bean id="listenerContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+	    <property name="connectionFactory" ref="connectionFactory" />
+	    <property name="destination" ref="defaultDestination" />
+	    <property name="messageListener" ref="receiver" />
+	    <property name="sessionTransacted" value="false"/>
+	    <!-- 设置值为4，就是同时启动4个Listener实例来消费消息 -->
+	    <!-- <property name="concurrentConsumers" value="4"/> -->
+	</bean>
+	
+	
+	<!-- JMS事务 -->
+	<bean id="jmsTransactionManager" class="org.springframework.jms.connection.JmsTransactionManager">
+	    <property name="connectionFactory" ref="connectionFactory" />
+	</bean>  
+	<tx:annotation-driven transaction-manager="jmsTransactionManager" />
+</beans>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.AdverImageMapper" >
+	
+<!-- 获取banner图片 -->
+	<select id="findAdverImages" resultType="Map">
+		select 
+			id, concat('${@bmatser.util.Constants@IMAGE_URL}',image) image,
+			target_url toUrl
+		from adver_image
+		where status = '1' and (terminal_type = 1 or terminal_type=2 or terminal_type=0)
+		and position_id = #{positionId}
+		and (start_time &lt;= now() or start_time is null) and (end_time &gt;= now() or end_time is null)
+		order by order_sn desc
+	</select>
+	<!-- 获取所有banner图片 -->
+	<select id="findAllAdverImages" resultType="Map">
+		select id, title, concat('${@bmatser.util.Constants@IMAGE_URL}',m_image) mImage, target_url targetUrl, end_time endTime,position_id positionId,
+		concat('${@bmatser.util.Constants@IMAGE_URL}',image) image
+		from adver_image
+		where status = '1' and (terminal_type = 1 or terminal_type=3)
+		and m_image is not null and position_id = #{positionId}
+		and (start_time &lt;= now() or start_time is null) and (end_time &gt;= now() or end_time is null)
+		order by order_sn desc
+	</select>
+	<!-- 商城首页楼层的横幅广告和分类促销广告          add  20160606 -->
+	<select id="getfloorAdvertisement" resultType="Map">
+	    SELECT
+	        pfa.id,
+			pfa.floor_id floorId,
+			pfa.position,
+			concat(
+				'${@bmatser.util.Constants@IMAGE_URL}',
+				pfa.floor_img
+			) img,
+			pfa.target_url targetUrl
+		FROM
+			page_floor_adver pfa left join page_floor pf on pf.id=pfa.floor_id
+		WHERE
+			 pfa.status!=2
+             and pf.`status`=1 
+             <if test="positionId!=null and positionId!=''">
+			 and pfa.position = #{positionId}
+		     </if>
+		ORDER BY
+			pfa.order_sn DESC
+	</select>
+		<select id="findMallAdverImages" resultType="map" parameterType="int">
+		select 
+			id,title,concat('${@bmatser.util.Constants@IMAGE_URL}',image)image,concat('${@bmatser.util.Constants@IMAGE_URL}',m_image)mImage,target_url targetUrl,brief
+		from mall_adver
+		where  status = 1 and terminal_type !=3
+			and is_valid = 1 and position_id = #{positionId}
+			order by order_sn
+		<if test="positionId==2">
+			limit 0,4
+		</if>	
+		<if test="positionId==4">
+			limit 0,2
+		</if>	
+	</select>
+		<select id="findAppMallAdverImages" resultType="map" parameterType="int">
+		select 
+			id,title,concat('${@bmatser.util.Constants@IMAGE_URL}',image)image,concat('${@bmatser.util.Constants@IMAGE_URL}',m_image)mImage,target_url targetUrl,brief
+		from mall_adver
+		where  status = 1 and terminal_type in(1,3)
+			and is_valid = 1 and position_id = #{positionId}
+			order by order_sn
+		<if test="positionId==2">
+			limit 0,4
+		</if>	
+		<if test="positionId==4">
+			limit 0,2
+		</if>	
+	</select>
+</mapper>

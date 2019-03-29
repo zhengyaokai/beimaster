@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.DealerBalanceMapper" >
+	
+<!--  获取用户余额使用记录 -->
+	<select id="getDealerBalanceByBuyerId" resultType="bmatser.model.DealerBalanceRecord">
+	   select dbr.id,ifnull(dbr.balance,0) balance,dbr.dealer_id dealerId,dbr.type,dbr.balance_apply_id balanceApplyId,
+	   dbr.balance_apply_status balanceApplyStatus,
+		CASE dbr.type WHEN 1 THEN '余额转入' WHEN 2 THEN '消费余额' WHEN 3 THEN '余额转出' END as name, 
+		dbr.create_time createTime 
+		from dealer_balance_record dbr 
+		where dbr.`status` = '1' and dbr.dealer_id = #{buyerId}
+		ORDER BY createTime desc
+       limit #{page}, #{rows} 
+	</select>
+	<!--获取用户余额  -->
+	<select id="getDealerBalance" resultType="java.math.BigDecimal">
+	   select ifnull(d.balance,0) residualAmount from  dealer d where  d.id = #{buyerId}
+	</select>
+	
+	<!-- 获取总数 -->	
+	<select id ="getDealerBalanceCount" resultType="Long">
+	  select count(1) from dealer_balance_record dbr LEFT JOIN dealer d on dbr.dealer_id = d.id
+		where dbr.`status` = '1' and dbr.dealer_id = #{buyerId}
+	</select>
+</mapper>

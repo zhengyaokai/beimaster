@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.KingnorMapper" >
+  <select id="getOrderList" resultType="map" parameterType="string" >
+    select oi.order_amount-ifnull(oi.freight_sale_amount,0)-ifnull(oi.full_cut_amount,0)-ifnull(oi.group_order_sale,0)-
+	ifnull(oi.goods_sale_amount,0)-ifnull(oi.tax_sale_amount,0)-ifnull(oi.score_deduction_amout,0)-ifnull(oi.bean_deduction,0) orderAmount
+	,oi.order_status orderStatus,oi.order_time orderDate,if(ro.id is not null and ro.id !='',2,1) orderType,
+	if(ro.id is not null and ro.id !='',oi.id,'') relevantNO,if(ro.id is not null and ro.id !='',ro.id,oi.id) orderNo,if(oi.pay_type=7,1,0) isKingnor
+	from order_info oi LEFT JOIN refund_order ro on ro.order_id=oi.id 
+	where ro.id is not null or (oi.pay_status between 2 and 7 and oi.original_order_id is null and ro.id is null)
+    <if test="orderStartDate !=null">
+    	and oi.order_time &gt;= #{orderStartDate}
+    </if>
+    <if test="orderEndDate !=null">
+    	and oi.order_time &lt;= #{orderEndDate}
+    </if>
+    <if test="customerCode !=null">
+    	and oi.buyer_id = #{customerCode}
+    </if>
+  </select>
+  <insert id="saveCustomerWarning" parameterType="map" useGeneratedKeys="true" keyProperty="id">
+		insert into jtl_dealer_warning 
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="id != null">
+				id,
+			</if>
+			<if test="customerCodeString != null">
+				dealer_id,
+			</if>
+			<if test="type != null">
+				type,
+			</if>
+			<if test="level != null">
+				level,
+			</if>
+			<if test="warningName != null">
+				warning_name,
+			</if>
+			<if test="warningContent != null">
+				warning_content,
+			</if>
+			<if test="warningDate != null">
+				warning_date,
+			</if>
+			<if test="resultDate !=null">
+				result_date,
+			</if>
+			<if test="result !=null">
+				result,
+			</if>
+			<if test="updateTime !=null">
+				update_time,
+			</if>
+			<if test="customerName !=null">
+				dealer_name,
+			</if>
+			<if test="earlyWarningCodes !=null">
+				early_warning_codes,
+			</if>
+		</trim>
+		<trim prefix="value (" suffix=")" suffixOverrides="," >
+			<if test="id != null">
+				#{id},
+			</if>
+			<if test="customerCodeString != null">
+				#{customerCodeString},
+			</if>
+			<if test="type != null">
+				#{type},
+			</if>
+			<if test="level != null">
+				#{level},
+			</if>
+			<if test="warningName != null">
+				#{warningName},
+			</if>
+			<if test="warningContent != null">
+				#{warningContent},
+			</if>
+			<if test="warningDate != null">
+				#{warningDate},
+			</if>
+			<if test="resultDate !=null">
+				#{resultDate},
+			</if>
+			<if test="result !=null">
+				#{result},
+			</if>
+			<if test="updateTime !=null">
+				#{updateTime},
+			</if>
+			<if test="customerName !=null">
+				#{customerName},
+			</if>
+			<if test="earlyWarningCodes !=null">
+				#{earlyWarningCodes},
+			</if>
+		</trim>
+	</insert>
+	
+	<insert id="insertJnPaid" parameterType="bmatser.model.JnPaid">
+  	insert into jtl_loaninform
+  	<trim prefix="(" suffix=")" suffixOverrides=",">
+  		<if test="paidNo != null">paid_no,</if>
+  		<if test="bankSerialNo != null">bank_serial_no,</if>
+  		<if test="actualPaidTime != null">actual_paid_time,</if>
+  		<if test="paidTotalAmount != null">paid_total_amount,</if>
+  		<if test="ackStartTime != null">ack_start_time,</if>
+  		<if test="ackEndTime != null">ack_end_time,</if>
+  		<if test="currentPaid != null">current_paid,</if>
+  		<if test="currentBalance != null">current_balance,</if>
+  		<if test="priorPaid != null">prior_paid,</if>
+  		<if test="priorPaidNo != null">prior_paid_no,</if>
+  		<if test="totalOrders != null">total_orders,</if>
+  		<if test="orderTotalAmt != null">order_total_amt,</if>
+  		<if test="totalReturn != null">total_return,</if>
+  		<if test="returnTotalAmt != null">return_total_amt,</if>
+  		<if test="status != null">status,</if>
+  		<if test="createTime != null">create_time,</if>
+  	</trim>
+  	<trim prefix="values (" suffix=")" suffixOverrides=",">
+  		<if test="paidNo != null">#{paidNo,jdbcType=VARCHAR},</if>
+  		<if test="bankSerialNo != null">#{bankSerialNo,jdbcType=VARCHAR},</if>
+  		<if test="actualPaidTime != null">#{actualPaidTime,jdbcType=TIMESTAMP},</if>
+  		<if test="paidTotalAmount != null">#{paidTotalAmount,jdbcType=DECIMAL},</if>
+  		<if test="ackStartTime != null">#{ackStartTime,jdbcType=TIMESTAMP},</if>
+  		<if test="ackEndTime != null">#{ackEndTime,jdbcType=TIMESTAMP},</if>
+  		<if test="currentPaid != null">#{currentPaid,jdbcType=DECIMAL},</if>
+  		<if test="currentBalance != null">#{currentBalance,jdbcType=DECIMAL},</if>
+  		<if test="priorPaid != null">#{priorPaid,jdbcType=DECIMAL},</if>
+  		<if test="priorPaidNo != null">#{priorPaidNo,jdbcType=VARCHAR},</if>
+  		<if test="totalOrders != null">#{totalOrders,jdbcType=INTEGER},</if>
+  		<if test="orderTotalAmt != null">#{orderTotalAmt,jdbcType=DECIMAL},</if>
+  		<if test="totalReturn != null">#{totalReturn,jdbcType=INTEGER},</if>
+  		<if test="returnTotalAmt != null">#{returnTotalAmt,jdbcType=DECIMAL},</if>
+  		<if test="status != null">#{status,jdbcType=CHAR},</if>
+  		<if test="createTime != null">#{createTime,jdbcType=TIMESTAMP},</if>
+  	</trim>
+  </insert>
+  
+  <insert id="insertJnOrderDetails" parameterType="bmatser.model.JnOrderDetails">
+		insert into jtl_loaninform_details
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="paidNo != null">paid_no,</if>
+			<if test="orderNo != null">order_no,</if>
+			<if test="returnNo != null">return_no,</if>
+			<if test="orderAmount != null">order_amount,</if>
+			<if test="orderDate != null">order_date,</if>
+			<if test="dealerId != null">dealer_id,</if>
+			<if test="customerName != null">dealer_name,</if>
+			<if test="isReturn != null">is_return,</if>
+			<if test="status != null">status,</if>
+			<if test="createTime != null">create_time,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="paidNo != null">#{paidNo,jdbcType=VARCHAR},</if>
+			<if test="orderNo != null">#{orderNo,jdbcType=VARCHAR},</if>
+			<if test="returnNo != null">#{returnNo,jdbcType=VARCHAR},</if>
+			<if test="orderAmount != null">#{orderAmount,jdbcType=DECIMAL},</if>
+			<if test="orderDate != null">#{orderDate,jdbcType=DATE},</if>
+			<if test="dealerId != null">#{dealerId,jdbcType=INTEGER},</if>
+			<if test="customerName != null">#{customerName,jdbcType=VARCHAR},</if>
+			<if test="isReturn != null">#{isReturn,jdbcType=CHAR},</if>
+			<if test="status != null">#{status,jdbcType=CHAR},</if>
+			<if test="createTime != null">#{createTime,jdbcType=TIMESTAMP},</if>
+		</trim>
+	</insert>
+	
+	<select id="checkIsExist" parameterType="String" resultType="Integer">
+		select count(1)
+			from jtl_loaninform where paid_no = #{paidNo,jdbcType=VARCHAR} and status = '1'
+	</select>
+	<delete id="deleteLoanInform" parameterType="String">
+		update jtl_loaninform set
+			status = '2'
+			where paid_no = #{paidNo,jdbcType=VARCHAR} and status = '1'
+	</delete>
+	
+	<delete id="deleteLoanInformDetails" parameterType="String">
+		update jtl_loaninform_details set
+			status = '2'
+			where paid_no = #{paidNo,jdbcType=VARCHAR} and status = '1'
+	</delete>
+</mapper>

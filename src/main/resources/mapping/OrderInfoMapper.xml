@@ -1,0 +1,1639 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bmatser.dao.OrderInfoMapper">
+
+	<sql id="bigCustomer">
+		(
+		select bcpg.big_customer_package_id id,bcpg.seller_goods_id sellerGoodsId,bcpg.rate from big_customer_package_goods bcpg
+			left join  big_customer_package_dealer dcpd on bcpg.big_customer_package_id = dcpd.big_customer_package_id
+			left join  big_customer_package bcp on bcp.id = dcpd.big_customer_package_id 
+			where   dcpd.dealer_id = ${@bmatser.util.SQLUtil@getSaasDealerId()}  and dcpd.status = 1 and bcp.status =1 and bcpg.status =1
+				and bcp.start_time &lt;= now() and bcp.end_time &gt;= now()
+		)x on  x.sellerGoodsId = sg.id
+	</sql>
+
+<!-- 根据ID查询订单 -->
+	<select id="getOrderById" resultType="Map">
+		select buyer_id buyerId, ${@bmatser.util.SQLUtil@PAY_AMOUNT} amount,
+		score_deduction_amout scoreDeductionAmout,order_status orderStatus,
+		${@bmatser.util.SQLUtil@PAY_AMOUNT}-ifnull(freight_amount,0)  scroeAmount
+		from order_info where id = #{orderId}
+	</select>
+
+
+  
+  <!-- 根据订单id获取订单应付金额  -->
+	<select id="getOrderInfoByIdValue" resultType="bmatser.model.OrderInfo">
+		select buyer_id buyerId, ${@bmatser.util.SQLUtil@PAY_AMOUNT} payAmount,order_status orderStatus
+		from order_info where id = #{orderId}
+	</select>
+<!-- 获取指定用户的订单数量（各状态） -->
+	<select id="findCountByStatus" resultType="java.util.Map">
+		select 1 status, count(1) count from order_info
+		where buyer_id = #{buyerId} and order_status='1' and original_order_id is null and (is_manual =0 or is_manual is null)
+		UNION ALL
+		select 2 status, count(1) count from order_info
+		where buyer_id = #{buyerId} and order_status='2' and original_order_id is null and (is_manual =0 or is_manual is null)
+		UNION ALL
+		select 3 status, count(1) count from order_info
+		where buyer_id = #{buyerId} and order_status='3' and original_order_id is null and (is_manual =0 or is_manual is null)
+		UNION ALL
+		select 6 status, count(1) count from order_info
+		where buyer_id = #{buyerId} and order_status='6' and original_order_id is null and (is_manual =0 or is_manual is null)
+	</select>
+
+<!-- 获取指定用户的订单列表（各状态） -->
+	<resultMap type="java.util.Map" id="findOrdersResultMap">
+		<result column="order_id" property="orderId"/>
+		<result column="amount" property="amount"/>
+		<result column="goods_id" property="goodsId"/>
+		<result column="image" property="image"/>
+		<result column="title" property="title"/>
+		<result column="model" property="model"/>
+		<result column="num" property="num"/>
+		<result column="unit_price" property="unitPrice"/>
+		<result column="sale_unit_price" property="saleUnitPrice"/>
+		<result column="order_status" property="status"/>
+		<result column="buy_no" property="buyNo"/>
+		<result column="order_time" property="orderTime"/>
+		<result column="consign_address_id" property="consignAddressId"/>
+		<result column="consign_address_info" property="consignAddressInfo"/>
+	</resultMap>
+	<select id="findOrders" resultMap="findOrdersResultMap"> 
+		select oi.id order_id, oi.order_amount-IFNULL(oi.goods_sale_amount,0)-IFNULL(oi.freight_sale_amount,0)-IFNULL(oi.tax_sale_amount,0)-IFNULL(oi.score_deduction_amout,0) amount, 
+		g.id goods_id, g.image, g.title, g.model, og.num, og.unit_price, og.sale_unit_price, oi.order_status,g.buy_no,oi.order_time,oi.consign_address_id,oi.consign_address_info
+		from order_info oi, order_goods og, goods g
+		where oi.id = og.order_id and og.goods_id = g.id
+		and oi.buyer_id = #{buyerId} 
+		and og.num > 0
+		<if test="status != null and status != 0">
+			and oi.order_status = #{status}
+		</if>
+        <if test="status !=10">
+            and oi.order_status!=10
+        </if>
+
+		order by oi.order_time desc
+		limit #{page}, #{rows}
+	</select>
+  	<select id="countOrders" resultType="long">
+  		select count(1)
+		from order_info oi, order_goods og, goods g
+		where oi.id = og.order_id and og.goods_id = g.id
+		and oi.buyer_id = #{buyerId} 
+		and og.num > 0
+		<if test="status != null and status != 0">
+			and oi.order_status = #{status}
+		</if>
+        <if test="status !=10">
+            and oi.order_status!=10
+        </if>
+  	</select>
+  	
+<!-- 订单详情 -->
+	<select id="getOrderDetail" resultType="Map">
+		select vod.order_id orderId, vod.amount,vod.goods_amount goodsAmount, vod.freight_amount freightAmount, vod.score_deduction_amout scoreDeductionAmout,vod.score, vod.order_status status,
+		vod.is_need_invoice isNeedInvoice, vod.inv_title invTitle, vod.goods_id goodsId, vod.image, vod.title, vod.model, vod.num, vod.unit_price unitPrice, vod.sale_unit_price saleUnitPrice,
+		vod.country_id countryId, vod.province_id provinceId, vod.city_id cityId, vod.area_id areaId, vod.address, vod.consignee, vod.mobile, vod.consign_address_info consignAddressInfo, vod.pay_type payType,vod.sellerGoodsId,
+		sg.seller_id gsId
+		from view_order_detail vod
+		left join seller_goods sg on sg.id = vod.sellerGoodsId
+		where vod.order_id = #{orderId}
+		<if test="dealerId != null">
+			and vod.buyer_id = #{dealerId}
+		</if>
+	</select>
+	
+	<!-- 打印 订单明细  -->
+	<select id="getSellerOrderDetail" resultType="Map">
+		select order_id orderId, amount, goods_amount goodsAmount, freight_amount freightAmount, score_deduction_amout scoreDeductionAmout,score, order_status status,
+		is_need_invoice isNeedInvoice, inv_title invTitle, goods_id goodsId, image, title, model, num, unit_price unitPrice, sale_unit_price saleUnitPrice,
+		country_id countryId, province_id provinceId, city_id cityId, area_id areaId, address, consignee, mobile, consign_address_info consignAddressInfo, pay_type payType,sellerGoodsId,0 gsId
+		from view_order_detail
+		where order_id = #{orderId}
+		<if test="dealerId != null">
+			and seller_id = #{dealerId}
+		</if>
+	</select>
+	
+	
+<!-- 取消订单-->
+	<update id="cancelOrder">
+		update order_info set order_status='8' where id=#{orderId}
+	</update>
+
+    <!-- 取消订单-->
+    <update id="deleteOrder">
+    update order_info set order_status='10' where id=#{orderId}
+    </update>
+
+
+    <!-- 取消订单 更新dealer 表中的cash字段  20160720 -->
+	<update id="updateDC">
+	update order_info oi,dealer d 
+     set d.cash = ifnull(d.cash,0) + ifnull(oi.score_deduction_amout,0) 
+    where oi.buyer_id = d.id and oi.order_status = '1' and oi.id = #{orderId}  
+	</update>
+	
+	<!--新增记录到dealer_cash表中 20160720 -->
+	<insert id="insertDealerCash" parameterType="bmatser.model.OrderInfo">
+	 insert into dealer_cash(dealer_id,cash,create_time,create_user_id,remark,related_id,type,status)
+	 values(#{buyerId},#{scoreDeductionAmout,jdbcType=INTEGER},now(),0,'订单取消返还',#{id},3,1)
+	</insert>
+	
+<!-- 确认收货 -->
+	<update id="confirmReceipt">
+		update order_info set order_status='6', shipping_status='2', consign_time=now() where (id=#{orderId} or child_id like '${orderId}-%' or original_order_id like '${orderId}-%')  and order_status  =3
+	</update>
+
+<!-- 生成订单 -->
+	<insert id="addOrderInfo" parameterType="bmatser.model.OrderInfo" useGeneratedKeys="true" keyProperty="id">
+		insert into order_info (id, buyer_id, seller_id, order_amount, goods_amount, freight_amount, order_time, order_status, pay_status, shipping_status, consign_address_id, 
+		settle_status, account_status, has_refund_bill, delay_consign_status, is_need_invoice, score, is_issue_invoice, score_deduction_amout, order_source, order_channel,buyer_remark
+		<if test="originalOrderId != null">
+			,original_order_id
+		</if>
+		<if test="customerServiceId != null">
+			,customer_service_id
+		</if>
+		<if test="customerManagerId != null">
+			,customer_manager_id
+		</if> 
+		<if test="orderStore != null">
+			,order_store
+		</if>
+		<if test="fullCutAmount != null">
+			,full_cut_amount
+		</if>
+		<if test="tail != null">
+			,tail
+		</if>
+		<if test="consignAddressInfo != null">
+			,consign_address_info
+		</if>
+		<if test="consignAddressInfoSecret != null">
+			,consign_address_info_secret
+		</if>
+		<if test="hasChild != null">
+			,has_child
+		</if>
+		<if test="childId != null">
+			,child_id
+		</if>
+		<if test="orderType != null">
+			,order_type
+		</if>
+		<if test="groupOrderSale != null">
+			,group_Order_Sale 
+		</if>
+		)
+		values(#{id}, #{buyerId}, #{sellerId}, #{orderAmount}, #{goodsAmount}, #{freightAmount}, now(), 1, 0, 0, #{consignAddressId}, 
+		0, 0, 0, 0, #{isNeedInvoice}, #{score}, 0, #{scoreDeductionAmout}, #{orderSource}, #{orderChannel},#{buyerRemark}
+		<if test="originalOrderId != null">
+			,#{originalOrderId}
+		</if>
+		<if test="customerServiceId != null">
+			,#{customerServiceId}
+		</if>
+		<if test="customerManagerId != null">
+			,#{customerManagerId}
+		</if>
+		<if test="orderStore != null">
+			,#{orderStore}
+		</if>
+		<if test="fullCutAmount != null">
+			,#{fullCutAmount}
+		</if>
+		<if test="tail != null">
+			,#{tail}
+		</if>
+		<if test="consignAddressInfo != null">
+			,#{consignAddressInfo}
+		</if>
+		<if test="consignAddressInfoSecret != null">
+			,#{consignAddressInfoSecret}
+		</if>
+		<if test="hasChild != null">
+			,#{hasChild}
+		</if>
+		<if test="childId != null">
+			,#{childId}
+		</if>
+		<if test="orderType != null">
+			,#{orderType}
+		</if>
+		<if test="groupOrderSale != null">
+			,#{groupOrderSale}
+		</if>
+		)
+	</insert>
+<!-- ERP订单对接 -->
+	<select id="saveOrderToERP" parameterType="java.lang.String" resultType="bmatser.model.Trade">
+select 
+			if(oi.child_id is not null and oi.child_id != '',oi.child_id,oi.id) fbillno,oi.order_time fcreatetime,0 flocked,'' flocknote,oi.order_status fshoptradestatus,if(oi.pay_type=3,1,0) fiscod,
+			oi.pay_time fpaytime,buyer.dealer_name fcustname,'苏州工电宝信息科技有限公司' fsalername,
+			${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} fpayamt,
+			oi.freight_amount-if(oi.freight_sale_amount,oi.freight_sale_amount,0) fpostamt,oi.goods_amount fgoodsamt,
+			(if(oi.goods_sale_amount,oi.goods_sale_amount,0)+if(oi.full_cut_amount,oi.full_cut_amount,0)+ifnull(oi.bean_deduction,0)) fdiscountamt,
+			bca.consignee freceiver,province.region_name freceiverstate,city.region_name freceivercity,area.region_name freceiverdistrict,
+			bca.address freceiveraddress,bca.post_code freceiverzip,bca.mobile_secret freceivermobile,bca.telephone_secret freceiverphone,
+			oi.buyer_remark fcustmessage,oi.service_remark fnote,1 fneedinvoice,
+			inv.inv_type finvoicetype,inv.inv_title finvoicetitle,inv.taxpaye_rno finvoiceregnumer,inv.reg_address finvoiceregaddress,
+			inv.reg_telphone_secret finvoiceregtel,inv.bank finvoicebanktax,inv.bank_account finvoicebanknumber,
+			if(oi.customer_service_id,oi.customer_service_id,ccs.service_id) as fempnumber,oi.company_account fbankaccountnumber,if(oi.order_store,oi.order_store,0) fshopid,
+			ifnull(inv.recv_province,0) fInvReceiverState,ifnull(inv.recv_city,0) finvReceiverCity,ifnull(inv.recv_area,0) fInvReceiverDistrict,inv.recv_address fInvReceiverAddress,inv.recv_name fInvReceiver,inv.recv_mobile_secret fInvReceiverMobile
+		from order_info oi 
+		left join dealer buyer on buyer.id = oi.buyer_id 
+		left join dealer seller on seller.id = oi.seller_id
+		left join buyer_consign_address bca on  bca.id = oi.consign_address_id
+		left join order_invoice inv on inv.order_id = oi.id 
+		left join region province on province.id = bca.province_id 
+		left join region city on city.id = bca.city_id 
+		left join region area on area.id = bca.area_id
+		left join crm_customer cc on cc.dealer_id = oi.buyer_id and cc.status = 1
+		left join crm_customer_service ccs on ccs.customer_id = cc.id and ccs.status = 1
+		where (oi.id = #{id} or oi.child_id = #{id}) and (oi.has_child = 0 or oi.has_child is null)
+		limit 0,1
+	</select>
+	
+	<!-- ERP订单对接 -->
+	<select id="saveOrderToJQERP" parameterType="java.lang.String" resultType="bmatser.model.OrderToERP">
+		select 
+			-1 as NID,if(oi.child_id is not null and oi.child_id != '',oi.child_id,oi.id) BaNbXsBh,oi.buyer_id buyerId,'' as GclientDeliveryID ,'001' as BaXsFpLx,
+			'001' as BaFkFs,'1' as BaFhFs,oi.freight_amount-if(oi.freight_sale_amount,oi.freight_sale_amount,0) BaYfCd,
+			inv.bank_account Account,inv.taxpaye_rno Tax,inv.bank BankAddress,inv.reg_address InvoiceAddress,inv.reg_telphone_secret InvoiceTelphone,
+			CONCAT_WS('_',bca.consignee,bca.area_id,right(bca.mobile,4)) ExactDeliveryMan,bca.consignee DeliveryMan,bca.address DeliveryAddress,bca.mobile_secret DeliveryTelphone,inv.recv_name InvoiceDeliveryMan,inv.recv_address InvoiceDeliveryAddress,inv.recv_mobile_secret InvoiceDeliveryTelphone,
+			oi.service_remark BaDjBz,if(oi.customer_manager_id,oi.customer_manager_id,ccm.manager_id) as Guser,
+			if(oi.customer_service_id,oi.customer_service_id,ccs.service_id) as Buser,1 as SumHtSl,
+            ifnull(sum(og.sale_price),0) as goodsAmount,
+            ${@bmatser.util.SQLUtil@PAY_AMOUNT_OI}-ifnull(oi.balance_deduction,0) realAmount,
+            oi.consign_address_info consignAddress
+		from order_info oi
+		left join dealer buyer on buyer.id = oi.buyer_id 
+		left join dealer seller on seller.id = oi.seller_id
+		left join buyer_consign_address bca on  bca.id = oi.consign_address_id
+		left join order_invoice inv on inv.order_id = oi.id 
+		left join region province on province.id = bca.province_id 
+		left join region city on city.id = bca.city_id 
+		left join region area on area.id = bca.area_id
+		left join crm_customer cc on cc.dealer_id = oi.buyer_id and cc.status = 1
+		left join crm_customer_service ccs on ccs.customer_id = cc.id and ccs.status = 1
+		left join crm_customer_manager ccm on ccm.customer_id = cc.id and ccm.status = 1
+		left join order_goods og on og.order_id = oi.id
+		where (oi.id = #{id} or oi.child_id = #{id}) and (oi.has_child = 0 or oi.has_child is null)
+		limit 0,1
+	</select>
+	
+	
+	
+	<select id="findById" parameterType="map" resultType="bmatser.model.OrderInfo">
+	    select 
+		  oi.id,oi.buyer_id as buyerId,oi.seller_id sellerId,oi.order_amount orderAmount,oi.goods_amount goodsAmount,
+	      oi.freight_amount freightAmount,oi.goods_sale_amount goodsSaleAmount,oi.freight_sale_amount freightSaleAmount,
+	      oi.tax_sale_amount taxSaleAmount,oi.order_time orderTime,oi.order_status orderStatus,oi.pay_status payStatus,
+	      oi.shipping_time shippingTime,oi.shipping_status shippingStatus,oi.consign_time consignTime,
+	      oi.consign_address_id consignAddressId,oi.consign_address_info consignAddressInfo,oi.shipping_address_id shippingAddressId,
+	      oi.shipping_address_info shippingAddressInfo,oi.seller_logistics_id sellerLogisticsId,oi.logistics_remark logisticsRemark,
+	      oi.logistics_code logisticsCode,oi.logistics_multi_code logisticsMultiCode,oi.buyer_remark buyerRemark,oi.seller_remark sellerRemark,
+	      oi.rank,oi.settle_status settleStatus,oi.settle_time settleTime,oi.settle_user_id settleUserId,oi.account_status accountStatus,
+	      oi.has_refund_bill hasRefundBill,oi.delay_consign_time delayConsignTime,oi.delay_consign_status delayConsignStatus,
+	      oi.is_need_invoice isNeedInvoice,oi.score,oi.is_issue_invoice isIssueInvoice,oi.pay_time payTime,oi.pay_type payType,
+	      oi.trade_id tradeId,oi.score_deduction_amout scoreDeductionAmout,oi.order_source orderSource,oi.order_channel orderChannel,
+	      oi.service_remark serviceRemark,oi.has_child hasChild,oi.original_order_id originalOrderId,oi.is_manual isManual,
+	      if(oi.goods_sale_amount,oi.goods_sale_amount,0)+if(oi.freight_sale_amount,oi.freight_sale_amount,0)+if(oi.full_cut_amount,oi.full_cut_amount,0) saleAmount
+	      ,oi.consign_address_info_secret consignAddressInfoSecret,
+	      ${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} payAmount
+	    from order_info oi
+	    where oi.id = #{id} 
+	</select>
+	
+	<select id="getRealAmount" parameterType="long" resultType="decimal">
+		select sum(ifnull(real_amount,0)) realAmount from order_info oi 
+		LEFT JOIN payment_bill_order pbo on pbo.order_id=oi.id AND pbo.`status`=1
+		LEFT JOIN payment_bill pb ON pb.id=pbo.payment_bill_id and pb.pay_status=1
+		where oi.id=#{id}
+		group by oi.id
+	</select>
+	
+	<select id="getRateType" parameterType="string" resultType="int">
+		SELECT pb.rate_type from payment_bill_order pbo 
+			LEFT JOIN payment_bill pb on pb.id=pbo.payment_bill_id and pb.`status`=1
+		where pbo.`status`=1 and rate_type=3 and pbo.order_id=#{id}
+		limit 1
+	</select>
+	
+	<select id="findBychildId" parameterType="map" resultType="bmatser.model.OrderInfo">
+	    select 
+		  oi.id,oi.buyer_id as buyerId,oi.seller_id sellerId,oi.order_amount orderAmount,oi.goods_amount goodsAmount,
+	      oi.freight_amount freightAmount,oi.goods_sale_amount goodsSaleAmount,oi.freight_sale_amount freightSaleAmount,
+	      oi.tax_sale_amount taxSaleAmount,oi.order_time orderTime,oi.order_status orderStatus,oi.pay_status payStatus,
+	      oi.shipping_time shippingTime,oi.shipping_status shippingStatus,oi.consign_time consignTime,
+	      oi.consign_address_id consignAddressId,oi.consign_address_info consignAddressInfo,oi.shipping_address_id shippingAddressId,
+	      oi.shipping_address_info shippingAddressInfo,oi.seller_logistics_id sellerLogisticsId,oi.logistics_remark logisticsRemark,
+	      oi.logistics_code logisticsCode,oi.logistics_multi_code logisticsMultiCode,oi.buyer_remark buyerRemark,oi.seller_remark sellerRemark,
+	      oi.rank,oi.settle_status settleStatus,oi.settle_time settleTime,oi.settle_user_id settleUserId,oi.account_status accountStatus,
+	      oi.has_refund_bill hasRefundBill,oi.delay_consign_time delayConsignTime,oi.delay_consign_status delayConsignStatus,
+	      oi.is_need_invoice isNeedInvoice,oi.score,oi.is_issue_invoice isIssueInvoice,oi.pay_time payTime,oi.pay_type payType,
+	      oi.trade_id tradeId,oi.score_deduction_amout scoreDeductionAmout,oi.order_source orderSource,oi.order_channel orderChannel,
+	      oi.service_remark serviceRemark,oi.has_child hasChild,oi.original_order_id originalOrderId,oi.is_manual isManual,if(oi.order_store,oi.order_store,0) orderStore
+	      ,oi.consign_address_info_secret consignAddressInfoSecret,oi.child_id childId
+	      
+	    from order_info oi
+	    where oi.child_id = #{id}
+	    limit 0,1
+	</select>
+	
+	<select id="findByOrderId" parameterType="map" resultType="bmatser.model.OrderInfo">
+	    select 
+		  oi.id,oi.buyer_id as buyerId,oi.seller_id sellerId,oi.order_amount orderAmount,oi.goods_amount goodsAmount,
+	      oi.freight_amount freightAmount,oi.goods_sale_amount goodsSaleAmount,oi.freight_sale_amount freightSaleAmount,
+	      oi.tax_sale_amount taxSaleAmount,oi.order_time orderTime,oi.order_status orderStatus,oi.pay_status payStatus,
+	      oi.shipping_time shippingTime,oi.shipping_status shippingStatus,oi.consign_time consignTime,
+	      oi.consign_address_id consignAddressId,oi.consign_address_info consignAddressInfo,oi.shipping_address_id shippingAddressId,
+	      oi.shipping_address_info shippingAddressInfo,oi.seller_logistics_id sellerLogisticsId,oi.logistics_remark logisticsRemark,
+	      oi.logistics_code logisticsCode,oi.logistics_multi_code logisticsMultiCode,oi.buyer_remark buyerRemark,oi.seller_remark sellerRemark,
+	      oi.rank,oi.settle_status settleStatus,oi.settle_time settleTime,oi.settle_user_id settleUserId,oi.account_status accountStatus,
+	      oi.has_refund_bill hasRefundBill,oi.delay_consign_time delayConsignTime,oi.delay_consign_status delayConsignStatus,
+	      oi.is_need_invoice isNeedInvoice,oi.score,oi.is_issue_invoice isIssueInvoice,oi.pay_time payTime,oi.pay_type payType,
+	      oi.trade_id tradeId,oi.score_deduction_amout scoreDeductionAmout,oi.order_source orderSource,oi.order_channel orderChannel,
+	      oi.service_remark serviceRemark,oi.has_child hasChild,oi.original_order_id originalOrderId,oi.is_manual isManual,if(oi.order_store,oi.order_store,0) orderStore
+	      ,oi.consign_address_info_secret consignAddressInfoSecret,oi.child_id childId
+	      
+	    from order_info oi
+	    where oi.id = #{orderId} or oi.child_id = #{orderId}
+	    limit 0,1
+	</select>
+	<!-- 判断是否首单 -->
+	<select id="findIsFirstWxOrder" resultType="int">
+		select 
+			count(oi.id)
+		from dealer d
+		left join order_info oi on oi.buyer_id = d.id
+		where d.id = #{dealerId}  and oi.order_channel = 8 and oi.order_status not in (8,9,1)
+	</select>
+	
+	<update id="update" parameterType="bmatser.model.OrderInfo" >
+		   update order_info
+	    <set >
+	      <if test="buyerId != null" >
+	        buyer_id = #{buyerId,jdbcType=INTEGER},
+	      </if>
+	      <if test="sellerId != null" >
+	        seller_id = #{sellerId,jdbcType=INTEGER},
+	      </if>
+	      <if test="orderAmount != null" >
+	        order_amount = #{orderAmount,jdbcType=DECIMAL},
+	      </if>
+	      <if test="goodsAmount != null" >
+	        goods_amount = #{goodsAmount,jdbcType=DECIMAL},
+	      </if>
+	      <if test="freightAmount != null" >
+	        freight_amount = #{freightAmount,jdbcType=DECIMAL},
+	      </if>
+	      <if test="goodsSaleAmount != null" >
+	        goods_sale_amount = #{goodsSaleAmount,jdbcType=DECIMAL},
+	      </if>
+	      <if test="freightSaleAmount != null" >
+	        freight_sale_amount = #{freightSaleAmount,jdbcType=DECIMAL},
+	      </if>
+	      <if test="taxSaleAmount != null" >
+	        tax_sale_amount = #{taxSaleAmount,jdbcType=DECIMAL},
+	      </if>
+	      <if test="orderTime != null" >
+	        order_time = #{orderTime,jdbcType=TIMESTAMP},
+	      </if>
+	      <if test="orderStatus != null" >
+	        order_status = #{orderStatus,jdbcType=CHAR},
+	      </if>
+	      <if test="payStatus != null" >
+	        pay_status = #{payStatus,jdbcType=CHAR},
+	      </if>
+	      <if test="shippingTime != null" >
+	        shipping_time = #{shippingTime,jdbcType=TIMESTAMP},
+	      </if>
+	      <if test="shippingStatus != null" >
+	        shipping_status = #{shippingStatus,jdbcType=CHAR},
+	      </if>
+	      <if test="consignTime != null" >
+	        consign_time = #{consignTime,jdbcType=TIMESTAMP},
+	      </if>
+	      <if test="consignAddressId != null" >
+	        consign_address_id = #{consignAddressId,jdbcType=INTEGER},
+	      </if>
+	      <if test="consignAddressInfo != null" >
+	        consign_address_info = #{consignAddressInfo,jdbcType=VARCHAR},
+	      </if>
+	      <if test="shippingAddressId != null" >
+	        shipping_address_id = #{shippingAddressId,jdbcType=INTEGER},
+	      </if>
+	      <if test="shippingAddressInfo != null" >
+	        shipping_address_info = #{shippingAddressInfo,jdbcType=VARCHAR},
+	      </if>
+	      <if test="sellerLogisticsId != null" >
+	        seller_logistics_id = #{sellerLogisticsId,jdbcType=INTEGER},
+	      </if>
+	      <if test="logisticsRemark != null" >
+	        logistics_remark = #{logisticsRemark,jdbcType=VARCHAR},
+	      </if>
+	      <if test="logisticsCode != null" >
+	        logistics_code = #{logisticsCode,jdbcType=VARCHAR},
+	      </if>
+	      <if test="logisticsMultiCode != null" >
+	        logistics_multi_code = #{logisticsMultiCode,jdbcType=VARCHAR},
+	      </if>
+	      <if test="buyerRemark != null" >
+	        buyer_remark = #{buyerRemark,jdbcType=VARCHAR},
+	      </if>
+	      <if test="sellerRemark != null" >
+	        seller_remark = #{sellerRemark,jdbcType=VARCHAR},
+	      </if>
+	      <if test="rank != null" >
+	        rank = #{rank,jdbcType=CHAR},
+	      </if>
+	      <if test="settleStatus != null" >
+	        settle_status = #{settleStatus,jdbcType=CHAR},
+	      </if>
+	      <if test="settleTime != null" >
+	        settle_time = #{settleTime,jdbcType=TIMESTAMP},
+	      </if>
+	      <if test="settleUserId != null" >
+	        settle_user_id = #{settleUserId,jdbcType=INTEGER},
+	      </if>
+	      <if test="accountStatus != null" >
+	        account_status = #{accountStatus,jdbcType=CHAR},
+	      </if>
+	      <if test="hasRefundBill != null" >
+	        has_refund_bill = #{hasRefundBill,jdbcType=CHAR},
+	      </if>
+	      <if test="delayConsignTime != null" >
+	        delay_consign_time = #{delayConsignTime,jdbcType=TIMESTAMP},
+	      </if>
+	      <if test="delayConsignStatus != null" >
+	        delay_consign_status = #{delayConsignStatus,jdbcType=CHAR},
+	      </if>
+	      <if test="isNeedInvoice != null" >
+	        is_need_invoice = #{isNeedInvoice,jdbcType=CHAR},
+	      </if>
+	      <if test="score != null" >
+	        score = #{score,jdbcType=INTEGER},
+	      </if>
+	      <if test="isIssueInvoice != null" >
+	        is_issue_invoice = #{isIssueInvoice,jdbcType=CHAR},
+	      </if>
+	      <if test="payTime != null" >
+	        pay_time = #{payTime,jdbcType=TIMESTAMP},
+	      </if>
+	      <if test="payType != null" >
+	        pay_type = #{payType,jdbcType=VARCHAR},
+	      </if>
+	      <if test="tradeId != null" >
+	        trade_id = #{tradeId,jdbcType=BIGINT},
+	      </if>
+	      <if test="scoreDeductionAmout != null" >
+	        score_deduction_amout = #{scoreDeductionAmout,jdbcType=DECIMAL},
+	      </if>
+	       <if test="orderChannel != null" >
+	        order_channel = #{orderChannel,jdbcType=VARCHAR},
+	      </if>
+	       <if test="serviceRemark != null" >
+	        service_remark = #{serviceRemark,jdbcType=VARCHAR},
+	      </if>
+	       <if test="thirdId != null" >
+	        third_id = #{thirdId},
+	      </if>
+	      <if test="companyAccount != null" >
+	        company_account = #{companyAccount,jdbcType=INTEGER},
+	      </if>
+	      
+	    </set>
+	    where id = #{id,jdbcType=BIGINT}
+	</update>	
+	
+	<!-- 根据id查询订单 -->
+	<select id="getOrderInfoById" resultType="bmatser.model.OrderInfo">
+		select id,company_account companyAccount,buyer_id buyerId,IFNULL(score_deduction_amout,0) scoreDeductionAmout,pay_type payType,
+		${@bmatser.util.SQLUtil@PAY_AMOUNT} payAmount,order_status orderStatus,
+		order_amount-IFNULL(goods_sale_amount,0)-IFNULL(freight_sale_amount,0)-IFNULL(tax_sale_amount,0)-if(full_cut_amount,full_cut_amount,0)-IFNULL(group_order_sale,0) payShouldAmount,ifnull(balance_deduction,0)balanceDeduction,
+		jd_order_id jdOrderId
+		from order_info where id = #{orderId}
+	</select>
+
+
+
+	<!-- 根据thirdId查询订单 -->
+	<select id="getOrderInfoByThirdId" resultType="bmatser.model.OrderInfo">
+		SELECT
+			id,
+			seller_logistics_id as sellerLogisticsId,
+			logistics_code as logisticsCode,
+			logistics_multi_code as logisticsMultiCode
+		FROM
+			order_info
+		WHERE
+			order_status = 2
+		AND third_id = #{thirdId}
+	</select>
+
+    <select id="getOrderNum" parameterType="java.lang.Integer" resultType="java.util.Map">
+        select  order_status status , count(order_status) num from order_info
+        where buyer_id = #{dealerId}
+        GROUP  BY order_status
+    </select>
+
+
+    <select id="getOrderForIos" parameterType="java.lang.Integer" resultType="java.lang.String">
+        select  order_status status  num from order_info
+        where buyer_id = #{dealerId}
+        GROUP  BY order_status
+    </select>
+
+    <select id="getCheckUser" resultType="java.lang.String">
+        select check_status from dealer where id = #{dealerId}
+    </select>
+
+
+	<!-- job 查询推送到ERP的，但没发货的订单 -->
+	<select id="getOrdersWithThirdIdAndNoSent" resultType="String">
+		select third_id  from order_info
+		where order_status = 2
+		and  (third_id is not null and third_id!='')
+	</select>
+
+	
+	<!-- 根据订单号查询支付金额及支付方式 -->
+	<select id="selectPaymentAmountAndMethod" resultType="map">
+	  select  
+	  	${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} payAmount,
+	  ifnull(pb.pay_type,2) payType from order_info oi left join payment_bill_order pbo on oi.id = pbo.order_id
+	  left join payment_bill pb on pb.id =pbo.payment_bill_id
+	  where oi.id = #{orderId}
+	</select>
+	
+	<!-- 商城首页显示订单信息 add 20160603 -->
+	<select id="findMallOrderMessage" resultType="map">
+	    SELECT
+			d.dealer_name name,
+			now() orderTime,
+			ifnull(o.order_amount, 0) - ifnull(o.goods_sale_amount, 0) - ifnull(o.freight_sale_amount, 0) - ifnull(o.tax_sale_amount, 0) - ifnull(o.score_deduction_amout, 0) - ifnull(o.full_cut_amount, 0) - ifnull(o.group_order_sale, 0) money
+		FROM
+			order_info o,
+			dealer d
+		WHERE
+			o.buyer_id = d.id 
+      and (o.original_order_id is NULL or o.original_order_id='') 
+      and (DATE_FORMAT(o.order_time, '%Y-%m-%d') = DATE_FORMAT(NOW(), '%Y-%m-%d') 
+         or
+         (DATE_FORMAT(o.order_time, '%Y-%m-%d') =  date_sub(DATE_FORMAT(NOW(), '%Y-%m-%d'),interval 1 month) 
+           and extract(day from DATE_FORMAT(NOW(), '%Y-%m-%d')) =  extract(day from date_sub(DATE_FORMAT(NOW(), '%Y-%m-%d'),interval 1 month))
+         )
+         or
+         (DATE_FORMAT(o.order_time, '%Y-%m-%d') =  date_sub(DATE_FORMAT(NOW(), '%Y-%m-%d'),interval 2 month) 
+           and extract(day from DATE_FORMAT(NOW(), '%Y-%m-%d')) =  extract(day from date_sub(DATE_FORMAT(NOW(), '%Y-%m-%d'),interval 2 month))
+         )
+      )
+		ORDER BY
+			o.order_time DESC
+		LIMIT 0,50
+	</select><!-- 商城首页销售记录滚动区域取值更改-->
+	
+	<!-- 根据父订单id查询订单 -->
+	<select id="getOrderInfoByParentId" resultType="bmatser.model.OrderInfo">
+		select 
+		oi.id,oi.buyer_id as buyerId,oi.seller_id sellerId,oi.order_amount orderAmount,oi.goods_amount goodsAmount,
+	      oi.freight_amount freightAmount,oi.goods_sale_amount goodsSaleAmount,oi.freight_sale_amount freightSaleAmount,
+	      oi.tax_sale_amount taxSaleAmount,oi.order_time orderTime,oi.order_status orderStatus,oi.pay_status payStatus,
+	      oi.shipping_time shippingTime,oi.shipping_status shippingStatus,oi.consign_time consignTime,
+	      oi.consign_address_id consignAddressId,oi.consign_address_info consignAddressInfo,oi.shipping_address_id shippingAddressId,
+	      oi.shipping_address_info shippingAddressInfo,oi.seller_logistics_id sellerLogisticsId,oi.logistics_remark logisticsRemark,
+	      oi.logistics_code logisticsCode,oi.logistics_multi_code logisticsMultiCode,oi.buyer_remark buyerRemark,oi.seller_remark sellerRemark,
+	      oi.rank,oi.settle_status settleStatus,oi.settle_time settleTime,oi.settle_user_id settleUserId,oi.account_status accountStatus,
+	      oi.has_refund_bill hasRefundBill,oi.delay_consign_time delayConsignTime,oi.delay_consign_status delayConsignStatus,
+	      oi.is_need_invoice isNeedInvoice,oi.score,oi.is_issue_invoice isIssueInvoice,oi.pay_time payTime,oi.pay_type payType,
+	      oi.trade_id tradeId,oi.score_deduction_amout scoreDeductionAmout,oi.order_source orderSource,oi.order_channel orderChannel,
+	      oi.service_remark serviceRemark,oi.has_child hasChild,oi.original_order_id originalOrderId,oi.is_manual isManual
+		from order_info oi where oi.original_order_id = #{originalOrderId}
+	</select>
+	
+	<!-- 商城个人中心首页获取三条订单信息（待付款，待发货，待收货） -->
+	<select id = "getOrderInfoFirst" resultType="map">
+	 select t.* from (select
+		   oi.id orderId,oi.order_status status,oi.order_amount amount,oi.order_time orderTime,
+		   ${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} as payAmount,
+		   oi.consign_address_id consignAddressId,oi.consign_address_info consignAddressInfo,
+		   oi.freight_amount freightAmount,if(oi.seller_logistics_id=0,null,oi.seller_logistics_id) sellerLogisticsId,if(oi.logistics_code=0,null,oi.logistics_code) logisticsCode,
+		   oi.is_need_invoice isNeedInvoice,oi.buyer_remark buyerRemark,inv.inv_type invType,lc.logistics_name logisticsName,oi.pay_time payTime,ifnull(oi.order_type,0) orderType
+		from order_info oi
+		left join order_invoice inv on inv.order_id = oi.id 
+		left join logistics_company lc on lc.id = oi.seller_logistics_id
+		where   oi.buyer_id = #{buyerId} 
+         and (oi.is_manual =0 or oi.is_manual is null)
+		 and oi.order_status = #{status}
+		 and (oi.has_child =0 or oi.has_child is null or oi.has_child ='')
+		order by oi.order_time desc) t
+    GROUP BY t.status 
+    ORDER by t.orderTime desc
+	</select>
+	
+	<select id="getOrderListByDealerId"  parameterType="map" resultType="map">
+		select
+		   oi.id orderId,oi.order_status status,sum(${@bmatser.util.SQLUtil@PAY_AMOUNT_OI}) amount,oi.order_time orderTime,
+		   sum(${@bmatser.util.SQLUtil@PAY_AMOUNT_OI}) as payAmount,
+		   oi.consign_address_id consignAddressId,oi.consign_address_info consignAddressInfo,oi.pay_type payType,
+		   oi.freight_amount freightAmount,if(oi.seller_logistics_id=0,null,oi.seller_logistics_id) sellerLogisticsId,
+		   if(oi.logistics_code=0,null,oi.logistics_code) logisticsCode,oi.consign_time consignTime,
+		   oi.is_need_invoice isNeedInvoice,oi.buyer_remark buyerRemark,inv.inv_type invType,lc.logistics_name logisticsName,
+		   oi.pay_time payTime,ifnull(oi.order_type,0) orderType,oi.bean_deduction beanDeduction,
+		   ifnull(oi.bean_quantity,0) beanQuantity,if(oi.is_comment is not null and oi.is_comment !='' ,oi.is_comment,'0') isComment 
+		from order_info oi
+		left join order_invoice inv on inv.order_id = oi.id 
+		left join logistics_company lc on lc.id = oi.seller_logistics_id
+		<if test="(query.goodsName != null and query.goodsName != '') or (query.buyNo != null and query.buyNo != '')">
+		left join order_goods og on og.order_id = oi.id 
+		left join goods g on g.id = og.goods_id 
+		left join seller_goods sg on og.seller_goods_id = sg.id 
+		</if>
+		where   oi.buyer_id = #{buyerId} and (oi.is_manual =0 or oi.is_manual is null)
+		<if test="(query.goodsName != null and query.goodsName != '') or (query.buyNo != null and query.buyNo != '')">
+		 AND sg.status!='3'
+		</if>
+		<if test="query.type == 0">
+			and (oi.original_order_id is NULL or oi.original_order_id='') 
+		</if>
+		<if test="query.type == 1">
+			and (oi.has_child =0 or oi.has_child is null or oi.has_child ='')
+		</if>
+		<if test="status != null and status != 0">
+			and oi.order_status = #{status}
+		</if>
+		<if test="query.orderId != null and query.orderId !=''">
+			and oi.id = #{query.orderId}
+		</if>
+		<if test="query.logisticsCode != null and query.logisticsCode !=''">
+			and oi.logistics_code = #{query.logisticsCode}
+		</if>
+		<if test="query.startTime != null and query.startTime !=''">
+			and DATE_FORMAT(oi.order_time,'%Y-%m-%d') &gt;= DATE_FORMAT(#{query.startTime},'%Y-%m-%d')
+		</if>
+		<if test="query.endTime != null and query.endTime !=''">
+			and DATE_FORMAT(oi.order_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{query.endTime},'%Y-%m-%d')
+		</if>
+		<if test="query.goodsName != null and query.goodsName != '' ">
+         and sg.goods_name like '%${query.goodsName}%'</if>
+        <if test="query.buyNo != null and query.buyNo != '' ">
+         and g.buy_no like '%${query.buyNo}%'</if> 
+		group by oi.id
+		order by oi.order_time desc
+		limit #{page}, #{rows}
+	</select><!-- modify 20161205 saas查看订单列表增加返回是否评价字段  isComment 订单是否评价（0：否，1：是） -->
+	<select id="getOrderListByDealerIdCount" parameterType="map" resultType="int">
+	select count(1) from (
+		select
+		   1
+		from order_info oi
+		left join order_invoice inv on inv.order_id = oi.id 
+		left join logistics_company lc on lc.id = oi.seller_logistics_id
+		<if test="(query.goodsName != null and query.goodsName != '') or (query.buyNo != null and query.buyNo != '')">
+		left join order_goods og on og.order_id = oi.id 
+		left join goods g on g.id = og.goods_id 
+		left join seller_goods sg on og.seller_goods_id = sg.id 
+		</if>
+		where   oi.buyer_id = #{buyerId} and (oi.is_manual =0 or oi.is_manual is null)
+		<if test="(query.goodsName != null and query.goodsName != '') or (query.buyNo != null and query.buyNo != '')">
+		 AND sg.status!='3'
+		</if>
+		<if test="query.type == 0">
+			and (oi.original_order_id is NULL or oi.original_order_id='') 
+		</if>
+		<if test="query.type == 1">
+			and (oi.has_child =0 or oi.has_child is null or oi.has_child ='')
+		</if>
+		<if test="status != null and status != 0">
+			and oi.order_status = #{status}
+		</if>
+		<if test="query.orderId != null and query.orderId !=''">
+			and oi.id = #{query.orderId}
+		</if>
+		<if test="query.logisticsCode != null and query.logisticsCode !=''">
+			and oi.logistics_code = #{query.logisticsCode}
+		</if>
+		<if test="query.startTime != null and query.startTime !=''">
+			and oi.order_time &gt;= #{query.startTime}
+		</if>
+		<if test="query.endTime != null and query.endTime !=''">
+			and DATE_FORMAT(oi.order_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{query.endTime},'%Y-%m-%d')
+		</if>
+		<if test="query.goodsName != null and query.goodsName != '' ">
+         and sg.goods_name like '%${query.goodsName}%'</if>
+        <if test="query.buyNo != null and query.buyNo != '' ">
+         and g.buy_no like '%${query.buyNo}%'</if> 
+		group by oi.id
+	)a
+	</select>
+	<select id="findByIdAndBuyerId" parameterType="map" resultType="bmatser.model.OrderInfo">
+	    select 
+		  oi.id,oi.buyer_id as buyerId,oi.seller_id sellerId,oi.order_amount orderAmount,oi.goods_amount goodsAmount,
+	      oi.freight_amount freightAmount,oi.goods_sale_amount goodsSaleAmount,oi.freight_sale_amount freightSaleAmount,
+	      oi.tax_sale_amount taxSaleAmount,oi.order_time orderTime,oi.order_status orderStatus,oi.pay_status payStatus,
+	      oi.shipping_time shippingTime,oi.shipping_status shippingStatus,oi.consign_time consignTime,
+	      oi.consign_address_id consignAddressId,oi.consign_address_info consignAddressInfo,oi.shipping_address_id shippingAddressId,
+	      oi.shipping_address_info shippingAddressInfo,oi.seller_logistics_id sellerLogisticsId,oi.logistics_remark logisticsRemark,
+	      oi.logistics_code logisticsCode,oi.logistics_multi_code logisticsMultiCode,oi.buyer_remark buyerRemark,oi.seller_remark sellerRemark,
+	      oi.rank,oi.settle_status settleStatus,oi.settle_time settleTime,oi.settle_user_id settleUserId,oi.account_status accountStatus,
+	      oi.has_refund_bill hasRefundBill,oi.delay_consign_time delayConsignTime,oi.delay_consign_status delayConsignStatus,
+	      oi.is_need_invoice isNeedInvoice,oi.score,oi.is_issue_invoice isIssueInvoice,oi.pay_time payTime,oi.pay_type payType,
+	      oi.trade_id tradeId,oi.score_deduction_amout scoreDeductionAmout,oi.order_source orderSource,oi.order_channel orderChannel,
+	      oi.service_remark serviceRemark,oi.has_child hasChild,oi.original_order_id originalOrderId,oi.is_manual isManual
+	    from order_info oi
+	    where oi.id = #{orderId} and oi.buyer_id = #{buyerId}
+	</select>
+		<select id="findServiceAndManager"  parameterType="map" resultType="map">
+		select 
+			ccs.service_id serviceId,ccm.manager_id managerId
+		from crm_customer cc  
+		left join crm_customer_service ccs on cc.id = ccs.customer_id and ccs.`status` = 1
+		left join crm_customer_manager ccm on cc.id = ccm.customer_id and ccm.`status` = 1
+		where cc.dealer_id = #{buyerId}
+		limit 0,1
+	</select>
+	
+	<!--保存支付页面线下支付信息  -->
+	<update id="updateOrderOfflinePay" parameterType="bmatser.model.OrderInfo" >
+		   update order_info
+	    <set>
+	      <if test="companyAccount != null" >
+	        company_account = #{companyAccount,jdbcType=INTEGER},
+	      </if>
+	      <if test="orderStatus != null" >
+	        order_status = #{orderStatus},
+	      </if>
+	      <if test="payStatus != null" >
+	        pay_status = #{payStatus},
+	      </if>
+	       <if test="payType != null" >
+	        pay_type = #{payType},
+	      </if>
+	      <if test="paymentAccount != null" >
+	        payment_account = #{paymentAccount},
+	      </if>
+	    </set>
+	    where id = #{id,jdbcType=BIGINT}
+	</update>  
+	
+	<!-- 销售合同     modify 20160624 修改单价和优惠查询  -->	
+	<select id="selectContract"   resultType="map">
+select (SELECT dealer_name FROM dealer WHERE id='939817') dealerName,(SELECT telephone FROM dealer WHERE id='939817') telephone,
+oi.id orderId,
+${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} amount,
+IFNULL(oi.freight_amount,0) freightTotalAmount,
+g.id goods_id,g.buy_no buyNo,g.measure measure,
+g.image image,g.title title,g.model model,og.num num,
+if(og.tail is null or og.tail=0,og.sale_unit_price,og.tail) saleUnitPrice,bca.country_id countryId,
+bca.province_id provinceId,
+bca.city_id cityId,bca.area_id areaId,
+bca.consignee consignee,
+bca.mobile mobile,oi.consign_address_info consignAddressInfo,
+oi.pay_type payType,oi.order_status orderStatus,
+sell.dealer_name sellerName,sf.staff_name sellerLinkman,sf.telephone sellerTelephone,(SELECT fax FROM dealer WHERE id='939817') sellerFax,sell.address address,
+buyer.dealer_name buyerName,clm.link_man buyerLinkman,IF(clm.mobile ='' or clm.mobile IS NULL,cc.mobile,clm.mobile) buyerTelephone,cc.fax buyerFax,
+oi.order_time orderTime,b.name_cn nameCn,
+(ifnull(oi.goods_sale_amount,0)+ ifnull(oi.freight_sale_amount,0) + ifnull(oi.tax_sale_amount,0)) otherDiscount,
+ifnull(oi.full_cut_amount,0) fullCutDiscount,
+ifnull(oi.group_order_sale,0) grouponDiscount 
+from (((order_info oi join order_goods og) join goods g) join buyer_consign_address bca)
+     LEFT JOIN brand b ON g.brand_id=b.id
+     LEFT JOIN dealer sell ON oi.seller_id = sell.id 
+     LEFT JOIN dealer buyer ON oi.buyer_id = buyer.id 
+     LEFT JOIN sys_staff sf ON sf.id = oi.customer_manager_id 
+LEFT JOIN crm_customer cc ON cc.dealer_id=buyer.id
+LEFT JOIN crm_customer_linkman clm ON clm.customer_id=cc.id
+ where ((oi.id = og.order_id) and (og.goods_id = g.id) and
+ (oi.consign_address_id = bca.id)  AND (og.num > 0)) AND oi.id=#{id} and g.status='1' and bca.status='1' and b.status='1'   
+ <if test="IsNull!=null">
+			${IsNull} 
+</if>
+</select>
+
+<!-- 根据订单号查询商品列表 -->
+<select id="selectOrderInfoGoodsList" resultType="map">
+select
+	  sg.id,og.num,ifnull(og.price,og.unit_price) saleUnitPrice,
+      ifnull(og.price,og.unit_price)-ifnull(og.unit_price-ifnull(og.tail,og.sale_unit_price),0) danjia,
+      round((ifnull(og.price,og.unit_price)-ifnull(og.unit_price-ifnull(og.tail,og.sale_unit_price),0))*og.num,2) heji,
+	  if(sg.goods_name is not null and sg.goods_name != '',sg.goods_name,g.title)title,
+	  ${@bmatser.util.SQLUtil@GOODS_IMG} image,
+	  g.model,g.buy_no buyNo,
+	  b.name_cn brandName,if(sg.sku_unit is not null and sg.sku_unit !='',sg.sku_unit,g.measure) measure,
+	  ifnull(og.unit_price-ifnull(og.tail,og.sale_unit_price),0) cash
+	  from order_goods og 
+		left join goods g on g.id = og.goods_id 
+		left join seller_goods sg on og.seller_goods_id = sg.id 
+		left join brand b on b.id = g.brand_id 
+  	where og.order_id =#{id} 
+     AND sg.status!='3' AND b.status='1'
+</select>
+
+<!--查询crm_customer_linkman表的status是否存在 -->
+<select id="selectCrmCusLikmanStatus" resultType="String">
+select DISTINCT IF(((clm.status IS NULL or clm.status='') or (clm.is_default IS NULL or clm.is_default='')) AND (clm.mobile ='' or clm.mobile IS NULL),'0','1')
+from (((order_info oi join order_goods og) join goods g) join buyer_consign_address bca)
+     LEFT JOIN brand b ON g.brand_id=b.id
+     LEFT JOIN dealer sell ON oi.seller_id = sell.id 
+     LEFT JOIN dealer buyer ON oi.buyer_id = buyer.id 
+     LEFT JOIN sys_staff sf ON sf.id = oi.customer_manager_id
+LEFT JOIN crm_customer cc ON cc.dealer_id=buyer.id
+LEFT JOIN crm_customer_linkman clm ON clm.customer_id=cc.id
+ where ((oi.id = og.order_id) and (og.goods_id = g.id) and
+ (oi.consign_address_id = bca.id)  AND (og.num > 0)) AND oi.id=#{orderId} and g.status='1' and bca.status='1' and b.status='1' AND cc.status !='2'
+ AND clm.status='1' AND clm.is_default='1'
+</select>
+
+<!-- 根据订单id查询订单信息以及买方供方信息  -->
+<select id="findOrderInfoById" resultType="map">
+select o.id,o.order_time orderTime,d.dealer_name buyerDealerName,ifnull(c.fax,d.fax) buyerFax,
+ifnull(o.balance_deduction,0) balanceDeduction,
+if(ccl.link_man is not null and ccl.link_man !='',ccl.link_man,c.link_man) buyerLinkman,
+if(ccl.mobile is not null and ccl.mobile !='',ccl.mobile,d.telephone) buyerTelephone,
+de.dealer_name sellerDealerName,de.telephone sellerTelephone,de.address address,
+ifnull(ss.staff_name,'') staffName,ifnull(ss.telephone,'') sellerTel,de.fax sellerFax,
+(ifnull(o.goods_sale_amount,0)+ ifnull(o.freight_sale_amount,0) + ifnull(o.tax_sale_amount,0)) otherDiscount,
+ifnull(o.full_cut_amount,0) fullCutDiscount,
+ifnull(o.group_order_sale,0) grouponDiscount,
+o.freight_amount freightAmount,ifnull(o.bean_deduction,0) beanDeduction,
+(o.order_amount-ifnull(o.goods_sale_amount,0)-ifnull(o.freight_sale_amount,0)-ifnull(o.tax_sale_amount,0)
+-ifnull(o.score_deduction_amout,0)-ifnull(o.full_cut_amount,0)-ifnull(o.group_order_sale,0)-ifnull(o.balance_deduction,0)-ifnull(o.bean_deduction,0)) amount
+  from order_info o
+LEFT JOIN sys_staff ss on ss.id = o.customer_service_id
+LEFT JOIN dealer d on o.buyer_id = d.id
+LEFT JOIN dealer de on de.id =939817
+LEFT JOIN crm_customer c on c.dealer_id = d.id and c.status !='2'
+LEFT JOIN crm_customer_linkman ccl on ccl.customer_id=c.id and ccl.`status`=1 and ccl.is_default=1
+where o.id = #{id}
+</select>
+
+<select id="createContract" parameterType="map" resultType="map">
+	select 
+	ifnull(invoice.bank_account,'') bank_account,ifnull(invoice.recv_address,'') recv_address,ifnull(invoice.taxpaye_rno,'') taxpaye_rno,ifnull(invoice.reg_telphone,'') reg_telphone,ifnull(invoice.bank,'') bank,
+		oi.id,buyer.dealer_name buyerName,seller.dealer_name sellerName,
+		oi.freight_amount freightAmount,oi.order_time orderTime,if(buyer.fax is not null and buyer.fax !='',buyer.fax,cc.fax) buyerFax,
+		if(ccl.mobile_secret is not null and ccl.mobile_secret !='',ccl.mobile_secret,buyer.telephone_secret) buyerTel,
+		ss.staff_name staffName,ss.telephone sellerTel,if(ccl.link_man is not null and ccl.link_man !='',ccl.link_man,buyer.linkman)linkman,seller.fax sellerFax,
+		if(oi.goods_sale_amount,oi.goods_sale_amount,0)+if(oi.freight_sale_amount,oi.freight_sale_amount,0)+if(oi.full_cut_amount,oi.full_cut_amount,0)+if(oi.score_deduction_amout,oi.score_deduction_amout,0)+ifnull(oi.group_order_sale,0) as  saleAmount,
+		${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} payAmount,ifnull(oi.balance_deduction,0) balanceDeduction,
+		ifnull(oi.group_order_sale,0)groupOrderSale,if(oi.full_cut_amount,oi.full_cut_amount,0)fullCutAmount,if(oi.goods_sale_amount,oi.goods_sale_amount,0)+if(oi.freight_sale_amount,oi.freight_sale_amount,0)otherAmount,ifnull(oi.bean_deduction,0) beanDeduction
+	from order_info oi 
+	left join dealer buyer on buyer.id = oi.buyer_id
+	left join dealer seller on seller.id =939817
+	left join sys_staff ss on ss.id = oi.customer_service_id
+	left join crm_customer cc on cc.dealer_id = buyer.id and cc.status = 1
+	left join crm_customer_linkman ccl on ccl.customer_id = cc.id and is_default = 1 and ccl.status = 1 
+	LEFT JOIN order_invoice invoice on invoice.order_id = oi.id
+	where oi.id = #{id}
+</select>
+
+<!--查询供应商详情  -->
+<select id="selectOrderDealByDealerId"  parameterType="map" resultType="map">
+		select
+		      oi.id orderId,oi.order_status status,oi.order_amount amount,oi.order_time orderTime,
+		      sum(IFNULL(oi.order_amount,0) - IFNULL(oi.goods_sale_amount,0) - IFNULL(oi.freight_sale_amount,0) - IFNULL(oi.tax_sale_amount,0) -  
+			  IFNULL(oi.score_deduction_amout,0) - IF(oi.full_cut_amount,oi.full_cut_amount,0) ) as payAmount,
+		      oi.consign_address_id consignAddressId,oi.consign_address_info consignAddressInfo,
+		      oi.freight_amount freightAmount,oi.seller_logistics_id sellerLogisticsId,lc.logistics_code logisticsCode,lc.logistics_name logisticsName,
+		      oi.is_need_invoice isNeedInvoice,oi.buyer_remark buyerRemark,oi.pay_time payTime,
+		      oi.settle_time settleTime
+		from order_info oi
+		LEFT JOIN dealer d ON oi.seller_id=d.id
+	    left join logistics_company lc on lc.id = oi.seller_logistics_id 
+		where d.status='1' 
+		<if test="1==1">
+			and 1=1
+		</if>  
+		<if test="dealerId != null and dealerId != 0">
+			and oi.seller_id = #{dealerId}
+		</if>
+		<if test="status != null and status != 0">
+			and oi.order_status = #{status}
+		</if>
+		<if test="orderId != null and orderId !=''">
+			and (oi.id = #{orderId} or d.dealer_name = #{orderId})
+		</if>
+		<if test="startTime != null and startTime !=''">
+			and Date(oi.order_time) &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime !=''">
+			and Date(oi.order_time) &lt;= #{endTime}
+		</if>
+		<if test="payType != null and payType !=''">
+			and oi.pay_type = #{payType}
+		</if>
+		group by oi.id
+		order by oi.order_time desc
+		limit #{page}, #{rows}
+	</select>
+	
+	<!--查询供应商详情总数量  -->
+<select id="getOrderListByDealerIdCountVal"  parameterType="map" resultType="int">
+select count(1) from (
+		select
+		   1
+		from order_info oi
+		LEFT JOIN dealer d ON oi.seller_id=d.id
+	    left join logistics_company lc on lc.id = oi.seller_logistics_id
+		where d.status='1' 
+		<if test="1==1">
+			and 1=1
+		</if>  
+		<if test="dealerId != null and dealerId != 0">
+			and oi.seller_id = #{dealerId}
+		</if>
+		<if test="status != null and status != 0">
+			and oi.order_status = #{status}
+		</if>
+		<if test="orderId != null and orderId !=''">
+			and (oi.id = #{orderId} or d.dealer_name = #{orderId})
+		</if>
+		<if test="startTime != null and startTime !=''">
+			and Date(oi.order_time) &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime !=''">
+			and Date(oi.order_time) &lt;= #{endTime}
+		</if>
+		<if test="payType != null and payType !=''">
+			and oi.pay_type = #{payType}
+		</if>
+		group by oi.id)
+		o
+	</select>
+	<update id="updateDealerCash" parameterType="map">
+		update 
+			dealer
+		<set>
+			cash = cash-${cash}
+		</set>
+		where id = #{id}	 
+	</update>
+	
+	<select id="findOrderDetail" parameterType="map" resultType="map">
+		select 
+			oi.seller_logistics_id sellerLogisticsId,bca.province_id provinceId,seller.email sellerEmail,oi.shipping_time shippingTime,ifnull(oi.balance_deduction,0) balanceDeduction,
+			ifnull(oi.goods_sale_amount,0)+ifnull(oi.freight_sale_amount,0)+ifnull(oi.tax_sale_amount,0) + ifnull(oi.full_cut_amount,0)saleAmount,
+			ifnull(oi.goods_amount,0)goodsAmount,bca.city_id cityId,bca.consignee,ifnull(oi.score,0)score,
+			inv.reg_address regAddress,inv.taxpaye_rno taxpayeRno,oi.pay_time payTime,
+			${@bmatser.util.SQLUtil@PAY_AMOUNT_OI}amount,
+			${@bmatser.util.SQLUtil@PAY_AMOUNT_OI}-ifnull(oi.balance_deduction,0) realAmount,
+			bca.area_id areaId,seller.address sellerAddress,seller.area_id sellerAreaId,ifnull(oi.logistics_code,'') logisticsCode,
+			ifnull(oi.goods_sale_amount,0)+ifnull(oi.freight_sale_amount,0)+ifnull(oi.tax_sale_amount,0) + ifnull(oi.full_cut_amount,0)goodsSaleAmount,
+			ifnull(oi.logistics_remark,'') logisticsRemark,inv.recv_mobile recvMobile,inv.recv_mobile_secret recvMobileSecret,inv.recv_name recvName,inv.inv_content invContent,
+			ifnull(lc.logistics_name,'')logisticsName,ifnull(oi.score_deduction_amout,0) scoreDeductionAmout,ifnull(oi.freight_amount,0) freightAmount,ifnull(inv.bank,'')bank,
+			ifnull(oi.buyer_remark,'') buyerRemark,seller.telephone sellerTelephone,seller.telephone_secret sellerTelephoneSecret,oi.id orderId,bca.country_id countryId,inv.recv_city recvCity,
+			inv.reg_telphone regTelphone,oi.order_status status,ifnull(oi.is_issue_invoice,0) isIssueInvoice,oi.order_time orderTime,inv.recv_area recvArea,bca.address,
+			seller.shop_name shopName,oi.pay_type payType,seller.city_id sellerCityId,seller.province_id sellerProvinceId,inv.recv_address recvAddress,bca.mobile,
+			oi.is_need_invoice isNeedInvoice,bca.mobile_secret mobileSecret,inv.recv_province recvProvince,inv.bank_account bankAccount,ifnull(oi.order_type,0) orderType,oi.consign_address_info consignAddressInfo,
+			ifnull(oi.group_order_sale,0) groupOrderSale,ifnull(oi.full_cut_amount,0) fullCutAmount,inv.inv_type invType,inv.inv_title invTitle,ifnull(oi.goods_sale_amount,0)goodsSale,ifnull(oi.freight_sale_amount,0)freightSaleAmount,
+			ifnull(oi.bean_quantity,0) beanQuantity,ifnull(oi.bean_deduction,0) beanDeduction,if(oi.bean_deduction is not null and oi.bean_deduction>0,1,0) isBean,oi.order_channel orderChannel,oi.package_info packageInfo
+		from order_info oi 
+		left join dealer seller on oi.seller_id = seller.id
+		left join buyer_consign_address bca on bca.id = oi.consign_address_id
+		left join order_invoice inv on inv.order_id = oi.id and inv.status = 1
+		left join logistics_company lc on lc.id = oi.seller_logistics_id
+		where oi.id = #{orderId} and oi.buyer_id = #{dealerId}
+	</select><!-- 20160722 查询增加余额字段 balanceDeduction-->
+	
+	<select id="findGoodsBytype" parameterType="map" resultType="map">
+		select 
+			og.goods_id goodsId,og.num,g.model,sg.goods_name title,ifnull(sg.sku_unit,g.measure)measure,ifnull(og.sale_unit_price,og.unit_price)saleUnitPrice,og.id orderGoodsId,if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1) batchQuantity,if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1) orderQuantity,
+			${@bmatser.util.SQLUtil@GOODS_IMG} image,og.seller_goods_id sellerGoodsId,ifnull(og.price,og.unit_price) salePrice,og.unit_Price unitPrice,b.name_cn brandName,sg.buy_no buyNo,${@bmatser.util.SQLUtil@IS_REAL_BEAN}isBean,floor(sg.price*ifnull(sg.bean_rate,0)*100) bean ,og.goods_type goodsType,og.activity_id activityId,sg.price marketPrice
+		from order_goods og
+		left join seller_goods sg on sg.id = og.seller_goods_id
+		left join goods g on sg.goods_id = g.id 
+		left join brand b on g.brand_id = b.id 
+		left join ${@bmatser.util.SQLUtil@GROUP_STATUS} on groupStatus.id = sg.id
+		where og.order_id = #{orderId} and 
+		<if test="type ==0">
+			(og.goods_type is null or og.goods_type = 0)
+		</if>
+		<if test="type ==1">
+			og.goods_type =1
+		</if>
+		<if test="type ==3">
+			og.goods_type =3
+		</if>
+	</select>
+	<select id="getOrderListByOrderDealPage" resultType="map">
+		select
+		   oi.id orderId,oi.order_status status,oi.order_amount amount,oi.order_time orderTime,
+		   sum(${@bmatser.util.SQLUtil@PAY_AMOUNT_OI}) as payAmount,
+		   sum(${@bmatser.util.SQLUtil@PAY_AMOUNT_OI}-ifnull(oi.balance_deduction,0)) as realAmount,
+		   balance_deduction balanceDeduction,
+		   oi.consign_address_id consignAddressId,oi.consign_address_info consignAddressInfo,
+		   oi.freight_amount freightAmount,if(oi.seller_logistics_id=0,null,oi.seller_logistics_id) sellerLogisticsId,if(oi.logistics_code=0,null,oi.logistics_code) logisticsCode,
+		   oi.is_need_invoice isNeedInvoice,oi.buyer_remark buyerRemark,inv.inv_type invType,lc.logistics_name logisticsName,oi.pay_time payTime
+		from order_info oi
+		left join order_invoice inv on inv.order_id = oi.id 
+		left join logistics_company lc on lc.id = oi.seller_logistics_id
+		where   oi.buyer_id = #{dealerId} and (oi.is_manual =0 or oi.is_manual is null)
+			and (oi.original_order_id is NULL or oi.original_order_id='') 
+		<if test="status != null and status != 0">
+			and oi.order_status = #{status}
+		</if>
+		<if test="orderId != null and orderId !=''">
+			and oi.id = #{orderId}
+		</if>
+		<if test="logisticsCode != null and logisticsCode !=''">
+			and oi.logistics_code = #{logisticsCode}
+		</if>
+		<if test="startTime != null and startTime !=''">
+			and oi.order_time &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime !=''">
+			and DATE_FORMAT(oi.order_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d')
+		</if>
+		<if test="queryType ==1">
+			and oi.order_time &gt;= DATE_SUB(oi.order_time, INTERVAL 3 MONTH)   
+		</if>
+		<if test="queryType ==2">
+			and oi.order_time &lt;= DATE_SUB(oi.order_time, INTERVAL 3 MONTH)   
+		</if>
+		group by oi.id
+		order by oi.order_time desc
+		limit #{page}, #{rows}
+	</select>
+	<select id="getOrderListByOrderDealPageCount" resultType="int">
+		select count(1) from (
+			select
+			   1
+			from order_info oi
+			left join order_invoice inv on inv.order_id = oi.id 
+			left join logistics_company lc on lc.id = oi.seller_logistics_id
+			where   oi.buyer_id = #{dealerId} and (oi.is_manual =0 or oi.is_manual is null)
+				and (oi.original_order_id is NULL or oi.original_order_id='') 
+			<if test="status != null and status != 0">
+				and oi.order_status = #{status}
+			</if>
+			<if test="orderId != null and orderId !=''">
+				and oi.id = #{orderId}
+			</if>
+			<if test="logisticsCode != null and logisticsCode !=''">
+				and oi.logistics_code = #{logisticsCode}
+			</if>
+			<if test="startTime != null and startTime !=''">
+				and oi.order_time &gt;= #{startTime}
+			</if>
+			<if test="endTime != null and endTime !=''">
+				and DATE_FORMAT(oi.order_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d')
+			</if>
+			<if test="queryType ==1">
+				and oi.order_time &gt;= DATE_SUB(oi.order_time, INTERVAL 3 MONTH)   
+			</if>
+			<if test="queryType ==2">
+				and oi.order_time &lt;= DATE_SUB(oi.order_time, INTERVAL 3 MONTH)   
+			</if>
+			group by oi.id
+		)a
+	</select>
+	<select id="getOrderInfoByEdit"  resultType="bmatser.model.EditOrder">
+		select 
+			id,buyer_id buyerId,order_amount orderAmount,goods_amount goodsAmount,
+			freight_amount freightAmount,ifnull(goods_sale_amount,0) goodsSaleAmount,
+			ifnull(freight_sale_amount,0) freightSaleAmount,ifnull(tax_sale_amount,0) taxSaleAmount,
+			ifnull(score_deduction_amout,0) scoreDeductionAmout,ifnull(full_cut_amount,0) fullCutAmount,
+			ifnull(group_order_sale,0) groupOrderSale,ifnull(order_time,0) orderTime,order_status orderStatus,
+			if(bean_deduction is not null and bean_deduction>0,1,0) isBean,
+			consign_address_info consignAddressInfo
+		from order_info
+		where id = #{id} and order_status = 1 and buyer_id = #{dealerId} and ifnull(order_type,0) = 0
+	</select >
+	<select id="getOrderGoodsByEdit" resultType="bmatser.model.EditOrderGoods">
+		select 
+			og.id,order_id orderId,og.goods_id goodsId,og.seller_goods_id sellerGoodsId,og.num,ifnull(og.unit_price,0) unitPrice,
+			ifnull(og.sale_price,0) salePrice,ifnull(og.sale_unit_price,0) saleUnitPrice,ifnull(og.cost_price,0) costPrice,
+			ifnull(og.tail,og.sale_unit_price)tail,ifnull(og.goods_type,0) goodsType,og.activity_id activityId,ifnull(og.price,0)price,
+			g.buy_no buyNo,g.model,b.name_cn brandName,if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1) batchQuantity,if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1) orderQuantity,
+			${@bmatser.util.SQLUtil@GOODS_IMG} image,ifnull(sg.goods_name,g.title)title
+		from order_goods og
+		left join seller_goods sg on sg.id = og.seller_goods_id
+		left join goods g on g.id = og.goods_id
+		left join brand b on b.id = g.brand_id
+		where og.order_id = #{id}
+	</select>
+ 	<select id="getGoodsByEdit" parameterType="map" resultType="bmatser.model.EditGoods">
+		select 
+			sg.id,
+			if(x.id is not null ,ROUND(g.market_price*x.rate,2),sg.sale_price) salePrice,
+			if(x.id is not null ,0,sg.is_sale) isSale,
+			if(x.id is not null ,0,${@bmatser.util.SQLUtil@IS_RATE}) isRate,
+			sg.rate,
+			sg.goods_id goodsId,
+			g.buy_no buyNo,
+			g.model,b.name_cn brandName,
+			if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1) batchQuantity,
+			if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1) orderQuantity,
+			${@bmatser.util.SQLUtil@GOODS_IMG} image,
+			ifnull(sg.goods_name,g.title)title,
+			x.id packageId
+		from 
+		seller_goods sg
+		left join  goods g on g.id = sg.goods_id
+		left join brand b on b.id = g.brand_id
+		left join <include refid="bigCustomer"/>
+		where sg.id in (
+			<foreach collection="idList" item="id" separator=",">
+				#{id}
+			</foreach>
+		)
+	</select>
+	
+	<select id="getFreightAmount" resultType="java.math.BigDecimal">
+		select sum(x.freightAmount)freightAmount from (
+			select if(sum(x.price)&lt;if(lst.order_amount is not null and lst.order_amount != '',lst.order_amount,0),lst.freight_amount,0) freightAmount 
+			from logistics_shop_temp lst
+			left join (
+				<foreach collection="idList" item="id" separator="union all">
+				select sg.fare_temp_id,(sg.sale_price*${id.num})price from seller_goods sg
+				where sg.id =#{id.sellerGoodsId} and sg.fare_temp_id is not null 
+				</foreach>
+			)x on x.fare_temp_id = lst.id
+			GROUP BY lst.id
+		)x
+	</select>
+	<select id="getFullCutAmount" resultType="java.math.BigDecimal">
+<!-- 			select sum(x.fullcut)price from (
+				select 
+					if(x.price&gt;gaf.full_amount,floor(x.price/gaf.full_amount)*cut_ext,0) fullcut,MAX(ga.create_time)
+				from goods_activity_sale gas
+				INNER JOIN goods_activity ga on ga.id = gas.goods_activity_id and ga.activity_type=2 and ga.`status`=1 and ga.start_time &lt;= now() and ga.end_time &gt;= now() 
+				INNER JOIN goods_activity_fullcut gaf on ga.id = gaf.goods_activity_id and gaf.status = 1
+				left join (
+					<foreach collection="idList" item="id" separator="union all">
+						select id,${id.unitPrice}*${id.num} price from seller_goods 
+						where id = #{id.sellerGoodsId}
+					</foreach>
+				)x on x.id = gas.seller_goods_id
+				inner join (
+					select gas.seller_goods_id,max(ga.create_time) time
+					from goods_activity_sale gas
+					INNER JOIN goods_activity ga on ga.id = gas.goods_activity_id and ga.activity_type=2 and ga.`status`=1 and ga.start_time &lt;= now() and ga.end_time &gt;= now() 
+					INNER JOIN goods_activity_fullcut gaf on ga.id = gaf.goods_activity_id and gaf.status = 1
+					group by gas.seller_goods_id 
+				)y on y.seller_goods_id =x.id and ga.create_time = y.time
+			)x -->
+			select sum(ifnull(x.fullcut,0))price from 
+			(
+					select 
+						if(x.price&gt;gaf.full_amount,floor(x.price/gaf.full_amount)*cut_ext,0) fullcut
+					from goods_activity_sale gas
+					INNER JOIN goods_activity ga on ga.id = gas.goods_activity_id and ga.activity_type=2 and ga.`status`=1 and ((
+								ga.start_time &lt;= now() 
+								and 
+								ga.end_time &gt;= now() 
+							)or(
+								ga.next_start_time &lt;= now() 
+								and 
+								ga.next_end_time &gt;= now()
+								and 
+								ga.next_start_time is not null
+								and 
+								ga.next_end_time is not null
+							))  
+					INNER JOIN goods_activity_fullcut gaf on ga.id = gaf.goods_activity_id and gaf.status = 1
+					left join 
+						(
+							<foreach collection="idList" item="id" separator="union all">
+								<choose>
+									<when test="id.num != null and id.num !='' and (id.packageId==null or id.packageId=='')">
+										select id,${id.unitPrice}*${id.num} price from seller_goods 
+										where id = #{id.sellerGoodsId}
+									</when>
+									<otherwise>
+										select id,0 price from seller_goods 
+										where id = #{id.sellerGoodsId}
+									</otherwise>
+								</choose>
+							</foreach>
+						)x on x.id = gas.seller_goods_id
+					inner join (
+							select gas.seller_goods_id,max(ga.create_time) time
+									from goods_activity_sale gas
+									INNER JOIN goods_activity ga on ga.id = gas.goods_activity_id and ga.activity_type=2 and ga.`status`=1 and ((
+								ga.start_time &lt;= now() 
+								and 
+								ga.end_time &gt;= now() 
+							)or(
+								ga.next_start_time &lt;= now() 
+								and 
+								ga.next_end_time &gt;= now()
+								and 
+								ga.next_start_time is not null
+								and 
+								ga.next_end_time is not null
+							))  
+							INNER JOIN goods_activity_fullcut gaf on ga.id = gaf.goods_activity_id and gaf.status = 1
+							group by gas.seller_goods_id 
+					)y on y.seller_goods_id =x.id and ga.create_time = y.time
+					where gas.status = 1
+			)x
+	</select>
+	<delete id="delOrderGoods">
+		delete from order_goods where order_id = #{id}
+	</delete>
+	<update id="updateOrderReturnCash">
+		update  dealer d,order_info oi set d.cash = d.cash + ifnull(oi.score_deduction_amout,0) where d.id = oi.buyer_id and oi.id = #{id}
+	</update>
+	<update id="updateEditOrder">
+		
+		update order_info 
+		<set>
+			order_amount = #{orderAmount},
+			goods_amount = #{goodsAmount},
+			freight_amount = #{freightAmount},
+			goods_sale_amount = #{goodsSaleAmount},
+			freight_sale_amount = #{freightSaleAmount},
+			tax_sale_amount = #{taxSaleAmount},
+			score_deduction_amout = #{scoreDeductionAmout},
+			full_cut_amount = #{fullCutAmount},
+			group_order_sale = #{groupOrderSale},
+			score = #{score},
+		</set>
+		where id = #{id};
+	</update>
+	<update id="updateOrderNewCash">
+		update  dealer d,order_info oi set d.cash = d.cash - ifnull(oi.score_deduction_amout,0) where d.id = oi.buyer_id and oi.id = #{id} and d.cash &gt;= ifnull(oi.score_deduction_amout,0);
+	</update>
+	<insert id="saveEditOrderGoods">
+		insert into order_goods 
+		<trim prefix="(" suffix=")values " suffixOverrides=",">
+			order_id,
+			goods_id,
+			seller_goods_id,
+			num,
+			unit_price,
+			sale_price,
+			sale_unit_price,
+			cost_price,
+			tail,
+			goods_type,
+			activity_id,
+			price
+		</trim>
+		<trim prefix="(" suffix=") " suffixOverrides=",">
+			#{orderId},
+			#{goodsId},
+			#{sellerGoodsId},
+			#{num},
+			#{unitPrice},
+			#{salePrice},
+			#{saleUnitPrice},
+			#{costPrice},
+			#{tail},
+			#{goodsType},
+			#{activityId},
+			#{price}
+		</trim>
+	</insert>
+	<update id="updateEditOrderGoods">
+		update order_goods 
+		<set>
+			order_id = #{orderId},
+			goods_id = #{goodsId},
+			seller_goods_id = #{sellerGoodsId},
+			num = #{num},
+			unit_price = #{unitPrice},
+			sale_price = #{salePrice},
+			sale_unit_price = #{saleUnitPrice},
+			cost_price = #{costPrice},
+			tail = #{tail},
+			goods_type = #{goodsType},
+			activity_id = #{activityId},
+			price = #{price}
+		</set>
+		where id = #{id}
+	</update>
+	<select id="findOrderBeforeCash" resultType="int">
+		select 
+			ifnull(d.cash,0)+ ifnull(oi.score_deduction_amout,0) cash
+		from order_info oi
+		inner join dealer d on oi.buyer_id = d.id
+		where oi.id = #{id}
+	</select>
+	<update id="delCashRecord">
+		update dealer_cash
+		set status =2
+		where related_id = #{id}
+	</update>
+	<insert id="insertCashRecord">
+				insert into dealer_cash (dealer_id,cash,create_time,create_user_id,related_id,type,status) select buyer_id,ifnull(score_deduction_amout,0)*-1,now(),0,id,2,1 from order_info where id= #{id} and score_deduction_amout > 0
+	</insert>
+	<update id="updateBalanceByType">
+		update 
+			order_info oi,dealer d
+		set 
+			<if test="type == 0">
+				oi.balance_deduction = 0 
+			</if>
+			<if test="type == 1">
+				oi.balance_deduction = if(
+					${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} > ifnull(d.balance,0),
+					ifnull(d.balance,0),
+					${@bmatser.util.SQLUtil@PAY_AMOUNT_OI}
+				)
+			</if>
+		where oi.id = #{orderId} and oi.buyer_id = d.id
+			and oi.order_status = 1 
+	</update>
+	
+	<select id="getOrderBalance" resultType="double">
+		select 
+			if(count(1)!=0,ifnull(balance_deduction,0),0) 
+		from order_info
+		where id = #{orderId} and buyer_id = #{dealerId} and order_status = 1
+	</select>
+	
+	<update id="saveOrderByBalance">
+		update 
+			order_info oi
+		set 
+			order_status = 2,
+			pay_status = 2,
+			pay_time = now(),
+			pay_type = 4,
+			company_account = 8
+		where id = #{orderId}
+	</update>
+	
+	<!-- 商城个人中心首页查询订单 待付款，待发货，待收货 总数-->
+	<!-- <select id="getOrderCountByDealerId" resultType="map">
+	  select count(1) count,order_status os,(case order_status when 1 then '待付款' when 2 then '待发货' when 4 then '已收货' end) as status
+	    from order_info
+       where order_status in (1,2,4)
+             and buyer_id = #{dealerId} 
+        group by  os
+	</select> -->
+	<!-- 商城首页查询订单 待付款，待发货，待收货 总数 -->
+	<select id="getOrderCountByDealerId" resultType="map">
+	select count(1) count,'1' os,'待付款' status from order_info oi where order_status =1 and (oi.is_manual =0 or oi.is_manual is null)
+			and (oi.has_child =0 or oi.has_child is null or oi.has_child ='') and buyer_id = #{dealerId}
+		union 
+		select count(1) count,'2' os,'待发货' status from order_info oi where order_status =2 and (oi.is_manual =0 or oi.is_manual is null)
+		    and (oi.has_child =0 or oi.has_child is null or oi.has_child ='') and buyer_id = #{dealerId}
+		union
+		select count(1) count,'3' os,'待收货' status from order_info oi where order_status =3 and (oi.is_manual =0 or oi.is_manual is null)
+		    and (oi.has_child =0 or oi.has_child is null or oi.has_child ='') and buyer_id = #{dealerId}
+	</select>	
+	
+	<!-- SaaS首页查询订单 待付款，待发货，待收货 总数 -->
+	<select id="getOrderCount" resultType="map">
+	    select count(1) count,'1' os,'待付款' status from order_info oi where order_status =1 and (oi.is_manual =0 or oi.is_manual is null)
+			and (oi.original_order_id is NULL or oi.original_order_id='') and buyer_id = #{dealerId}
+		union 
+		select count(1) count,'2' os,'待发货' status from order_info oi where order_status =2 and (oi.is_manual =0 or oi.is_manual is null)
+		    and (oi.original_order_id is NULL or oi.original_order_id='') and buyer_id = #{dealerId}
+		union
+		select count(1) count,'3' os,'待收货' status from order_info oi where order_status =3 and (oi.is_manual =0 or oi.is_manual is null)
+		    and (oi.original_order_id is NULL or oi.original_order_id='') and buyer_id = #{dealerId}
+	</select>	
+	
+	<select id="findOrderAddress" resultType="map">
+		select 
+			consign_address_info_secret consignAddressInfoSecret,
+			consign_address_id consignAddressId,
+			if(jd_order_id is not null and jd_order_id !='',1,0)isJd 
+		from order_info
+		where id = #{id}
+	</select>
+	
+	<select id="saveScoreToERP" parameterType="java.lang.String" resultType="bmatser.model.Trade">
+		select 
+			oi.id fbillno,oi.exchange_time fcreatetime,0 flocked,'' flocknote,2 fshoptradestatus,0 fiscod,
+			oi.exchange_time fpaytime,buyer.dealer_name fcustname,'江苏工电宝信息科技有限公司' fsalername,
+			0 fpayamt,0 fpostamt,0 fgoodsamt,0 fdiscountamt,oi.consign_address_info freceiveraddress,
+			'' fcustmessage,'' fnote,0 fneedinvoice,g.`name`,g.syn_code synCode,oi.num,
+			14 fempnumber,6 fbankaccountnumber,2 fshopid
+		from gift_exchange_record oi 
+		left join dealer buyer on buyer.id = oi.dealer_id 
+		LEFT JOIN gift g on g.id=oi.gift_id
+		where oi.id =#{id} and oi.status=1
+	</select>
+	
+	<update id="updateGift" parameterType="map">
+		update gift_exchange_record set fid=#{fid},status=4 where id=#{id}
+	</update>
+	<select id="findOrderInterest" resultType="map">
+		select
+			 oi.id,ro.interest,oi.buyer_id dealerId
+		from order_info oi
+		left join refund_order ro on oi.id = ro.order_id and ro.status = 3
+		where oi.id =#{orderId}
+		limit 0,1
+	</select>
+	<update id="updateOrderInterest">
+		update 
+			order_info oi,refund_order ro
+			set
+				status=6
+		where oi.id =#{orderId} and oi.id = ro.order_id
+	</update>
+	<update id="saveOrderInterest">
+			update 
+			order_info oi,refund_order ro
+			set
+				interest=#{amount}
+			where oi.id =#{orderId} and oi.id = ro.order_id
+	</update>
+	<select id="findGoodsInfo" resultType="map">
+		select 
+			id,seller_goods_id sellerGoodsId,ifnull(goods_type,0) goodsType,num,ifnull(activity_id,0) activityId
+		from order_goods 
+		where order_id = #{orderId}
+	</select>
+	
+	<update id="updateOrderRebate">
+		update 
+			order_info
+		set 
+			rebate_status = 1
+		where id = #{orderId}
+	</update>
+	<update id="cancelEzhuOrder">
+		update 
+			order_info
+		set
+			third_id = null
+		where child_id = #{orderId}	or id = #{orderId}
+	</update>
+	
+	<!-- saas订单评价查询下单时间 -->
+	<select id="getOrderTime" resultType="java.sql.Timestamp">
+	  select order_time orderTime from order_info where id =#{orderId}
+	</select>
+	
+	<select id="getToPayInfo" resultType="bmatser.model.PayInfo">
+	   select 
+	       oi.id orderId,${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} payAmount,ifnull(oi.balance_deduction,0)balanceDeduction,ifnull(d.balance,0)+ifnull(oi.balance_deduction,0) balance
+	   from order_info oi 
+	   left join dealer d on d.id = oi.buyer_id
+	   where oi.id=#{orderId} and oi.buyer_id = #{dealerId} 
+	</select>
+	
+	<!-- 获取订单物流信息 -->
+	<select id="getOrderLogistics" resultType="bmatser.model.OrderExpressInfo">
+	 <!--  select oe.shop_id shopId,oe.shop_name shopName,oe.original_order_id originalOrderId,
+	    lc.logistics_code fexpcomname,oe.fexp_no fexpNo,oe.fname,lc.logistics_name logisticsName  
+	  from order_express oe left join logistics_company lc on lc.logistics_name  = oe.fexpcomname and lc.status = 1 
+	  where oe.original_order_id = #{orderId}
+	  and oe.status = 1 -->
+	  
+	  select lc.logistics_code fexpcomname,oi.logistics_code fexpNo,lc.logistics_name logisticsName from order_info oi LEFT JOIN logistics_company lc
+		on lc.id = oi.seller_logistics_id
+		where oi.id=#{orderId}
+	</select>
+	<!-- 获取订单包裹物流信息 -->
+	<select id="getOrderPackageLogistics" resultType="bmatser.model.OrderExpressInfo">
+		SELECT
+			oexp.id,oexp.shop_name as shopName,oexp.original_order_id as originalOrderId,oexp.fexpcomname,oexp.fexp_no as fexpNo,oexp.fname,oexp.status,lc.logistics_name as logisticsName
+		FROM
+			order_express  oexp
+		LEFT JOIN logistics_company lc
+		on oexp.fexpcomname = lc.logistics_code
+		WHERE oexp.status= 1
+		AND oexp.original_order_id = #{orderId}
+	</select>
+	
+	<!-- 获取订单发票物流信息 -->
+	<select id="getInvoiceLogistics" resultType="bmatser.model.OrderReceiptInfo">
+	 select o.shop_id shopId,o.shop_name shopName,o.original_order_id originalOrderId,o.fjs_no fjsNo,
+            o.ftradeamt,o.famt,o.fcheck_time fcheckTime,
+	        lc.logistics_code fexpcomname,o.fexp_no fexpNo,lc.logistics_name logisticsName  
+	   from order_receipt o 
+     left join logistics_company lc on lc.logistics_name = o.fexpcomname and lc.status = 1 
+	 where o.original_order_id = #{orderId}
+	    and o.status = 1
+	</select>
+	
+	<select id="getAmount" parameterType="long" resultType="bmatser.model.OrderInfo">
+		SELECT (oi.order_amount-ifnull(oi.goods_sale_amount,0)-ifnull(oi.freight_sale_amount,0)
+					-ifnull(oi.full_cut_amount,0)-ifnull(oi.score_deduction_amout,0)-ifnull(oi.tax_sale_amount,0)-ifnull(oi.bean_deduction,0)- IFNULL(oi.group_order_sale,0)) shouldAmount
+						,sum(ifnull(pb.real_amount,0)) payAmount,pb.rate_type rateType from order_info oi 
+			LEFT JOIN payment_bill_order pbo on pbo.order_id=oi.id and pbo.`status`=1
+			LEFT JOIN payment_bill pb on pb.id=pbo.payment_bill_id and pb.`status`=1
+		where oi.id=#{id} and pb.pay_time is not null and pb.pay_status=1
+		GROUP BY pbo.order_id
+	</select>
+	
+	<insert id="addOrderInfoSave" >
+		INSERT INTO 
+		order_info 
+			(
+				id,
+				buyer_id,
+				seller_id,
+				order_amount,
+				goods_amount,
+				freight_amount,
+				order_time,
+				order_status,
+				pay_status,
+				consign_address_id,
+				consign_address_info,
+				consign_address_info_secret,
+				buyer_remark,
+				is_need_invoice,
+				score,
+				is_issue_invoice,
+				score_deduction_amout,
+				order_source,
+				order_channel,
+				full_cut_amount,
+				customer_service_id,
+				customer_manager_id,
+				order_type,
+				group_order_sale,
+				package_info
+			)
+			VALUE
+			(
+				#{orderId},
+				#{dealerId},
+				939817,
+				#{orderAmount},
+				#{goodsAmount},
+				#{freightAmount},
+				now(),
+				1,
+				0,
+				#{consignAddressId},
+				#{consignAddressInfo},
+				#{consignAddressInfoSecret},
+				#{buyerRemark},
+				#{isNeedInvoice},
+				#{score},
+				#{isIssueInvoice},
+				#{scoreDeductionAmout},
+				#{orderSource},
+				#{orderChannel},
+				#{fullCutAmount},
+				#{customerServiceId},
+				#{customerManagerId},
+				#{orderType},
+				#{groupOrderSale},
+				#{packageInfo}
+			)
+	</insert>
+	
+	<select id="getGoodsPackageInfo" resultType="bmatser.model.GoodsPackage" >
+		select 
+			x.id ,
+			gp.id packageId,
+			gp.package_name packageName,
+			sum(if(c.combination_type=2,round(ifnull(gc.rate,1)*sg.sale_price,2),ifnull(gc.fixed_price,sg.sale_price)))price,
+			x.num,
+			sum(sg.sale_price)-sum(if(c.combination_type=2,round(ifnull(gc.rate,1)*sg.sale_price,2),ifnull(gc.fixed_price,sg.sale_price))) packageSale
+		from goods_package gp
+		left join combination c  on gp.combination_id = c.id
+		left join goods_combination gc on gc.package_id = gp.id
+		inner join seller_goods sg  on sg.id = gc.seller_goods_id
+		INNER JOIN (
+			select og.activity_id,og.num,og.id 
+			from order_goods og 
+			where og.order_id = #{orderId} and goods_type = 3
+			GROUP BY og.activity_id
+		)x on x.activity_id = gp.id
+		where 
+		c.start_time &lt;=now() and c.end_time &gt;=now() and c.status = 1 
+		and gp.status = 1 and gc.status = 1
+		GROUP BY gp.id
+	</select>
+
+	<select id="wapperExpressRequestByOrderId" parameterType="long" resultType="bmatser.model.ExpressRequestWapper">
+		SELECT
+			deli.*, cd.dealer_name consignCompany,
+			cd.linkman consignLinkMan,
+			cd.link_tel_secret consignLinkTel
+		FROM
+			(
+				SELECT
+					of.id orderId,
+					of.buyer_id buyerId,
+					of.seller_id sellerId,
+					of.consign_address_info_secret consignAddress,
+					of.logistics_code logisticsCode,
+					d.dealer_name deliverCompany,
+					d.telephone_secret deliverTel,
+					d.country_id deliverCountryId,
+					d.province_id deliverProvinceId,
+					city_id deliverCityId,
+					d.area_id deliverAreaId,
+					d.address deliverAddress,
+					d.linkman deliverLinkMan,
+					d.link_tel_secret deliverLinkTel
+				FROM
+					order_info of,
+					dealer d
+				WHERE
+					of.id = #{orderId}
+				AND of.seller_id = d.id
+			) deli,
+			dealer cd
+		WHERE
+			deli.buyerId = cd.id
+	</select><!-- 根据订单号查询快递接口需要的参数 -->
+
+</mapper>

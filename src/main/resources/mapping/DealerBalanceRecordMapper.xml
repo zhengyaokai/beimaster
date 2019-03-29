@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.DealerBalanceRecordMapper" >
+
+	<update id="delRecordByOrderId">
+		update 
+			dealer_balance_record
+		set 
+			status = 2
+		where related_id = #{orderId}
+	</update>
+	<insert id="insertRecordByOrderId">
+		insert into 
+			dealer_balance_record 
+			(dealer_id,balance,related_id,create_time,status,type) 
+		select 
+			buyer_id,balance_deduction,id,now(),1,2 from order_info 
+		where id = #{orderId} and balance_deduction > 0
+	</insert>
+</mapper>

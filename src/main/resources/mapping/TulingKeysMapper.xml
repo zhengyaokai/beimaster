@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.CorpusKeysDao" >
+	
+<!-- 获取banner图片 -->
+	<select id="findTulingKeys" resultType="String">
+		select tuling_keys.`key` from tuling_keys
+		where tuling_keys.`status`=1 
+		
+	</select>
+</mapper>

@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.SellerGoodsMapper" >
+ <resultMap id="BaseResultMap" type="bmatser.model.SellerGoods" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="goods_id" property="goodsId" jdbcType="BIGINT" />
+    <result column="goods_no" property="goodsNo" jdbcType="VARCHAR" />
+    <result column="seller_id" property="sellerId" jdbcType="INTEGER" />
+    <result column="buy_no" property="buyNo" jdbcType="VARCHAR" />
+    <result column="stock" property="stock" jdbcType="INTEGER" />
+    <result column="price" property="price" jdbcType="DECIMAL" />
+    <result column="cost_price" property="costPrice" jdbcType="DECIMAL" />
+    <result column="goods_name" property="goodsName" jdbcType="VARCHAR" />
+    <result column="shipping_city_id" property="shippingCityId" jdbcType="INTEGER" />
+    <result column="shipping_city_name" property="shippingCityName" jdbcType="VARCHAR" />
+    <result column="is_freepost" property="isFreepost" jdbcType="CHAR" />
+    <result column="fare_temp_id" property="fareTempId" jdbcType="INTEGER" />
+    <result column="fixed_up_time" property="fixedUpTime" jdbcType="TIMESTAMP" />
+    <result column="fixed_down_time" property="fixedDownTime" jdbcType="TIMESTAMP" />
+    <result column="status" property="status" jdbcType="CHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="create_user_id" property="createUserId" jdbcType="INTEGER" />
+    <result column="modify_time" property="modifyTime" jdbcType="TIMESTAMP" />
+    <result column="modify_user_id" property="modifyUserId" jdbcType="INTEGER" />
+    <result column="sales_volume" property="salesVolume" jdbcType="INTEGER" />
+    <result column="coupon_amount" property="couponAmount" jdbcType="INTEGER" />
+    <result column="show_amount" property="showAmount" jdbcType="DECIMAL" />
+    <result column="is_recomm" property="isRecomm" jdbcType="CHAR" />
+    <result column="order_sn" property="orderSn" jdbcType="INTEGER" />
+    <result column="is_show" property="isShow" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, goods_id, goods_no, seller_id, buy_no, stock, price, cost_price, goods_name, 
+    shipping_city_id, shipping_city_name, is_freepost, fare_temp_id, fixed_up_time, fixed_down_time, 
+    status, create_time, create_user_id, modify_time, modify_user_id, sales_volume, coupon_amount, 
+    show_amount, is_recomm, order_sn, is_show
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select 
+    <include refid="Base_Column_List" />
+    from seller_goods
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from seller_goods
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.SellerGoods" >
+    insert into seller_goods (id, goods_id, goods_no, 
+      seller_id, buy_no, stock, 
+      price, cost_price, goods_name, 
+      shipping_city_id, shipping_city_name, is_freepost, 
+      fare_temp_id, fixed_up_time, fixed_down_time, 
+      status, create_time, create_user_id, 
+      modify_time, modify_user_id, sales_volume, 
+      coupon_amount, show_amount, is_recomm, 
+      order_sn, is_show)
+    values (#{id,jdbcType=BIGINT}, #{goodsId,jdbcType=BIGINT}, #{goodsNo,jdbcType=VARCHAR}, 
+      #{sellerId,jdbcType=INTEGER}, #{buyNo,jdbcType=VARCHAR}, #{stock,jdbcType=INTEGER}, 
+      #{price,jdbcType=DECIMAL}, #{costPrice,jdbcType=DECIMAL}, #{goodsName,jdbcType=VARCHAR}, 
+      #{shippingCityId,jdbcType=INTEGER}, #{shippingCityName,jdbcType=VARCHAR}, #{isFreepost,jdbcType=CHAR}, 
+      #{fareTempId,jdbcType=INTEGER}, #{fixedUpTime,jdbcType=TIMESTAMP}, #{fixedDownTime,jdbcType=TIMESTAMP}, 
+      #{status,jdbcType=CHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createUserId,jdbcType=INTEGER}, 
+      #{modifyTime,jdbcType=TIMESTAMP}, #{modifyUserId,jdbcType=INTEGER}, #{salesVolume,jdbcType=INTEGER}, 
+      #{couponAmount,jdbcType=INTEGER}, #{showAmount,jdbcType=DECIMAL}, #{isRecomm,jdbcType=CHAR}, 
+      #{orderSn,jdbcType=INTEGER}, #{isShow,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.model.SellerGoods" >
+    insert into seller_goods
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="goodsId != null" >
+        goods_id,
+      </if>
+      <if test="goodsNo != null" >
+        goods_no,
+      </if>
+      <if test="sellerId != null" >
+        seller_id,
+      </if>
+      <if test="buyNo != null" >
+        buy_no,
+      </if>
+      <if test="stock != null" >
+        stock,
+      </if>
+      <if test="price != null" >
+        price,
+      </if>
+      <if test="costPrice != null" >
+        cost_price,
+      </if>
+      <if test="goodsName != null" >
+        goods_name,
+      </if>
+      <if test="shippingCityId != null" >
+        shipping_city_id,
+      </if>
+      <if test="shippingCityName != null" >
+        shipping_city_name,
+      </if>
+      <if test="isFreepost != null" >
+        is_freepost,
+      </if>
+      <if test="fareTempId != null" >
+        fare_temp_id,
+      </if>
+      <if test="fixedUpTime != null" >
+        fixed_up_time,
+      </if>
+      <if test="fixedDownTime != null" >
+        fixed_down_time,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="createUserId != null" >
+        create_user_id,
+      </if>
+      <if test="modifyTime != null" >
+        modify_time,
+      </if>
+      <if test="modifyUserId != null" >
+        modify_user_id,
+      </if>
+      <if test="salesVolume != null" >
+        sales_volume,
+      </if>
+      <if test="couponAmount != null" >
+        coupon_amount,
+      </if>
+      <if test="showAmount != null" >
+        show_amount,
+      </if>
+      <if test="isRecomm != null" >
+        is_recomm,
+      </if>
+      <if test="orderSn != null" >
+        order_sn,
+      </if>
+      <if test="isShow != null" >
+        is_show,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="goodsId != null" >
+        #{goodsId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsNo != null" >
+        #{goodsNo,jdbcType=VARCHAR},
+      </if>
+      <if test="sellerId != null" >
+        #{sellerId,jdbcType=INTEGER},
+      </if>
+      <if test="buyNo != null" >
+        #{buyNo,jdbcType=VARCHAR},
+      </if>
+      <if test="stock != null" >
+        #{stock,jdbcType=INTEGER},
+      </if>
+      <if test="price != null" >
+        #{price,jdbcType=DECIMAL},
+      </if>
+      <if test="costPrice != null" >
+        #{costPrice,jdbcType=DECIMAL},
+      </if>
+      <if test="goodsName != null" >
+        #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="shippingCityId != null" >
+        #{shippingCityId,jdbcType=INTEGER},
+      </if>
+      <if test="shippingCityName != null" >
+        #{shippingCityName,jdbcType=VARCHAR},
+      </if>
+      <if test="isFreepost != null" >
+        #{isFreepost,jdbcType=CHAR},
+      </if>
+      <if test="fareTempId != null" >
+        #{fareTempId,jdbcType=INTEGER},
+      </if>
+      <if test="fixedUpTime != null" >
+        #{fixedUpTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="fixedDownTime != null" >
+        #{fixedDownTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=CHAR},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUserId != null" >
+        #{createUserId,jdbcType=INTEGER},
+      </if>
+      <if test="modifyTime != null" >
+        #{modifyTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyUserId != null" >
+        #{modifyUserId,jdbcType=INTEGER},
+      </if>
+      <if test="salesVolume != null" >
+        #{salesVolume,jdbcType=INTEGER},
+      </if>
+      <if test="couponAmount != null" >
+        #{couponAmount,jdbcType=INTEGER},
+      </if>
+      <if test="showAmount != null" >
+        #{showAmount,jdbcType=DECIMAL},
+      </if>
+      <if test="isRecomm != null" >
+        #{isRecomm,jdbcType=CHAR},
+      </if>
+      <if test="orderSn != null" >
+        #{orderSn,jdbcType=INTEGER},
+      </if>
+      <if test="isShow != null" >
+        #{isShow,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.SellerGoods" >
+    update seller_goods
+    <set >
+      <if test="goodsId != null" >
+        goods_id = #{goodsId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsNo != null" >
+        goods_no = #{goodsNo,jdbcType=VARCHAR},
+      </if>
+      <if test="sellerId != null" >
+        seller_id = #{sellerId,jdbcType=INTEGER},
+      </if>
+      <if test="buyNo != null" >
+        buy_no = #{buyNo,jdbcType=VARCHAR},
+      </if>
+      <if test="stock != null" >
+        stock = #{stock,jdbcType=INTEGER},
+      </if>
+      <if test="price != null" >
+        price = #{price,jdbcType=DECIMAL},
+      </if>
+      <if test="costPrice != null" >
+        cost_price = #{costPrice,jdbcType=DECIMAL},
+      </if>
+      <if test="goodsName != null" >
+        goods_name = #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="shippingCityId != null" >
+        shipping_city_id = #{shippingCityId,jdbcType=INTEGER},
+      </if>
+      <if test="shippingCityName != null" >
+        shipping_city_name = #{shippingCityName,jdbcType=VARCHAR},
+      </if>
+      <if test="isFreepost != null" >
+        is_freepost = #{isFreepost,jdbcType=CHAR},
+      </if>
+      <if test="fareTempId != null" >
+        fare_temp_id = #{fareTempId,jdbcType=INTEGER},
+      </if>
+      <if test="fixedUpTime != null" >
+        fixed_up_time = #{fixedUpTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="fixedDownTime != null" >
+        fixed_down_time = #{fixedDownTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUserId != null" >
+        create_user_id = #{createUserId,jdbcType=INTEGER},
+      </if>
+      <if test="modifyTime != null" >
+        modify_time = #{modifyTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyUserId != null" >
+        modify_user_id = #{modifyUserId,jdbcType=INTEGER},
+      </if>
+      <if test="salesVolume != null" >
+        sales_volume = #{salesVolume,jdbcType=INTEGER},
+      </if>
+      <if test="couponAmount != null" >
+        coupon_amount = #{couponAmount,jdbcType=INTEGER},
+      </if>
+      <if test="showAmount != null" >
+        show_amount = #{showAmount,jdbcType=DECIMAL},
+      </if>
+      <if test="isRecomm != null" >
+        is_recomm = #{isRecomm,jdbcType=CHAR},
+      </if>
+      <if test="orderSn != null" >
+        order_sn = #{orderSn,jdbcType=INTEGER},
+      </if>
+      <if test="isShow != null" >
+        is_show = #{isShow,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.SellerGoods" >
+    update seller_goods
+    set goods_id = #{goodsId,jdbcType=BIGINT},
+      goods_no = #{goodsNo,jdbcType=VARCHAR},
+      seller_id = #{sellerId,jdbcType=INTEGER},
+      buy_no = #{buyNo,jdbcType=VARCHAR},
+      stock = #{stock,jdbcType=INTEGER},
+      price = #{price,jdbcType=DECIMAL},
+      cost_price = #{costPrice,jdbcType=DECIMAL},
+      goods_name = #{goodsName,jdbcType=VARCHAR},
+      shipping_city_id = #{shippingCityId,jdbcType=INTEGER},
+      shipping_city_name = #{shippingCityName,jdbcType=VARCHAR},
+      is_freepost = #{isFreepost,jdbcType=CHAR},
+      fare_temp_id = #{fareTempId,jdbcType=INTEGER},
+      fixed_up_time = #{fixedUpTime,jdbcType=TIMESTAMP},
+      fixed_down_time = #{fixedDownTime,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=CHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user_id = #{createUserId,jdbcType=INTEGER},
+      modify_time = #{modifyTime,jdbcType=TIMESTAMP},
+      modify_user_id = #{modifyUserId,jdbcType=INTEGER},
+      sales_volume = #{salesVolume,jdbcType=INTEGER},
+      coupon_amount = #{couponAmount,jdbcType=INTEGER},
+      show_amount = #{showAmount,jdbcType=DECIMAL},
+      is_recomm = #{isRecomm,jdbcType=CHAR},
+      order_sn = #{orderSn,jdbcType=INTEGER},
+      is_show = #{isShow,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <!-- 查询商品价格 -->
+  <select id="findGoodsPrice"  resultType="bmatser.model.SellerGoods" parameterType="map" >
+  	select 
+  		sg.id,sg.sale_price salePrice,sg.seller_id sellerId ,sg.goods_id goodsId,sg.goods_no goodsNo
+  	from seller_goods sg
+	where sg.`status` = 1 and sg.id=#{sellerGoodsId}
+	limit 0,1
+  </select>
+
+    <select id="getDiscountByGoodsNo" resultType="java.math.BigDecimal">
+        select discount from dealer_goods_discount where goods_no = #{goodsNo} and dealer_id = #{dealerId}
+    </select>
+
+    <select id="getDiscountBySeries" resultType="java.math.BigDecimal">
+        select discount from dealer_goods_discount where series = #{series} and dealer_id = #{dealerId}
+    </select>
+    <!--获取系列-->
+    <select id="getSeries" resultType="java.lang.String">
+        select series from goods where goods_no = #{goodsNo}
+    </select>
+    <!--获取面价-->
+    <select id="getMarketprice" resultType="java.math.BigDecimal">
+       select market_price marketPrice from goods g LEFT JOIN seller_goods s on g.goods_no  = s.goods_no where 1=1 and s.id = #{sellerGoodsId}
+    </select>
+
+<!-- 查询品牌下的商品 -->
+<select id="findGoodsByBrand" parameterType="map" resultType="map">
+		select 
+			sg.id,sg.goods_name goodsName,sg.stock,if(sg.sale_price,sg.sale_price,sg.price)price,g.model,g.measure,sg.sales_volume salesVolume,g.buy_no buyNo
+			,${@bmatser.util.SQLUtil@GOODS_IMG} image,d.dealer_name dealerName
+		from seller_goods sg
+		left join goods g on sg.goods_id = g.id 
+		left join dealer d on d.id = sg.seller_id
+		where sg.status = 1 and sg.is_show = 1 and g.brand_id =  #{brandId} and sg.channel =2
+		ORDER BY sg.sales_volume desc
+		limit ${page},${rows}
+</select>
+<!-- 查询品牌下的商品总条数 -->
+<select id="findGoodsByBrandCount" parameterType="map" resultType="int">
+		select 
+			count(1)
+		from seller_goods sg
+		left join goods g on sg.goods_id = g.id 
+		where sg.status = 1 and sg.is_show = 1 and g.brand_id =  #{brandId} and sg.channel =2
+</select>
+<!-- 查询店铺的总销售 -->
+<!-- <select id="findStoreOrderCount" parameterType="map" resultType="map">
+		select
+			 og.seller_goods_id id,sum(og.num) as count
+		from order_goods og
+		left join order_info oi on oi.id = og.order_id
+		left join dealer d on d.id = oi.seller_id
+		left join seller_goods sg on sg.id = og.seller_goods_id
+		where d.alias = #{alias} and oi.order_status not in (1,8,9) and og.seller_goods_id >0  and oi.order_channel = 2 and sg.status =1 
+	and sg.is_show = 1 
+	and sg.channel =2 
+		GROUP BY og.seller_goods_id
+		order by count desc
+		limit 0,6
+</select> 
+	 select sg.id,
+t.salesVolume salesVolume
+ from  seller_goods sg 
+LEFT JOIN dealer d on sg.seller_id = d.id 
+LEFT JOIN goods g on sg.goods_id = g.id 
+LEFT JOIN (
+	select g.id,sum(sg.sales_volume*2) as salesVolume from seller_goods sg LEFT JOIN goods g on sg.goods_id = g.id 
+	where sg.`status`='1' and sg.is_show='1' and g.`status`='1'
+	GROUP BY g.id
+ ) t
+on sg.goods_id = t.id
+where sg.`status`='1' and sg.is_show='1' and g.`status`='1' and sg.channel =2 
+#and d.alias = #{alias}
+group by sg.id 
+order by salesVolume desc
+limit 0,6
+-->
+<select id="findStoreOrderCount" parameterType="map" resultType="map">
+		select sg.id,sum(x.sales_volume*2)salesVolume from seller_goods sg 
+left join dealer d on sg.seller_id = d.id 
+left join seller_goods x on x.goods_id = sg.goods_id and sg.`status`='1' and sg.is_show='1'
+where sg.`status`='1' and sg.is_show='1'  and sg.channel =2
+and d.alias = #{alias}
+group by sg.id
+order by salesVolume desc
+limit 0,6
+</select>
+
+<!-- 查询店铺的月销售 -->
+<!-- <select id="findStoreMonthOrderCount" parameterType="map" resultType="map">
+		select
+			 og.seller_goods_id id,sum(og.num) as count
+		from order_goods og
+		left join order_info oi on oi.id = og.order_id
+		left join dealer d on d.id = oi.seller_id
+		left join seller_goods sg on sg.id = og.seller_goods_id
+		where d.alias = #{alias} and oi.order_status not in (1,8,9) and oi.order_channel = 2
+					and date_format(oi.order_time,'%Y-%m')=date_format(now(),'%Y-%m') and og.seller_goods_id >0 and sg.status =1 
+	and sg.is_show = 1 
+	and sg.channel =2 
+		GROUP BY og.seller_goods_id
+		order by count desc
+		limit 0,6
+</select> -->
+<select id="findStoreMonthOrderCount" parameterType="map" resultType="map">
+		select sg.id,sum(og.num*2) salesVolume from seller_goods sg 
+left join dealer d on sg.seller_id = d.id 
+left join order_goods og on og.goods_id = sg.goods_id 
+left join order_info oi on oi.id = og.order_id 
+where  sg.`status`='1' and sg.is_show='1' 
+and oi.order_status not in (1,8,9) 
+and d.alias = #{alias}
+and date_format(oi.order_time,'%Y-%m')=date_format(now(),'%Y-%m') and sg.status =1 
+group by sg.id
+order by salesVolume desc
+limit 0,6
+</select>
+<!-- 查询店铺的商品详情 -->
+<select id="findStoreGoodsById" parameterType="map" resultType="map">
+	select  
+		sg.id,sg.goods_name goodsName,if(sg.sale_price,sg.sale_price,sg.price)price,${@bmatser.util.SQLUtil@GOODS_IMG} image,
+		g.model,if(sg.sku_unit is not null and sg.sku_unit != '',sg.sku_unit,g.measure)measure,g.buy_no buyNo,b.name_cn brandName,d.shop_name shopName,d.alias  
+	from seller_goods sg
+	left join goods g on g.id = sg.goods_id
+	left join brand b on b.id = g.brand_id
+	left join dealer d on sg.seller_id = d.id 
+	where sg.id = #{id}
+</select>
+<!-- 根据页面查询店铺商品 -->
+<select id="findStoreGoodsByPage"  parameterType="map" resultType="map">
+	select
+		 g.buy_no buyNo,sum(x.sales_volume*2)salesVolume,sg.id,sg.goods_name goodsName,if(sg.sale_price,sg.sale_price,sg.price)price,g.model,${@bmatser.util.SQLUtil@GOODS_IMG} image
+	from seller_goods sg 
+	left join goods g on sg.goods_id = g.id 
+	left join seller_goods x on x.goods_id = sg.goods_id and sg.`status`='1' and sg.is_show='1'
+	LEFT JOIN dealer d on sg.seller_id = d.id 
+	where sg.status =1 
+		and d.alias = #{alias}
+		<if test="query.goodsName != null and query.goodsName != '' ">
+         and (sg.goods_name like '%${query.goodsName}%' or g.buy_no like '%${query.goodsName}%' or g.model like '%${query.goodsName}%')</if>
+		<if test="query.lowPrice != null and query.lowPrice != ''">and if(sg.sale_price,sg.sale_price,sg.price) &gt;= #{query.lowPrice} </if>
+		<if test="query.hightPrice != null and query.hightPrice != ''">and if(sg.sale_price,sg.sale_price,sg.price) &lt;= #{query.hightPrice} </if>
+		GROUP BY sg.id 
+	order by salesVolume desc	
+	limit ${page},${rows}
+</select><!-- 增加查询销量 订货号 -->
+<!-- 根据页面查询店铺商品总数 -->
+<select id="findStoreGoodsByPageCount"  parameterType="map" resultType="int">
+	select
+	 	count(1)
+	from seller_goods sg 
+	left join goods g on sg.goods_id = g.id 
+	LEFT JOIN dealer d on sg.seller_id = d.id 
+	where sg.status =1 
+		and sg.is_show = 1 
+		and d.alias = #{alias}
+		<if test="query.goodsName != null and query.goodsName != '' ">and sg.goods_name like '%${query.goodsName}%'  </if>
+		<if test="query.lowPrice != null and query.lowPrice != ''">and if(sg.sale_price,sg.sale_price,sg.price) &gt; #{query.lowPrice} </if>
+		<if test="query.hightPrice != null and query.hightPrice != ''">and if(sg.sale_price,sg.sale_price,sg.price) &lt; #{query.hightPrice} </if>
+</select>
+
+<select id="findStoreGoodsByNoExist" parameterType="map" resultType="map">
+	select  sg.id,sg.sale_price price,0 count,${@bmatser.util.SQLUtil@GOODS_IMG} image,sg.goods_name goodsName
+	from seller_goods sg 
+	left join goods g on sg.goods_id = g.id 
+	LEFT JOIN dealer d on sg.seller_id = d.id 
+	where sg.status =1 
+	and sg.is_show = 1 
+	and sg.channel =2 
+	and d.alias = #{alias} 
+	<if test="noExist !=null and noExist !=''">
+		and sg.id not in (${noExist})
+	</if>
+	limit 0,${page}
+</select>
+<select id="getSellerGoodsByGoodsId" parameterType="map" resultType="map">
+	select 
+		sg.id,sg.sale_price salePrice,if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1) batchQuantity,if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1) orderQuantity
+	from seller_goods sg
+	where sg.id = #{id} and sg.`status` = 1 and sg.is_show = 1 and sg.channel = 1
+	limit 0,1
+</select>
+
+<!-- 根据活动id查询出活动  20160811 tiw -->
+<select id="findActivity" resultType="map">
+	select da.id,da.activity_name activityName,da.activity_desc activityDesc,da.start_time startTime,
+da.end_time endTime,da.type from dealer_activity da
+where da.status = '1'
+and da.id = #{id} 
+</select>
+
+<!-- 根据活动id查询出活动商品 20160808 tiw -->
+<select id="findActivityGoods" resultType="map">
+	select dag.deduction_rate deductionRate,dag.seller_goods_id sellerGoodsId,dag.brand_id brandId,dag.buy_no buyNo,
+ifnull(dag.sale_price,sg.sale_price) salePrice,dag.create_time createTime,t.salesVolume,sg.goods_name goodsName,
+ifnull(sg.is_sale,0) isSale,ifnull(sg.is_fullcut,0) isFullcut,
+g.model,${@bmatser.util.SQLUtil@GOODS_IMG} image
+from  dealer_activity_goods dag 
+LEFT JOIN seller_goods sg on sg.id  = dag.seller_goods_id 
+LEFT JOIN goods g on sg.goods_id = g.id 
+LEFT JOIN (
+	select g.id,sum(sg.sales_volume*2) as salesVolume from seller_goods sg LEFT JOIN goods g on sg.goods_id = g.id 
+	where sg.`status`='1' and sg.is_show='1' and g.`status`='1'
+	GROUP BY g.id
+ ) t
+on sg.goods_id = t.id 
+where dag.status = '1'
+and sg.`status`='1' and sg.is_show='1' 
+and sg.channel = 2 
+and dag.dealer_activity_id= #{id} 
+order by t.salesVolume desc
+limit ${page},${rows}
+</select><!-- modify 20161026 活动商品增加查询是否满减 是否特卖字段 -->
+<!-- 查询活动商品总数  20160808 tiw-->
+<select id="findActivityGoodsCount" resultType="int">
+	select count(1)
+from  dealer_activity_goods dag 
+LEFT JOIN seller_goods sg on sg.id  = dag.seller_goods_id 
+LEFT JOIN goods g on sg.goods_id = g.id 
+where dag.status = '1'
+and sg.`status`='1' and sg.is_show='1'
+and sg.channel = 2 
+and dag.dealer_activity_id= #{id} 
+</select>
+
+</mapper>

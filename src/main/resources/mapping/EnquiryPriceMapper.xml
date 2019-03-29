@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.EnquiryPriceMapper" >
+  <resultMap id="BaseResultMap" type="bmatser.model.EnquiryPrice" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="end_date" property="endDate" jdbcType="DATE" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="dealer_id" property="dealerId" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="status" property="status" jdbcType="CHAR" />
+    <result column="quoted_staff_id" property="quotedStaffId" jdbcType="INTEGER" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, name, end_date, remark, dealer_id, create_time, status, quoted_staff_id
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from enquiry_price
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from enquiry_price
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.EnquiryPrice" useGeneratedKeys="true" keyProperty="id">
+    insert into enquiry_price (id, name, end_date, 
+      remark, dealer_id, create_time, 
+      status, quoted_staff_id)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{endDate,jdbcType=DATE}, 
+      #{remark,jdbcType=VARCHAR}, #{dealerId,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{status,jdbcType=CHAR}, #{quotedStaffId,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.model.EnquiryPrice" useGeneratedKeys="true" keyProperty="id">
+    insert into enquiry_price
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="endDate != null" >
+        end_date,
+      </if>
+      <if test="remark != null" >
+        remark,
+      </if>
+      <if test="dealerId != null" >
+        dealer_id,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="quotedStaffId != null" >
+        quoted_staff_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="endDate != null" >
+        #{endDate,jdbcType=DATE},
+      </if>
+      <if test="remark != null" >
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="dealerId != null" >
+        #{dealerId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=CHAR},
+      </if>
+      <if test="quotedStaffId != null" >
+        #{quotedStaffId,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.EnquiryPrice" >
+    update enquiry_price
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="endDate != null" >
+        end_date = #{endDate,jdbcType=DATE},
+      </if>
+      <if test="remark != null" >
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="dealerId != null" >
+        dealer_id = #{dealerId,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+      <if test="quotedStaffId != null" >
+        quoted_staff_id = #{quotedStaffId,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.EnquiryPrice" >
+    update enquiry_price
+    set name = #{name,jdbcType=VARCHAR},
+      end_date = #{endDate,jdbcType=DATE},
+      remark = #{remark,jdbcType=VARCHAR},
+      dealer_id = #{dealerId,jdbcType=INTEGER},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=CHAR},
+      quoted_staff_id = #{quotedStaffId,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+   <select id="findEnquiryPriceList" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from enquiry_price
+    where dealer_id = #{dealerId,jdbcType=INTEGER}
+  </select>
+  
+  <select id="findEnquiryPriceById" resultType="Map" parameterType="java.lang.Integer" >
+    select ep.id,ep.name,ep.end_date,ep.remark,ep.dealer_id,ep.create_time,ep.status,ep.quoted_staff_id,ep.quoted_time,
+     d.dealer_name,ss.staff_name,ss.mobile
+    
+    from enquiry_price ep left join dealer d on ep.dealer_id = d.id
+    left join sys_staff ss on ss.id = ep.quoted_staff_id
+    where ep.id = #{enquiryPriceId,jdbcType=INTEGER}
+  </select>
+  
+</mapper>

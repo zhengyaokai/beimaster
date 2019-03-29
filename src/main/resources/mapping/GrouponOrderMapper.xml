@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GrouponOrderMapper" >
+	<select id="selectGrouponGoods" resultType="Map">
+select * from (SELECT ga.groupon_name  grouponName,ga.groupon_open_condition grouponOpenCondition,IFNULL(ga.groupon_amount+ga.virtual_num+0,0) grouponAmount,concat('${@bmatser.util.Constants@IMAGE_URL}',ga.banner_image) bannerImage,
+IF(IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0) &lt;0,0,IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0)) needGroupAmount,
+ga.start_time startTime,ga.end_time endTime,
+(CASE 
+WHEN ga.start_time &gt;NOW() and ga.online_time &lt;=NOW() 
+THEN '1'
+WHEN  (ga.groupon_open_condition+0) &lt;=(ga.groupon_amount+ga.virtual_num+0) and  ga.end_time &gt;NOW() AND ga.start_time &lt;= NOW()
+THEN '3' 
+WHEN ga.end_time &gt;NOW() AND ga.start_time &lt;= NOW()
+THEN '2'
+END) activityStatus, 
+ga.id 
+FROM groupon_activity ga
+         LEFT JOIN groupon_buyer gb ON gb.groupon_id=ga.id
+         WHERE gb.status='1'
+         AND ga.groupon_status !='5' 
+         and ga.online_time &lt;=NOW()
+         and ga.online_time &lt;=NOW() and ga.end_time &gt;NOW()
+         AND gb.groupon_buyer_id=#{dealerId}
+         <if test="null!=allActivityParam and ''!=allActivityParam">
+         ${allActivityParam}
+         </if>
+         <if test="null!=grouponName and ''!=grouponName">
+          AND ga.groupon_name like '%${grouponName}%'
+         </if> 
+         GROUP BY ga.id
+         ORDER BY ga.order_sn
+         ) t
+union all
+
+(SELECT ga.groupon_name  grouponName,ga.groupon_open_condition grouponOpenCondition,IFNULL(ga.groupon_amount+ga.virtual_num+0,0) grouponAmount,concat('${@bmatser.util.Constants@IMAGE_URL}',ga.banner_image) bannerImage,
+IF(IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0) &lt;0,0,IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0)) needGroupAmount,
+ga.start_time startTime,ga.end_time endTime,'4' activityStatus,ga.id 
+         FROM groupon_activity ga
+        LEFT JOIN groupon_buyer gb ON gb.groupon_id=ga.id
+         WHERE gb.status='1'
+         AND ga.groupon_status !='5' 
+         and ga.online_time &lt;=NOW()
+         and ga.end_time &lt;=NOW() 
+         AND gb.groupon_buyer_id=#{dealerId}
+         <if test="null!=allActivityParam and ''!=allActivityParam">
+         ${allActivityParam}
+         </if>
+         <if test="null!=grouponName and ''!=grouponName">
+          AND ga.groupon_name like '%${grouponName}%'
+         </if> 
+         GROUP BY ga.id
+         ORDER BY ga.order_sn
+         )  
+limit ${page},${rows}        
+	</select><!-- 个人信息中 我的团购修改为和团购活动一样的顺序  -->
+	
+  <select id="count" resultType="java.lang.Integer" parameterType="map">
+  SELECT COUNT(1) FROM (
+select 1
+FROM groupon_activity ga
+         LEFT JOIN groupon_buyer gb ON gb.groupon_id=ga.id
+         WHERE gb.status='1' AND ga.groupon_status !='5'
+         AND gb.groupon_buyer_id=#{dealerId}
+         <if test="null!=allActivityParam and ''!=allActivityParam">
+         ${allActivityParam}
+         </if>
+         <if test="null!=grouponName and ''!=grouponName">
+          AND ga.groupon_name like '%${grouponName}%'
+         </if> 
+          GROUP BY ga.id) c
+	</select>
+	<!--活动汇  -->
+  <select id="selectGrouponActivitySink" resultType="Map">
+select * from (SELECT IF(gb.groupon_buyer_id IS NULL OR ''=gb.groupon_buyer_id,'0','1') activitySinkStatus,
+ga.groupon_open_condition grouponOpenCondition,
+ga.id,ga.groupon_desc grouponDesc,ga.groupon_name grouponName,IFNULL(ga.groupon_amount+ga.virtual_num+0,0) grouponAmount,
+concat('${@bmatser.util.Constants@IMAGE_URL}',ga.banner_image) bannerImage,ga.banner_url bannerUrl,
+IF(IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0) &lt;0,0,IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0)) needGroupAmount,
+ga.start_time startTime,ga.end_time endTime,
+(CASE 
+WHEN ga.start_time &gt;NOW() and ga.online_time &lt;=NOW() 
+THEN '1'
+WHEN  (ga.groupon_open_condition+0) &lt;=(ga.groupon_amount+ga.virtual_num+0) and  ga.end_time &gt;NOW() AND ga.start_time &lt;= NOW()
+THEN '3' 
+WHEN ga.end_time &gt;NOW() AND ga.start_time &lt;= NOW()
+THEN '2'
+END) activityStatus 
+         FROM groupon_activity ga
+         LEFT JOIN groupon_buyer gb ON gb.groupon_id=ga.id AND gb.groupon_buyer_id=#{dealerId}
+         WHERE ga.groupon_status!='5'
+         and ga.online_time &lt;=NOW()
+         and ga.online_time &lt;=NOW() and ga.end_time &gt;NOW()
+          <if test="null!=chooseActivityModule and ''!=chooseActivityModule">
+         ${chooseActivityModule}
+         </if>
+         GROUP BY ga.id
+         ORDER BY ga.order_sn desc
+         ) t
+         
+union all
+
+select g.* from (SELECT IF(gb.groupon_buyer_id IS NULL OR ''=gb.groupon_buyer_id,'0','1') activitySinkStatus,
+ga.groupon_open_condition grouponOpenCondition,
+ga.id,ga.groupon_desc grouponDesc,ga.groupon_name grouponName,IFNULL(ga.groupon_amount+ga.virtual_num+0,0) grouponAmount,
+concat('${@bmatser.util.Constants@IMAGE_URL}',ga.banner_image) bannerImage,ga.banner_url bannerUrl,
+IF(IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0) &lt;0,0,IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0)) needGroupAmount,
+ga.start_time startTime,ga.end_time endTime,'4' activityStatus 
+         FROM groupon_activity ga
+         LEFT JOIN groupon_buyer gb ON gb.groupon_id=ga.id AND gb.groupon_buyer_id=#{dealerId}
+         WHERE ga.groupon_status!='5'
+         and ga.online_time &lt;=NOW()
+         and ga.end_time &lt;=NOW() 
+          <if test="null!=chooseActivityModule and ''!=chooseActivityModule">
+         ${chooseActivityModule}
+         </if>
+         GROUP BY ga.id
+         ORDER BY ga.end_time desc
+         ) g  
+limit ${page},${rows}                
+	</select>
+	
+	 <select id="countActivitySink" resultType="java.lang.Integer" parameterType="map">
+  SELECT COUNT(1) FROM (
+select 1
+ FROM groupon_activity ga
+         WHERE ga.groupon_status!='5'
+          <if test="null!=chooseActivityModule and ''!=chooseActivityModule">
+         ${chooseActivityModule}
+         </if>
+           GROUP BY ga.id) c
+	</select>
+	
+	
+		<!--活动汇 单个团购活动详情  -->
+  <select id="selectGrouponActivityDetail" resultType="Map">
+SELECT ga.id,IF(gb.groupon_buyer_id IS NULL OR ''=gb.groupon_buyer_id,'0','1') activitySinkStatus,
+ga.groupon_open_condition grouponOpenCondition,
+ga.groupon_desc grouponDesc,ga.groupon_name grouponName,IFNULL(ga.groupon_amount+ga.virtual_num+0,0) grouponAmount,
+IF(IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0) &lt;0,0,IFNULL(ga.groupon_open_condition+0,0)-IFNULL(ga.groupon_amount+ga.virtual_num+0,0)) needGroupAmount,
+ga.start_time startTime,ga.end_time endTime,
+concat('${@bmatser.util.Constants@IMAGE_URL}',ga.banner_image) bannerImage,ga.banner_url bannerUrl,
+(CASE 
+WHEN ga.start_time &gt;NOW() and ga.online_time &lt;=NOW() 
+THEN '1'
+WHEN ga.end_time &lt;=NOW() 
+THEN '4'
+WHEN (ga.groupon_open_condition+0) &lt;=(ga.groupon_amount+ga.virtual_num+0) and  ga.end_time &gt;NOW() AND ga.start_time &lt;= NOW()
+THEN '3'
+WHEN ga.end_time &gt;NOW() AND ga.start_time &lt;= NOW()
+THEN '2'
+END) activityStatus 
+         FROM groupon_activity ga
+         LEFT JOIN groupon_buyer gb ON gb.groupon_id=ga.id AND gb.groupon_buyer_id=#{dealerId}
+         WHERE ga.groupon_status!='5'
+         and ga.online_time &lt;=NOW()
+           <if test="null!=id and ''!=id">
+          AND ga.id=#{id}
+         </if>
+limit 0,1         
+	</select>
+	
+	<!--团购活动商品列表数据   -->
+  <select id="selectGrouponActivityDetailList" resultType="Map">
+SELECT g.title,ga.id activityId,g.goods_no goodsNo,g.buy_no buyNo,g.model,sg.sale_price price,sg.id sellerGoodsId,go.deduction_price discount_price,go.deduction_rate discount,g.market_price,
+IF(gb.groupon_buyer_id IS NULL OR ''=gb.groupon_buyer_id,'0','1') activitySinkStatus,sg.stock,ifnull(sg.sku_unit,g.measure) measure,
+${@bmatser.util.SQLUtil@GOODS_IMG} bannerImage,ga.banner_url bannerUrl,
+if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1) orderQuantity,if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1) batchQuantity,
+(CASE 
+WHEN ga.start_time &gt;NOW() and ga.online_time &lt;=NOW() 
+THEN '1'
+WHEN ga.end_time &lt;=NOW() 
+THEN '4'
+WHEN  (ga.groupon_open_condition+0) &lt;=(ga.groupon_amount+ga.virtual_num+0) and  ga.end_time &gt;NOW() AND ga.start_time &lt;= NOW()
+THEN '3'
+WHEN ga.end_time &gt;NOW() AND ga.start_time &lt;= NOW()
+THEN '2'
+END) activityStatus 
+         FROM groupon_activity ga
+         LEFT JOIN groupon_buyer gb ON gb.groupon_id=ga.id AND gb.groupon_buyer_id=#{dealerId}
+         LEFT JOIN groupon_goods go ON go.groupon_id=ga.id
+         LEFT JOIN seller_goods sg ON sg.id=go.seller_goods_id
+         LEFT JOIN goods g on g.id=sg.goods_id 
+         WHERE  go.`status`='1' AND sg.`status`='1' AND g.`status`='1'  and ga.groupon_status != 5 
+         AND ga.id=#{id} 
+         ORDER BY go.order_sn
+         limit ${page},${rows}
+	</select><!-- modify  20160711 去掉and ga.end_time &gt;= now()条件  已经结束的团购商品也要显示出来！ -->
+		<!--团购活动商品列表数据  -->
+		
+  <select id="countActivityDetailList" resultType="java.lang.Integer">
+   SELECT COUNT(1) FROM (
+SELECT   1
+         FROM groupon_activity ga
+         LEFT JOIN groupon_goods go ON go.groupon_id=ga.id
+         LEFT JOIN seller_goods sg ON sg.id=go.seller_goods_id
+         LEFT JOIN goods g on g.id=sg.goods_id 
+         WHERE  go.`status`='1' AND sg.`status`='1' AND g.`status`='1'  and ga.groupon_status != 5 
+         AND ga.id=#{id}) c
+	</select><!-- modify  20160711 去掉and ga.end_time &gt;= now()条件  已经结束的团购商品也要显示出来！ -->
+	
+</mapper>

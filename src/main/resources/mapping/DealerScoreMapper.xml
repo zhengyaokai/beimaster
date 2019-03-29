@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.DealerScoreMapper" >
+  <resultMap id="findByBuyerIdResultMap" type="java.util.Map" >
+    <id column="id" property="id"/>
+    <result column="score" property="score"/>
+    <result column="create_time" property="createTime"/>
+    <result column="remark" property="remark" />
+    <result column="related_id" property="relatedId"/>
+    <result column="type" property="type"/>
+    <result column="name" property="name"/>
+  </resultMap>
+
+<!-- 获取指定用户的积分获取/使用记录 -->
+	<select id="findByBuyerId" resultMap="findByBuyerIdResultMap">
+		select 
+			ds.id, ds.score, ds.create_time, ds.related_id, ds.type, ds.remark ,if(ds.type =2,g.name,CONCAT(sg.goods_name,'等'))name
+		from dealer_score ds
+		left join gift_exchange_record ger on ger.id = ds.related_id 
+		left join gift g on g.id = ger.gift_id
+		left join order_goods og on og.order_id = ds.related_id
+		left join seller_goods sg on sg.id = og.seller_goods_id
+		where ds.status = '1' and ds.dealer_id = #{buyerId} and ds.score != 0
+		GROUP BY ds.id
+		order by ds.create_time desc
+		limit #{page}, #{rows} 
+	</select>
+	
+	<!--  获取用户成长值 -->
+	<select id="getGrowthValueByBuyerId" resultMap="findByBuyerIdResultMap">
+	   select drs.create_time createTime,drs.related_id orderInfoId,
+         ${@bmatser.util.SQLUtil@PAY_AMOUNT_OI} amount,
+         drs.score score,drs.type type,drs.rank_score rankScore,drs.rank rank
+       from dealer_rank_score drs LEFT JOIN order_info oi on drs.related_id = oi.id 
+       where drs.dealer_id = #{buyerId} 
+       and drs.status = '1' 
+       ORDER BY createTime DESC 
+       limit #{page}, #{rows} 
+	</select>
+	
+	<!-- add 20160705 根据buyerId获取成长值总数 -->	
+	<select id ="findCountGrowthValue" resultType="Long">
+	  select count(1) from dealer_rank_score drs 
+       where drs.dealer_id = #{buyerId} 
+       and drs.status = '1' 
+	</select>
+	
+	<!--  获取当前成长值 -->
+	<select id="getRankScoreByBuyerId" resultType="int">
+	  select IFNULL(rank_score,0) rankScore from dealer where id=#{buyerId}
+	</select>
+	
+	<select id="countByBuyerId" resultType="long">
+		select count(1) from dealer_score
+		where status = '1' and dealer_id = #{buyerId} and score != 0
+	</select>
+
+<!-- 添加积分 -->
+	<insert id="addScore">
+		insert into dealer_score(dealer_id, score, create_time, remark, related_id, type, status)
+		values(#{buyerId}, #{score}, now(), remark, #{orderId}, 1, '1')
+	</insert>
+	<!-- 查询积分 -->
+<select id="findScore" parameterType="map" resultType="int">
+	select if(score is not null and score !='',score,0) from dealer
+	where id = #{id}
+</select>
+
+<!-- 积分扣减需要操作dealer_score表 -->
+	<insert id="addDealerScore">
+		insert into dealer_score(dealer_id, score, create_time,related_id, type, status)
+		values(#{dealerId}, #{score}, now(),#{relatedId},2,'1')
+	</insert>
+	
+	<!-- 查询零售商等级，等级积分-->
+	<select id="findRankScore" resultType="map">
+		select 
+			ifnull(rank,0)rank,ifnull(rank_score,0) rankScore
+		from dealer 
+		where id = #{dealerId}
+	</select>
+</mapper>

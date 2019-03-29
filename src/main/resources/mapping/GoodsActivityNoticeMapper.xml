@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GoodsActivityNoticeMapper" >
+
+<!-- 获取特卖预告 -->
+	<select id="findGoodsActivityNotices" resultType="Map">
+		select gan.id, gan.title, gan.start_date startDate, gan.end_date endDate, ganb.brand_id brandId, concat('${@bmatser.util.Constants@IMAGE_URL}',ganb.brand_image) brandImage
+		from goods_activity_notice gan, goods_activity_notice_brand ganb
+		where gan.id = ganb.activity_notice_id
+		and gan.`status`='1' and ganb.`status`='1'
+		and gan.end_date >= now()
+		order by ganb.order_sn desc
+	</select>
+
+<!--下期预告 -->
+	<select id="selectUnderlineGoodsActivity" resultType="Map">
+		SELECT gb.id id,b.name_cn nameCn,b.name_en nameEn,concat('${@bmatser.util.Constants@IMAGE_URL}',gb.brand_image) brandImage,
+		DATE_FORMAT(g.start_date,'%m-%d') startDate,DATE_FORMAT(g.end_date,'%m-%d') endDate 
+		FROM (SELECT * FROM goods_activity_notice ORDER BY start_date desc LIMIT 1) g
+        LEFT JOIN goods_activity_notice_brand gb ON g.id=gb.activity_notice_id
+        LEFT JOIN brand b ON b.id=gb.brand_id
+        WHERE g.status='1' AND gb.status='1' AND b.status='1'
+        ORDER BY gb.order_sn desc
+	</select>
+</mapper>

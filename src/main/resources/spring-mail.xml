@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"  
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd ">
+						   
+   <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <!-- 服务器 -->
+        <property name="host" value="${mail_host}" />
+        <!-- 端口号 -->
+        <property name="port" value="${mail_mail_port}" />
+        <!-- 用户名 -->
+        <property name="username" value="${mail_username}" />
+        <!--  密码   -->
+        <property name="password" value="${mail_password}" />
+        <!-- SMTP服务器验证 -->
+        <property name="javaMailProperties">
+            <props>
+                <!-- 验证身份 -->
+                <prop key="mail.smtp.auth">${mail_auth}</prop>
+           </props>
+        </property>
+    </bean>
+    
+    <bean id="simpleMailMessage" class="org.springframework.mail.SimpleMailMessage">
+        <!-- 发件人email -->
+        <property name="from" value="${mail_from}" />
+        <!-- 
+       	  收件人email
+        <property name="to" value="to@gdbmromall.com" />
+        email主题(标题)
+        <property name="subject" value="Subject" />
+        email主题内容
+        <property name="text">
+          <value>ContentText</value>
+        </property>
+        -->
+    </bean>
+    
+    <bean id="freeMarker" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">   
+      <!--指定模板文件目录-->   
+	  <property name="templateLoaderPath" value="classpath:templates"/>
+	  <!-- 设置FreeMarker环境属性-->  
+	  <property name="freemarkerSettings">       
+	      <props>
+	      	  <!--刷新模板的周期，单位为秒-->
+	          <prop key="template_update_delay">1800</prop>
+	          <!--模板的编码格式 -->       
+	          <prop key="default_encoding">UTF-8</prop>
+	          <!-- 本地化设置-->
+	          <prop key="locale">zh_CN</prop>
+	      </props>
+	  </property>    
+	</bean>
+
+    <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<property name="corePoolSize" value="10"/>
+		<property name="maxPoolSize" value="30"/>
+	</bean>
+    
+    <bean id="simpleMail" class="bmatser.util.Email">
+        <property name="mailSender" ref="mailSender" />
+        <property name="simpleMailMessage" ref="simpleMailMessage" />
+        <property name="freeMarkerConfigurer" ref="freeMarker"></property>
+        <property name="taskExecutor" ref="taskExecutor"></property>
+    </bean>
+     
+</beans>

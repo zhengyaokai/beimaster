@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.AuthorizationInfoMapper">
+	<!-- <select id="getChuZhangDetails" resultType="int">
+		select count(1) from jtl_dealer_bill where account_no = #{accountNo}
+	</select> -->
+	
+	<insert id="insert">
+	 insert into jtl_dealer_bill
+	<trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="customerName != null" >
+        dealer_name,
+      </if>
+      <if test="customerCode != null" >
+        dealer_id,
+      </if>
+      <if test="accountNo != null" >
+        account_no,
+      </if>
+      <if test="associatedOrderNo != null" >
+        order_id,
+      </if>
+      <if test="orderStatus != null" >
+        order_status,
+      </if>
+      <if test="paymentAmount != null" >
+        payment_amount,
+      </if>
+      <if test="paymentTerm != null" >
+        payment_term,
+      </if>
+      <if test="paymentInterest != null" >
+        payment_interest,
+      </if>
+      <if test="overdueAmount != null" >
+        overdue_amount,
+      </if>
+      <if test="returnInterest != null" >
+        return_interest,
+      </if>
+      <if test="repaymentStatus != null" >
+        repayment_status,
+      </if>
+      <if test="repaymentType != null" >
+        repayment_type,
+      </if>
+      <if test="repaymentAccountName != null" >
+        repayment_account_name,
+      </if>
+      <if test="repaymentAccountBank != null" >
+        repayment_account_bank,
+      </if>
+      <if test="repaymentAccountNo != null" >
+        repayment_account_no,
+      </if>
+      <if test="paymentRate != null" >
+        payment_rate,
+      </if>
+      <if test="expiryDate != null and expiryDate !=''" >
+        expiry_date,
+      </if>
+      <if test="paymentDate != null and paymentDate !=''" >
+        payment_date,
+      </if>
+      <if test="repaymentTime != null and repaymentTime !=''" >
+        repayment_time,
+      </if>
+      <if test="updateStatus != null" >
+        update_status,
+      </if>
+      <if test="updateTime != null and updateTime !=''" >
+        update_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+     <if test="customerName != null" >
+        #{customerName},
+      </if>
+      <if test="customerCode != null" >
+        #{customerCode},
+      </if>
+      <if test="accountNo != null" >
+        #{accountNo},
+      </if>
+      <if test="associatedOrderNo != null" >
+        #{associatedOrderNo},
+      </if>
+      <if test="orderStatus != null" >
+        #{orderStatus},
+      </if>
+      <if test="paymentAmount != null" >
+        #{paymentAmount},
+      </if>
+      <if test="paymentTerm != null" >
+        #{paymentTerm},
+      </if>
+      <if test="paymentInterest != null" >
+        #{paymentInterest},
+      </if>
+      <if test="overdueAmount != null" >
+        #{overdueAmount},
+      </if>
+      <if test="returnInterest != null" >
+        #{returnInterest},
+      </if>
+      <if test="repaymentStatus != null" >
+        #{repaymentStatus},
+      </if>
+      <if test="repaymentType != null" >
+        #{repaymentType},
+      </if>   
+      <if test="repaymentAccountName != null" >
+        #{repaymentAccountName},
+      </if>
+      <if test="repaymentAccountBank != null" >
+        #{repaymentAccountBank},
+      </if>
+      <if test="repaymentAccountNo != null" >
+        #{repaymentAccountNo},
+      </if>
+      <if test="paymentRate != null" >
+        #{paymentRate},
+      </if>
+      <if test="expiryDate != null and expiryDate !=''" >
+        #{expiryDate},
+      </if>
+      <if test="paymentDate != null and paymentDate !=''" >
+        #{paymentDate},
+      </if>
+      <if test="repaymentTime != null and repaymentTime !=''" >
+        #{repaymentTime},
+      </if>
+       <if test="updateStatus != null" >
+        #{updateStatus},
+      </if>
+      <if test="updateTime != null and updateTime !=''" >
+        #{updateTime},
+      </if>
+      </trim>
+	</insert>
+	
+	<update id="update">
+	  	update jtl_dealer_bill 
+	  	<set>
+	      <if test="customerName != null" >dealer_name = #{customerName},</if>
+	      <if test="customerCode != null" >dealer_id = #{customerCode},</if>
+	      <if test="associatedOrderNo != null" >order_id = #{associatedOrderNo},</if>
+	      <if test="orderStatus != null" >order_status = #{orderStatus},</if>
+	      <if test="paymentAmount != null" >payment_amount = #{paymentAmount},</if>
+	      <if test="paymentTerm != null" >payment_term = #{paymentTerm},</if>
+	      <if test="paymentInterest != null" >payment_interest = #{paymentInterest},</if>
+	      <if test="overdueAmount != null" >overdue_amount =  #{overdueAmount},</if>
+	      <if test="returnInterest != null" >return_interest = #{returnInterest},</if>
+	      <if test="repaymentStatus != null" >repayment_status = #{repaymentStatus},</if>
+	      <if test="repaymentType != null" >repayment_type = #{repaymentType},</if>	      
+	      <if test="repaymentAccountName != null" >repayment_account_name = #{repaymentAccountName},</if>
+          <if test="repaymentAccountBank != null" >repayment_account_bank = #{repaymentAccountBank},</if>
+          <if test="repaymentAccountNo != null" >repayment_account_no = #{repaymentAccountNo},</if>
+	      <if test="paymentRate != null" >payment_rate = #{paymentRate},</if>
+	      <if test="expiryDate != null and expiryDate !=''" >expiry_date = #{expiryDate},</if>
+	      <if test="paymentDate != null and paymentDate !=''" >payment_date = #{paymentDate},</if>
+	      <if test="repaymentTime != null and repaymentTime !=''" >repayment_time = #{repaymentTime},</if>
+	      <if test="updateStatus != null" >update_status = #{updateStatus},</if>
+          <if test="updateTime != null and updateTime !=''" >update_time = #{updateTime},</if>
+	  	</set>
+	  	where account_no = #{accountNo}
+	</update>
+	
+	<select id="getJtlDealerBillDetails" resultType="map">
+	  select jdb.account_no accountNo,oi.pay_time payTime,jdb.payment_amount paymentAmount,
+	  jdb.payment_term paymentTerm,jdb.payment_interest paymentInterest,
+	  (ifnull(jdb.payment_amount,0)+ifnull(jdb.payment_interest,0)) shouldAmount,
+	  (ifnull(jdb.payment_amount,0)+ifnull(jdb.payment_interest,0)+ifnull(jdb.overdue_amount,0)) payTotal,
+	  jdb.expiry_date expiryDate,jdb.overdue_amount overdueAmount,
+	  jdb.order_id orderId,jdb.order_status orderStatus,jdb.repayment_status repaymentStatus from jtl_dealer_bill jdb
+	  left join order_info oi on jdb.order_id = oi.id 
+	  where dealer_id = #{dealerId}
+	  <if test="status != null and status !=''">
+			and jdb.repayment_status = #{status}
+	  </if>
+	  <if test="expiryStartTime != null and expiryStartTime !=''">
+			and DATE_FORMAT(jdb.expiry_date,'%Y-%m-%d') &gt;= DATE_FORMAT(#{expiryStartTime},'%Y-%m-%d')
+	  </if>
+	  <if test="expiryEndTime != null and expiryEndTime !=''">
+			and DATE_FORMAT(jdb.expiry_date,'%Y-%m-%d') &lt;= DATE_FORMAT(#{expiryEndTime},'%Y-%m-%d')
+	  </if>
+	  <if test="payStartTime != null and payStartTime !=''">
+			and DATE_FORMAT(oi.pay_time,'%Y-%m-%d') &gt;= DATE_FORMAT(#{payStartTime},'%Y-%m-%d')
+	  </if>
+	  <if test="payEndTime != null and payEndTime !=''">
+			and DATE_FORMAT(oi.pay_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{payEndTime},'%Y-%m-%d')
+	  </if>
+	  order by expiryDate desc 
+	  limit ${page},${rows}
+	</select>
+	
+	<select id="getJtlDealerBillDetailsCount" resultType="int">
+	  select count(1) from jtl_dealer_bill jdb
+	  left join order_info oi on jdb.order_id = oi.id  where dealer_id = #{dealerId}
+	  <if test="status != null and status !=''">
+			and jdb.repayment_status = #{status}
+	  </if>
+	  <if test="expiryStartTime != null and expiryStartTime !=''">
+			and DATE_FORMAT(jdb.expiry_date,'%Y-%m-%d') &gt;= DATE_FORMAT(#{expiryStartTime},'%Y-%m-%d')
+	  </if>
+	  <if test="expiryEndTime != null and expiryEndTime !=''">
+			and DATE_FORMAT(jdb.expiry_date,'%Y-%m-%d') &lt;= DATE_FORMAT(#{expiryEndTime},'%Y-%m-%d')
+	  </if>
+	  <if test="payStartTime != null and payStartTime !=''">
+			and DATE_FORMAT(oi.pay_time,'%Y-%m-%d') &gt;= DATE_FORMAT(#{payStartTime},'%Y-%m-%d')
+	  </if>
+	  <if test="payEndTime != null and payEndTime !=''">
+			and DATE_FORMAT(oi.pay_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{payEndTime},'%Y-%m-%d')
+	  </if>
+	</select>
+	
+	<!--查询待还款总金额和逾期总金额  -->
+	<select id="getPayTotal" resultType="map">
+	   select 
+	  jdb.repayment_status status,ifnull(SUM(ifnull(jdb.payment_amount,0)+ifnull(jdb.payment_interest,0)+ifnull(jdb.overdue_amount,0)),0) money 
+    from jtl_dealer_bill jdb
+	  left join order_info oi on jdb.order_id = oi.id 
+	  where dealer_id = #{dealerId}
+    and jdb.repayment_status = 1
+union all
+    select 
+	  jdb.repayment_status status,ifnull(sum(ifnull(jdb.payment_amount,0)+ifnull(jdb.payment_interest,0)+ifnull(jdb.overdue_amount,0)),0) money 
+    from jtl_dealer_bill jdb
+	  left join order_info oi on jdb.order_id = oi.id 
+	  where dealer_id = #{dealerId}
+    and jdb.repayment_status = 3
+	</select>
+	
+	<select id="getJtlDealerBillInfo" resultType="map">
+	  select dealer_id customerCode,dealer_name customerName,account_no accountNo,order_id orderId,
+	  (ifnull(payment_amount,0)+ifnull(payment_interest,0)) accountTotalAmount,ifnull(overdue_amount,0) overdueAmount,
+	  repayment_account_name repaymentAccountName,repayment_account_bank repaymentAccountBank,repayment_account_no repaymentAccountNo 
+	   from jtl_dealer_bill where account_no = #{accountNo}
+	</select>
+	
+	<insert id="saveJtlDealerReimbursement">
+	 insert into jtl_dealer_reimbursement
+	<trim prefix="(" suffix=")" suffixOverrides="," >
+	  <if test="customerCode != null" >
+        dealer_id,
+      </if>
+      <if test="customerName != null" >
+        dealer_name,
+      </if>     
+      <if test="accountNo != null" >
+        account_no,
+      </if>
+      <if test="accountTotalAmount != null" >
+        account_total_amount,
+      </if>
+      <if test="overdueAmount != null" >
+        overdue_amount,
+      </if>
+      <if test="repaymentAccountName != null" >
+        repayment_account_name,
+      </if>
+      <if test="repaymentAccountBank != null" >
+        repayment_account_bank,
+      </if>
+      <if test="repaymentAccountNo != null" >
+        repayment_account_no,
+      </if>
+      <if test="bankSerialNo != null" >
+        bank_serial_no,
+      </if>
+      <if test="repaymentDate != null" >
+        repayment_date,
+      </if>
+      <if test="updateTime != null" >
+        update_time,
+      </if>
+      <if test="repaymentNo != null" >
+        repayment_no,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="note != null" >
+        note,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="customerCode != null" >
+        #{customerCode},
+      </if>
+      <if test="customerName != null" >
+        #{customerName},
+      </if>
+      <if test="accountNo != null" >
+        #{accountNo},
+      </if>
+      <if test="accountTotalAmount != null" >
+        #{accountTotalAmount},
+      </if>
+      <if test="overdueAmount != null" >
+        #{overdueAmount},
+      </if>
+      <if test="repaymentAccountName != null" >
+        #{repaymentAccountName},
+      </if>
+      <if test="repaymentAccountBank != null" >
+        #{repaymentAccountBank},
+      </if>
+      <if test="repaymentAccountNo != null" >
+        #{repaymentAccountNo},
+      </if>
+      <if test="bankSerialNo != null" >
+        #{bankSerialNo},
+      </if>
+      <if test="repaymentDate != null" >
+        #{repaymentDate},
+      </if>
+      <if test="updateTime != null" >
+        #{updateTime},
+      </if>
+      <if test="repaymentNo != null" >
+        #{repaymentNo},
+      </if>
+      <if test="status != null" >
+        #{status},
+      </if>
+      <if test="note != null" >
+        #{note},
+      </if>
+      </trim>
+	</insert>
+	
+	<update id="updateJtlDealerReimbursement">
+	  update jtl_dealer_reimbursement  
+	  	<set>
+	      <if test="status != null" >status = #{status},</if>
+	      <if test="note != null" >note = #{note},</if>
+          <if test="updateTime != null" >update_time = #{updateTime},</if>
+	  	</set>
+	  	where account_no = #{accountNo} and repayment_no = #{repaymentNo}
+	</update>
+	
+	<!-- SaaS授信信息查询待还款和逾期总条数  -->
+	<select id="getStatusCount" resultType="map">
+	    select count(1) count,'1' rs,'待还款' status from jtl_dealer_bill jdb where repayment_status = 1 and dealer_id = #{dealerId}
+		 union 
+        select count(1) count,'3' rs,'逾期' status from jtl_dealer_bill jdb where repayment_status =3 and dealer_id = #{dealerId}
+	</select>	
+	
+	<insert id="insertJtlHandleRecord">
+	 insert into jtl_handle_record
+	<trim prefix="(" suffix=")" suffixOverrides="," >
+	  <if test="customerCode != null" >
+        dealer_id,
+      </if>
+	  <if test="repaymentNo != null" >
+        apply_no,
+      </if>
+	  <if test="orderId != null" >
+        order_id,
+      </if>
+      <if test="repaymentAmount != null" >
+        repayment_amount,
+      </if>     
+      <if test="1==1" >
+        create_time,
+      </if>
+      <if test="remark != null" >
+        remark,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="customerCode != null" >
+        #{customerCode},
+      </if>
+      <if test="repaymentNo != null" >
+        #{repaymentNo},
+      </if>
+      <if test="orderId != null" >
+        #{orderId},
+      </if>
+      <if test="repaymentAmount != null" >
+        #{repaymentAmount},
+      </if>
+      <if test="1==1" >
+        now(),
+      </if>
+      <if test="remark != null" >
+        #{remark},
+      </if>
+    </trim>
+	</insert>
+	
+	<!-- 查询用户 贷通支付 操作列表-->
+	<select id="getJtlHandleRecord" resultType="map">
+	   select dealer_id dealerId,apply_no applyNo,order_id orderId,repayment_amount repaymentAmount,create_time createTime,remark
+	    from jtl_handle_record
+	   where dealer_id = #{dealerId} 
+	   <if test="startTime != null and startTime !=''">
+			and DATE_FORMAT(create_time,'%Y-%m-%d') &gt;= DATE_FORMAT(#{startTime},'%Y-%m-%d')
+	   </if>
+	   <if test="endTime != null and endTime !=''">
+			and DATE_FORMAT(create_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d')
+	   </if>
+	   order by createTime desc
+       limit #{page}, #{rows} 
+	</select>
+	
+    <!-- 查询用户贷通支付 操作列表总条数 -->
+	<select id="getJtlHandleRecordCount" resultType="int">
+	   select count(1) from jtl_handle_record
+	   where dealer_id = #{dealerId} 
+	   <if test="startTime != null and startTime !=''">
+			and DATE_FORMAT(create_time,'%Y-%m-%d') &gt;= DATE_FORMAT(#{startTime},'%Y-%m-%d')
+	   </if>
+	   <if test="endTime != null and endTime !=''">
+			and DATE_FORMAT(create_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d')
+	   </if>
+	</select>
+</mapper>

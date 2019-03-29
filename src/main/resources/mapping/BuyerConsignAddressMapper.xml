@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.BuyerConsignAddressMapper" >
+
+	<resultMap type="java.util.Map" id="findByBuyerIdResultMap">
+		<result column="country_id" property="countryId"/>
+		<result column="province_id" property="provinceId"/>
+		<result column="city_id" property="cityId"/>
+		<result column="area_id" property="areaId"/>
+		<result column="address" property="address"/>
+		<result column="consignee" property="consignee"/>
+		<result column="post_code" property="postCode"/>
+		<result column="mobile" property="mobile"/>
+		<result column="mobile_secret" property="mobileSecret"/>
+		<result column="is_default" property="isDefault"/>
+		<result column="is_jd" property="isJd"/>
+		<result column="town_id" property="townId"/>
+		<result column="is_jd" property="isJd"/>
+        <!--增加行政区划-->
+	</resultMap>
+
+    <resultMap type="bmatser.pageModel.BuyerConsignAddressPage" id="findByBuyerIdResultMap2">
+        <result column="country_id" property="countryId"/>
+        <result column="province_id" property="provinceId"/>
+        <result column="city_id" property="cityId"/>
+        <result column="area_id" property="areaId"/>
+        <result column="address" property="address"/>
+        <result column="consignee" property="consignee"/>
+        <result column="post_code" property="postCode"/>
+        <result column="mobile" property="mobile"/>
+        <result column="mobile_secret" property="mobileSecret"/>
+        <result column="is_default" property="isDefault"/>
+        <result column="is_jd" property="isJd"/>
+        <result column="town_id" property="townId"/>
+        <result column="is_jd" property="isJd"/>
+        <!--增加行政区划-->
+    </resultMap>
+
+
+    <!-- 获取指定用户的收货地址 -->
+	<select id="findByBuyerId" resultMap="findByBuyerIdResultMap2">
+		select id, country_id, province_id, city_id, area_id, address, consignee, post_code, mobile, is_default,ifnull(is_jd,0) is_jd,ifnull(town_id,0)town_id
+		from buyer_consign_address
+		where buyer_id = #{buyerId} and status='1'
+		order by is_default desc
+	</select><!-- modify 20160918  收货地址列表查询增加返回是否京东数据字段 -->
+	
+<!-- 设置默认收货地址 -->
+	<update id="setNoDefault">
+		update buyer_consign_address
+		set is_default = '0'
+		where buyer_id = #{buyerId}
+	</update>
+	<update id="setDefault">
+		update buyer_consign_address
+		set is_default = '1'
+		where id = #{id}
+	</update>
+
+<!-- 新增收货地址 -->
+	<insert id="add" useGeneratedKeys="true" keyProperty="id">
+		insert into buyer_consign_address
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="id != null" >id,</if>
+	      <if test="buyerId != null" >buyer_id,</if>
+	      <if test="countryId != null" >country_id,</if>
+	      <if test="provinceId != null" >province_id,</if>
+	      <if test="cityId != null" >city_id,</if>
+	      <if test="areaId != null" >area_id,</if>
+	      <if test="address != null" >address,</if>
+	      <if test="postCode != null" >post_code,</if>
+	      <if test="consignee != null" >consignee,</if>
+	      <if test="telephone != null" >telephone,</if>
+	      <if test="mobile != null" >mobile,</if>
+	      <if test="telephoneSecret != null" >telephone_secret,</if>
+	      <if test="mobileSecret != null" >mobile_secret,</if>
+	      <if test="email != null" >email,</if>
+	      <if test="isDefault != null" >is_default,</if>
+	      <if test="1==1" >create_time,</if>
+	      <if test="1==1" >status,</if>
+	      <if test="isJd != null" >is_jd,</if>
+	      <if test="townId != null" >town_id,</if>
+	    </trim>
+	    <trim prefix="values (" suffix=")" suffixOverrides="," >
+	      <if test="id != null" >#{id},</if>
+	      <if test="buyerId != null" >#{buyerId},</if>
+	      <if test="countryId != null" >#{countryId},</if>
+	      <if test="provinceId != null" >#{provinceId},</if>
+	      <if test="cityId != null" >#{cityId},</if>
+	      <if test="areaId != null" >#{areaId},</if>
+	      <if test="address != null" >#{address},</if>
+	      <if test="postCode != null" >#{postCode},</if>
+	      <if test="consignee != null" >#{consignee},</if>
+	      <if test="telephone != null" >#{telephone},</if>
+	      <if test="mobile != null" >#{mobile},</if>
+	      <if test="telephoneSecret != null" >#{telephoneSecret},</if>
+	      <if test="mobileSecret != null" >#{mobileSecret},</if>
+	      <if test="email != null" >#{email},</if>
+	      <if test="isDefault != null" >#{isDefault},</if>
+	      <if test="1==1" >now(),</if>
+	      <if test="1==1" >1,</if>
+	      <if test="isJd != null" >#{isJd},</if>
+	      <if test="townId != null" >#{townId},</if>
+	    </trim>
+	</insert>
+	
+<!-- 修改收货地址 -->
+	<update id="edit" parameterType="bmatser.pageModel.BuyerConsignAddressPage">
+		update buyer_consign_address
+		<set>
+			<if test="countryId != null">
+				country_id = #{countryId},
+			</if>
+			<if test="provinceId != null">
+				province_id = #{provinceId},
+			</if>
+			<if test="cityId != null">
+				city_id = #{cityId},
+			</if>
+			<if test="areaId != null">
+				area_id = #{areaId},
+			</if>
+			<if test="address != null">
+				address = #{address},
+			</if>
+			<if test="postCode != null">
+				post_code = #{postCode},
+			</if>
+			<if test="consignee != null">
+				consignee = #{consignee},
+			</if> 
+			<if test="mobile != null">
+				mobile = #{mobile},
+			</if>
+			<if test="mobileSecret != null">
+				mobile_secret = #{mobileSecret},
+			</if>
+			<if test="isDefault != null" >
+				is_default = #{isDefault},
+			</if>
+			<if test="townId != null" >
+				town_id = #{townId},
+			</if>
+		</set>
+		where id=#{id}
+	</update>
+	
+<!-- 删除收货地址 -->
+	<delete id="delete">
+		update buyer_consign_address set status = '2' where id = #{id}
+	</delete>
+	
+<!-- 获取默认地址 -->
+	<select id="getDefaultByBuyerId" resultMap="findByBuyerIdResultMap">
+		select id,country_id, province_id, city_id, area_id, address, consignee, post_code, mobile, is_default,ifnull(is_jd,0) isJd,ifnull(town_id,0)town_id
+		from buyer_consign_address
+		where buyer_id = #{buyerId} and status='1' and is_default = '1' and ifnull(is_jd,0) !=1
+		limit 0,1
+	</select>
+<!-- 获取默认京东地址 -->
+	<select id="getDefaultJDByBuyerId" resultMap="findByBuyerIdResultMap">
+		select id,country_id, province_id, city_id, area_id, address, consignee, post_code, mobile, is_default,ifnull(is_jd,0) isJd,ifnull(town_id,0)town_id
+		from buyer_consign_address
+		where buyer_id = #{buyerId} and status='1' and is_default = '1' and ifnull(is_jd,0) =1
+		limit 0,1
+	</select>
+	
+<!-- 获取地址详情 -->
+	<select id="getConsignAddressById" resultMap="findByBuyerIdResultMap">
+		select id,country_id, province_id, city_id, area_id, address, consignee, post_code, mobile, is_default 
+		from buyer_consign_address
+		where id = #{id} and status='1'
+	</select>
+	<!-- 根据收货地址ID查询 -->
+	<select id="findById" parameterType="java.lang.Integer" resultMap="findByBuyerIdResultMap" >
+		select
+		id,country_id, province_id, city_id, area_id, address, consignee, post_code, mobile,mobile_secret mobileSecret, is_default 
+		from buyer_consign_address bca
+		where id = #{id}
+	</select>
+	<update id="deleteByPage" parameterType="map">
+		update buyer_consign_address
+		<set>
+			status = 2
+		</set>
+		where id = #{id} and buyer_id = #{buyerId}
+	</update>
+	
+	<!-- 查询收货地址 -->
+	<select id="selectAddress" resultType="map" parameterType="Integer">
+        select id,buyer_id,country_id,province_id,city_id,area_id,address,post_code,consignee,telephone,
+        mobile,email,is_default,create_time,status
+		from buyer_consign_address
+		where id = #{consignAddressId} and status='1'
+	</select>
+	
+	<select id="findJsonAddress" parameterType="map" resultType="map">
+		select 
+			address,area_id areaId,city_id cityId,consignee,mobile mobile,province_id provinceId,ifnull(town_id,0) townId,ifnull(is_jd,0) isJd
+		from buyer_consign_address
+		where id = #{consignAddressId}
+	</select>
+	<select id="findJsonSecretAddress" parameterType="map" resultType="map">
+		select 
+			address,area_id areaId,city_id cityId,consignee,mobile_secret mobile,province_id provinceId,ifnull(town_id,0) townId,ifnull(is_jd,0) isJd
+		from buyer_consign_address
+		where id = #{consignAddressId}
+	</select>
+	<select id="findAddrByChannel" resultMap="findByBuyerIdResultMap">
+		select id,country_id, province_id, city_id, area_id, address, consignee, post_code, mobile, is_default,ifnull(is_jd,0)is_jd,ifnull(town_id,0) town_id
+		from buyer_consign_address
+		where buyer_id = #{buyerId} and status='1' 
+		<if test="type!=2">
+		and ifnull(is_jd,0) = #{type}
+		</if>
+		order by is_default desc
+	</select>
+</mapper>

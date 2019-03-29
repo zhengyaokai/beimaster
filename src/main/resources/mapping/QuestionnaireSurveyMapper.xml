@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.QuestionnaireSurveyMapper" >
+
+
+	<select id="selectDealerBean" resultType="int">
+		select count(1) from dealer_bean where dealer_id = #{dealerId}
+        and type = '6' and status = '1'
+	</select>
+		
+	<insert id="insertDealerBean" >
+		insert into dealer_bean
+		(dealer_id,bean,create_time,modify_time,remark,type,status) 
+		values 
+		(#{dealerId},1000,now(),now(),'问卷调查赠送',6,'1')
+	</insert>
+	
+	<update id="updateBeanToDealer" >
+		update dealer SET bean = COALESCE(bean,0) + 1000
+		where id = #{dealerId} 
+	</update>
+</mapper>

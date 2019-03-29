@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.MemberFavoriteMapper" >
+<resultMap id="selectMemberFavorite" type="java.util.Map" >
+    <result column="id" property="id" jdbcType="INTEGER" />
+    <result column="goods_name" property="goodsName" jdbcType="VARCHAR" />
+    <result column="price" property="price" jdbcType="DECIMAL" />
+    <result column="sale_price" property="salePrice" jdbcType="DECIMAL" />
+    <result column="buy_no" property="buyNo" jdbcType="VARCHAR" />
+    <result column="stock" property="stock" jdbcType="INTEGER" />
+    <result column="model" property="model" jdbcType="VARCHAR" />
+    <result column="dealer_id" property="dealerId" jdbcType="INTEGER" />
+    <result column="seller_goods_id" property="sellerGoodsId" jdbcType="INTEGER" />
+     <result column="fav_date" property="favDate" jdbcType="VARCHAR" />
+      <result column="image" property="image" jdbcType="VARCHAR" />
+      <result column="sku_unit" property="skuUnit" jdbcType="VARCHAR" />
+  </resultMap>
+<!-- 查询会员收藏关联信息 -->
+  <select id="selectById" resultMap="selectMemberFavorite" parameterType="map">
+    select m.id,sg.goods_name,sg.price,sg.sale_price,sg.sku_unit,if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1) orderQuantity,sg.buy_no,sg.stock,g.model,${@bmatser.util.SQLUtil@GOODS_IMG} image,m.dealer_id,m.seller_goods_id,m.fav_date
+         from member_favorite m 
+         left join seller_goods sg on m.seller_goods_id=sg.id
+         left join goods g on g.id=sg.goods_id
+         left join brand b on b.id=g.brand_id and b.status='1'
+         where sg.status='1' and g.status='1' and m.status='1' 
+         <if test="dealerId != null">
+				and m.dealer_id = #{dealerId} 
+		 </if>
+		 <if test="goodsName != null">
+				and sg.goods_name like '%${goodsName}%'
+		 </if>
+		 <if test="favDate != null">
+				and DATE_FORMAT(m.fav_date,'%Y/%m/%d') = #{favDate} 
+		 </if>
+		 <if test="buyNo != null">
+				and sg.buy_no = #{buyNo}
+		 </if>
+		  <if test="queryType != null and queryType == 1">
+			and DATE_FORMAT(m.fav_date,'%Y-%m-%d') &gt;= DATE_SUB(NOW(), INTERVAL 3 DAY)   
+		</if>
+		<if test="queryType != null and queryType == 2">
+			and DATE_FORMAT(m.fav_date,'%Y-%m-%d') &gt;= DATE_SUB(NOW(), INTERVAL 1 MONTH)   
+		</if>
+		<if test="queryType != null and queryType == 3">
+			and DATE_FORMAT(m.fav_date,'%Y-%m-%d') &gt;= DATE_SUB(NOW(), INTERVAL 3 MONTH)   
+		</if> 
+		<if test="startTime != null and startTime !=''">
+			and DATE_FORMAT(m.fav_date,'%Y-%m-%d') &gt;= DATE_FORMAT(#{startTime},'%Y-%m-%d')
+		</if>
+		<if test="endTime != null and endTime !=''">
+			and DATE_FORMAT(m.fav_date,'%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d')
+		</if>
+		 order by m.fav_date desc
+		 limit #{page}, #{rows}
+  </select>
+   <!-- 查询会员收藏总记录数-->
+  <select id="count" resultType="java.lang.Integer" parameterType="map">
+		 select count(*)
+         from member_favorite m 
+         left join seller_goods sg on m.seller_goods_id=sg.id
+         left join goods g on g.id=sg.goods_id
+         left join brand b on b.id=g.brand_id and b.status='1'
+         where sg.status='1' and g.status='1' and m.status='1'
+          <if test="dealerId != null">
+				and m.dealer_id = #{dealerId} 
+		 </if>
+		 <if test="goodsName != null">
+				and sg.goods_name like '%${goodsName}%'
+		 </if>
+		 <if test="favDate != null">
+				and DATE_FORMAT(m.fav_date,'%Y/%m/%d') = #{favDate} 
+		 </if>
+		 <if test="buyNo != null">
+				and sg.buy_no = #{buyNo}
+		 </if>
+		 <if test="queryType != null and queryType == 1">
+			and DATE_FORMAT(m.fav_date,'%Y-%m-%d') &gt;= DATE_SUB(NOW(), INTERVAL 3 DAY)   
+		</if>
+		<if test="queryType != null and queryType == 2">
+			and DATE_FORMAT(m.fav_date,'%Y-%m-%d') &gt;= DATE_SUB(NOW(), INTERVAL 1 MONTH)   
+		</if>
+		<if test="queryType != null and queryType == 3">
+			and DATE_FORMAT(m.fav_date,'%Y-%m-%d') &gt;= DATE_SUB(NOW(), INTERVAL 3 MONTH)   
+		</if> 
+		<if test="startTime != null and startTime !=''">
+			and DATE_FORMAT(m.fav_date,'%Y-%m-%d') &gt;= DATE_FORMAT(#{startTime},'%Y-%m-%d')
+		</if>
+		<if test="endTime != null and endTime !=''">
+			and DATE_FORMAT(m.fav_date,'%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d')
+		</if>
+	</select>
+	<!-- 查询会员是否被收藏-->
+  <select id="getNumber" resultType="java.lang.Integer">
+		 select count(*)
+         from member_favorite m 
+         where m.status='1'
+          <if test="dealerId != null">
+				and m.dealer_id = #{dealerId} 
+		   </if> 
+		   <if test="sellerGoodsId != null">
+				and m.seller_goods_id = #{sellerGoodsId} 
+		   </if> 
+	</select>
+  <!-- 新增会员收藏 -->
+  <insert id="insert" parameterType="bmatser.model.MemberFavorite" >
+    insert into member_favorite (dealer_id, seller_goods_id,fav_date,status)
+    values (#{dealerId},#{sellerGoodsId},now(),'1')
+  </insert>
+   <!-- 修改会员收藏 -->
+   <update id="updateById" parameterType="bmatser.model.MemberFavorite" >
+    update member_favorite
+    <set >
+      <if test="dealerId != null" >
+        dealer_id = #{dealerId},
+      </if>
+      <if test="sellerGoodsId != null" >
+         seller_goods_id = #{sellerGoodsId},
+      </if>
+    </set>
+    where id = #{id}
+  </update>
+    <!-- 删除会员收藏 -->
+  <update id="deleteById">
+    update member_favorite set status='2'
+    where seller_goods_id = #{sellerGoodsId} and dealer_id= #{dealerId} and status='1'
+  </update>
+</mapper>

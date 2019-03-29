@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GiftExchangeRecordMapper" >
+<!-- 查询礼品兑换记录 -->
+	<select id="selectCreExchange" resultType="map" parameterType="map">
+         SELECT f.name name,concat('${@bmatser.util.Constants@IMAGE_URL}','giftImg/',f.small_pic) smallPic,f.market_price marketPrice,b.address address,ger.id id,
+         ger.score score,ger.exchange_time exchangeTime,b.province_id provinceId,b.city_id cityId,b.area_id areaId,ger.num,b.consignee,b.mobile_secret mobileSecret,
+         ger.score_remain scoreRemain,ger.status status,${@bmatser.util.SQLUtil@GER_STATUS} characterStatus,ger.seller_logistics_id sellerLogisticsId,ger.logistics_code logisticsCode
+         FROM gift_exchange_record ger 
+         LEFT JOIN gift f ON ger.gift_id=f.id
+         LEFT JOIN buyer_consign_address b ON b.id=ger.consign_address_id
+         LEFT JOIN dealer d ON d.id=ger.dealer_id 
+         LEFT JOIN register r ON r.id=ger.user_id
+         WHERE ger.dealer_id=#{dealerId}
+         AND d.status='1' AND r.status='1' ORDER BY ger.exchange_time desc
+		 limit #{page}, #{rows} <!--  增加返回物流ID sellerLogisticsId 和 物流单号 logisticsCode  增加返回数量，收货人和电话号码-->
+	</select>
+	<!-- 查询礼品兑换总记录 -->
+	<select id="count" resultType="java.lang.Integer" parameterType="map">
+         SELECT count(g.id)
+         FROM gift_exchange_record g
+         LEFT JOIN gift f ON g.gift_id=f.id
+         LEFT JOIN buyer_consign_address b ON b.id=g.consign_address_id
+         LEFT JOIN dealer d ON d.id=g.dealer_id 
+         LEFT JOIN register r ON r.id=g.user_id
+         WHERE g.dealer_id=#{dealerId}
+         AND d.status='1' AND r.status='1' 
+	</select>
+	
+	<select id="selectAppGiftInfo" resultType="map">
+	   SELECT f.name name,concat('${@bmatser.util.Constants@IMAGE_URL}','giftImg/',f.small_pic) smallPic,f.market_price marketPrice,b.address address,g.id id,
+         g.score score,g.exchange_time exchangeTime,b.province_id provinceId,b.city_id cityId,b.area_id areaId,g.num,b.consignee,b.mobile_secret mobileSecret,
+         g.score_remain scoreRemain,g.status status,g.seller_logistics_id sellerLogisticsId,g.logistics_code logisticsCode 
+         FROM gift_exchange_record g
+         LEFT JOIN gift f ON g.gift_id=f.id
+         LEFT JOIN buyer_consign_address b ON b.id=g.consign_address_id
+         LEFT JOIN dealer d ON d.id=g.dealer_id 
+         LEFT JOIN register r ON r.id=g.user_id
+         WHERE g.dealer_id=#{dealerId}
+         AND g.id=#{id} 
+         AND d.status='1' AND r.status='1' 
+	</select>
+	
+	 <!-- 礼品所需要的积分对dealer表中的积分字段进行扣减后，然后将扣减记录保存到gift_exchange_record 表 -->
+  <insert id="insert" parameterType="bmatser.model.GiftExchangeRecord" keyProperty="id" useGeneratedKeys="true">
+    insert into gift_exchange_record (id,gift_id,num,score,score_remain,exchange_time,dealer_id,user_id,mobile,consign_address_id,
+    consign_address_info,status)
+    values (#{id},#{giftId},#{num},#{score},#{scoreRemain},
+    #{exchangeTime},#{dealerId},#{userId},#{mobile},#{consignAddressId},#{consignAddressInfo},'1')
+  </insert>
+ 
+ <select id="getExistEZhuGiftStatus"  resultType="int">
+		select 
+			if(count(1)>0,status,0)
+		from gift_exchange_record 
+		where id = #{id}
+ </select>
+ <update id="updateEzhuInfo">
+ 		update 
+ 			gift_exchange_record
+ 		set
+ 			status = 2,
+ 			logistics_code = #{logisticsNo},
+ 			seller_logistics_id= #{logisticsId}
+ 		where id = #{id}	
+ </update>
+</mapper>

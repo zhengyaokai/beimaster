@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.WeiXinMapper" >
+
+	<select id="getDealerInfo" resultType="map">
+		select r.id loginId,d.id dealerId,d.dealer_name dealerName,r.user_name userName 
+		 from dealer d,register r 
+		 where r.dealer_id = d.id and  d.open_id = #{openId} and d.status = '1' and d.dealer_type in ('4','5')
+	</select>
+	
+	<select id="getWXSaasDealerInfo" resultType="map">
+		select r.id loginId,d.id dealerId,d.dealer_name dealerName,r.user_name userName 
+		 from dealer d,register r 
+		 where r.dealer_id = d.id and  d.saas_open_id = #{openId} and d.status = '1' and d.dealer_type = '2'
+	</select>
+	
+	<insert id="saveOpenId">
+	   insert into dealer(check_status,check_time,rank,dealer_type,status,reg_channel,
+		<if test="openId != null and openId != ''">
+			open_id,
+		</if>
+		create_time)
+		values('1',now(),1,'4','1','4'
+		<if test="openId != null and openId != ''">
+			#{openId},
+		</if>
+		now());
+	</insert>
+	
+	<update id="saveOpenIdByDealerId">
+	  update dealer set open_id = #{openId} 
+	  where id = #{dealerId}
+	</update>
+	
+	<select id="selectDealerInvitedInfo" resultType="int">
+	   select count(1) from dealer_invited where invited_open_id = #{invitedOpenId} 
+	</select>
+	
+	<insert id="insertDealerInvited">
+	   insert into dealer_invited(dealer_id,invited_open_id,create_time) 
+	   values(#{dealerId},#{invitedOpenId},now())
+	</insert>
+</mapper>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.DealerBeanMapper" >
+    <!-- 查询用户可用工币-->
+	<select id="getBean" resultType="java.lang.Long">
+	select IFNULL(d.bean,0) available
+	 from dealer d 
+     where d.id = #{dealerId}
+	</select>
+	
+	<!-- 查询可用和冻结工币  ：
+	select IFNULL(d.bean,0) available,t.freeze 
+	 from dealer d 
+     LEFT JOIN (select sum(IFNULL(db.bean,0)) freeze, db.dealer_id from dealer_bean db
+LEFT JOIN order_info oi on db.related_id = oi.id 
+where db.dealer_id = 1111111527 and db.type = 1 and db.status =3 and oi.order_status !='1' 
+      and (oi.original_order_id is null or oi.original_order_id = '')
+		  and (oi.is_manual =0 or oi.is_manual is null)
+group by db.dealer_id ) t on t.dealer_id = d.id
+where d.id = 1111111527 -->
+	
+	<!-- 查询用户冻结工币-->
+	<select id="getFreezeBean" resultType="java.lang.Long">	
+     select sum(IFNULL(db.bean,0)) freeze  from dealer_bean db
+      LEFT JOIN order_info oi on db.related_id = oi.id 
+     where db.dealer_id = #{dealerId} and db.type = 1 and db.status =3 and oi.order_status not in ('1','9')
+      and (oi.original_order_id is null or oi.original_order_id = '')
+	  and (oi.is_manual =0 or oi.is_manual is null)
+     group by db.dealer_id 
+	</select>
+	
+	<!-- 查询用户工币列表 -->
+	<select id="getDealerBeanList" resultType="map">
+	   select id,ifnull(bean,0) bean,if(modify_time is not null and modify_time !='' ,modify_time,create_time) createTime,ifnull(remark,'') remark,ifnull(related_id,'') orderId,type,status from dealer_bean
+	   where dealer_id = #{dealerId} and status in ('1','2')
+	   <!-- <if test="status != null and status !=''">
+			and status = #{status} 
+		</if> -->
+	   order by createTime desc
+       limit #{page}, #{rows} 
+	</select>
+
+
+
+
+    <!-- 查询用户工币列表总条数 -->
+	<select id="getDealerBeanCount" resultType="int">
+	   select count(1) from dealer_bean
+	   where dealer_id = #{dealerId} and status in ('1','2') 
+	   <!-- <if test="status != null and status !=''">
+			and status = #{status} 
+	   </if> -->
+	</select>
+	
+	<!-- 查询用户冻结工币列表 -->
+	<select id="getFreezeDealerBeanList" resultType="bmatser.model.DealerBean">
+	  select db.id,db.dealer_id dealerId,ifnull(bean,0) bean,
+       oi.pay_time createTime,ifnull(remark,'') remark,ifnull(related_id,'') orderId,
+       db.status,db.type,oi.order_status orderStatus,ifnull(oi.consign_time,'') consignTime
+      from dealer_bean db left join order_info oi on db.related_id = oi.id
+       where db.`status` in ('3','5') and db.dealer_id = #{dealerId}
+       and (oi.original_order_id is null or oi.original_order_id = '')
+		and (oi.is_manual =0 or oi.is_manual is null)
+		and oi.order_status not in ('1','9') 
+      order by createTime desc
+      limit #{page}, #{rows} 
+	</select>
+	
+	 <!-- 查询用户冻结工币列表总条数 -->
+	<select id="getFreezeDealerBeanCount" resultType="int">
+	   select count(1) 
+      from dealer_bean db left join order_info oi on db.related_id = oi.id
+       where db.`status` in ('3','5')  and db.dealer_id = #{dealerId}
+       and (oi.original_order_id is null or oi.original_order_id = '')
+		and (oi.is_manual =0 or oi.is_manual is null)
+		and oi.order_status not in ('1','9') 
+      order by db.create_time desc
+	</select>
+</mapper>

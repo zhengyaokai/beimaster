@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.OrderGoodsMapper" >
+    <resultMap id="BaseResultMap" type="bmatser.model.OrderGoods" >
+        <id column="id" property="id" jdbcType="BIGINT" />
+        <result column="order_id" property="orderId" jdbcType="BIGINT" />
+        <result column="goods_id" property="goodsId" jdbcType="BIGINT" />
+        <result column="seller_goods_id" property="sellerGoodsId" jdbcType="BIGINT" />
+        <result column="num" property="num" jdbcType="INTEGER" />
+        <result column="unit_price" property="unitPrice" jdbcType="DECIMAL" />
+        <result column="goods_desc" property="goodsDesc" jdbcType="VARCHAR" />
+        <result column="sale_price" property="salePrice" jdbcType="DECIMAL" />
+        <result column="sale_unit_price" property="saleUnitPrice" jdbcType="DECIMAL" />
+        <result column="cost_price" property="costPrice" jdbcType="DECIMAL" />
+    </resultMap>
+    <sql id="Base_Column_List" >
+    id, order_id, goods_id, seller_goods_id, num, unit_price, goods_desc, sale_price, 
+    sale_unit_price, cost_price
+  </sql>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+        select
+        <include refid="Base_Column_List" />
+        from order_goods
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from order_goods
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+    <insert id="insert" parameterType="bmatser.model.OrderGoods" >
+    insert into order_goods (id, order_id, goods_id, 
+      seller_goods_id, num, unit_price, 
+      goods_desc, sale_price, sale_unit_price, 
+      cost_price)
+    values (#{id,jdbcType=BIGINT}, #{orderId,jdbcType=BIGINT}, #{goodsId,jdbcType=BIGINT}, 
+      #{sellerGoodsId,jdbcType=BIGINT}, #{num,jdbcType=INTEGER}, #{unitPrice,jdbcType=DECIMAL}, 
+      #{goodsDesc,jdbcType=VARCHAR}, #{salePrice,jdbcType=DECIMAL}, #{saleUnitPrice,jdbcType=DECIMAL}, 
+      #{costPrice,jdbcType=DECIMAL})
+  </insert>
+    <insert id="insertSelective" parameterType="bmatser.model.OrderGoods" >
+        insert into order_goods
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="orderId != null" >
+                order_id,
+            </if>
+            <if test="goodsId != null" >
+                goods_id,
+            </if>
+            <if test="sellerGoodsId != null" >
+                seller_goods_id,
+            </if>
+            <if test="num != null" >
+                num,
+            </if>
+            <if test="unitPrice != null" >
+                unit_price,
+            </if>
+            <if test="goodsDesc != null" >
+                goods_desc,
+            </if>
+            <if test="salePrice != null" >
+                sale_price,
+            </if>
+            <if test="saleUnitPrice != null" >
+                sale_unit_price,
+            </if>
+            <if test="costPrice != null" >
+                cost_price,
+            </if>
+            <if test="tail != null" >
+                tail,
+            </if>
+            <if test="goodsType != null" >
+                goods_type,
+            </if>
+            <if test="activityId != null" >
+                activity_id,
+            </if>
+            <if test="price != null" >
+                price,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="orderId != null" >
+                #{orderId,jdbcType=BIGINT},
+            </if>
+            <if test="goodsId != null" >
+                #{goodsId,jdbcType=BIGINT},
+            </if>
+            <if test="sellerGoodsId != null" >
+                #{sellerGoodsId,jdbcType=BIGINT},
+            </if>
+            <if test="num != null" >
+                #{num,jdbcType=INTEGER},
+            </if>
+            <if test="unitPrice != null" >
+                #{unitPrice,jdbcType=DECIMAL},
+            </if>
+            <if test="goodsDesc != null" >
+                #{goodsDesc,jdbcType=VARCHAR},
+            </if>
+            <if test="salePrice != null" >
+                #{salePrice,jdbcType=DECIMAL},
+            </if>
+            <if test="saleUnitPrice != null" >
+                #{saleUnitPrice,jdbcType=DECIMAL},
+            </if>
+            <if test="costPrice != null" >
+                #{costPrice,jdbcType=DECIMAL},
+            </if>
+            <if test="tail != null" >
+                #{tail,jdbcType=DECIMAL},
+            </if>
+            <if test="goodsType != null" >
+                #{goodsType},
+            </if>
+            <if test="activityId != null" >
+                #{activityId},
+            </if>
+            <if test="price != null" >
+                #{price},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.OrderGoods" >
+        update order_goods
+        <set >
+            <if test="orderId != null" >
+                order_id = #{orderId,jdbcType=BIGINT},
+            </if>
+            <if test="goodsId != null" >
+                goods_id = #{goodsId,jdbcType=BIGINT},
+            </if>
+            <if test="sellerGoodsId != null" >
+                seller_goods_id = #{sellerGoodsId,jdbcType=BIGINT},
+            </if>
+            <if test="num != null" >
+                num = #{num,jdbcType=INTEGER},
+            </if>
+            <if test="unitPrice != null" >
+                unit_price = #{unitPrice,jdbcType=DECIMAL},
+            </if>
+            <if test="goodsDesc != null" >
+                goods_desc = #{goodsDesc,jdbcType=VARCHAR},
+            </if>
+            <if test="salePrice != null" >
+                sale_price = #{salePrice,jdbcType=DECIMAL},
+            </if>
+            <if test="saleUnitPrice != null" >
+                sale_unit_price = #{saleUnitPrice,jdbcType=DECIMAL},
+            </if>
+            <if test="costPrice != null" >
+                cost_price = #{costPrice,jdbcType=DECIMAL},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="bmatser.model.OrderGoods" >
+    update order_goods
+    set order_id = #{orderId,jdbcType=BIGINT},
+      goods_id = #{goodsId,jdbcType=BIGINT},
+      seller_goods_id = #{sellerGoodsId,jdbcType=BIGINT},
+      num = #{num,jdbcType=INTEGER},
+      unit_price = #{unitPrice,jdbcType=DECIMAL},
+      goods_desc = #{goodsDesc,jdbcType=VARCHAR},
+      sale_price = #{salePrice,jdbcType=DECIMAL},
+      sale_unit_price = #{saleUnitPrice,jdbcType=DECIMAL},
+      cost_price = #{costPrice,jdbcType=DECIMAL}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+    <select id="findNameById" resultType="java.lang.String" parameterType="java.lang.String">
+        select name from city_dict where id = #{id}
+    </select>
+
+    <select id="selectGoodsByOrderId" parameterType="java.lang.String" resultType="bmatser.model.OrderGoods">
+  		select  
+  			og.id,og.order_id orderId,og.goods_id goodsId,og.seller_goods_id sellerGoodsId,og.num,ifnull(og.price,og.unit_price) unitPrice,
+  			og.goods_desc goodsDesc,og.sale_price salePrice,og.sale_unit_price saleUnitPrice,og.cost_price costPrice,g.title,
+  			g.goods_no goodsNo,if(g.syn_code is not null and g.syn_code != '',g.syn_code,g.buy_no) buyNo,og.is_comment isComment,og.tail
+  		from order_goods og
+  		left join goods g on g.id = og.goods_id
+  		where og.order_id = #{id}
+  </select>
+
+    <select id="selectGoodsByOrderIdForErp" parameterType="java.lang.String" resultType="bmatser.model.Produce">
+  		select  
+  		      g.id as GoodId,b.name_cn as Gbrand,g.series as Gserial,g.model as GID,g.title as Gname,g.buy_no as Gindex,g.syn_code as GaProID,g.measure as Gunit,og.num as Bnumb,
+			  IFNULL(og.sale_unit_price,og.unit_price) as Bprice,2 BaHtHq,'' as BaBz,'' as BaYfCd
+  		from order_goods og
+  		left join goods g on g.id = og.goods_id
+  		left join brand b on b.id=g.brand_id
+        where g.syn_code is not null and og.order_id = #{id}
+  </select>
+
+    <!-- 订单列表商品显示 -->
+    <select id="getGoodsByOrderId" parameterType="map" resultType="map">
+ 	  	select
+	  		sg.id,og.num,ifnull(og.sale_unit_price,og.unit_price) saleUnitPrice,
+			if(sg.goods_name is not null and sg.goods_name != '',sg.goods_name,g.title)title,
+			${@bmatser.util.SQLUtil@GOODS_IMG} image,
+			g.model,d.shop_name shopName,d.alias,g.buy_no buyNo,og.is_comment isComment,
+			b.name_cn brandName,if(sg.sku_unit is not null and sg.sku_unit !='',sg.sku_unit,g.measure)measure,ifnull(og.price,og.unit_price) unitPrice,
+			ifnull(og.goods_type,0) goodsType,ifnull(og.unit_price-ifnull(og.tail,og.sale_unit_price),0) cash
+	  	from order_goods og 
+		left join goods g on g.id = og.goods_id 
+		left join seller_goods sg on og.seller_goods_id = sg.id AND sg.status!='3'
+		left join dealer d on sg.seller_id = d.id  AND d.status='1'
+		left join brand b on b.id = g.brand_id AND b.status='1'
+  		where order_id =#{id} 
+
+ </select>
+
+    <!-- 订单列表商品显示 -->
+    <select id="getGoods" parameterType="map" resultType="map">
+        select
+        sg.id,og.num,ifnull(og.sale_unit_price,og.unit_price) saleUnitPrice,
+        if(sg.goods_name is not null and sg.goods_name != '',sg.goods_name,g.title)title,
+        ${@bmatser.util.SQLUtil@GOODS_IMG} image,
+        g.model,d.shop_name shopName,g.buy_no buyNo,og.is_comment isComment,
+        b.name_cn brandName,if(sg.sku_unit is not null and sg.sku_unit !='',sg.sku_unit,g.measure)measure,ifnull(og.price,og.unit_price) unitPrice,
+        ifnull(og.goods_type,0) goodsType,ifnull(og.unit_price-ifnull(og.tail,og.sale_unit_price),0) cash,og.order_id orderId
+        from order_goods og
+        left join order_info oi on og.order_id = oi.id
+        left join goods g on g.id = og.goods_id
+        left join seller_goods sg on og.seller_goods_id = sg.id
+        left join dealer d on sg.seller_id = d.id
+        left join brand b on b.id = g.brand_id AND b.status='1'
+        where  g.status='1' AND sg.status!='3' AND d.status='1'
+        <if test="query.goodsName != null and query.goodsName != '' ">
+            and sg.goods_name like '%${query.goodsName}%'</if>
+        <if test="query.buyNo != null and query.buyNo != '' ">
+            and g.buy_no like '%${query.buyNo}%'</if>
+        <if test="query.orderId != null and query.orderId != '' ">
+            and og.order_id = ${query.orderId}</if>
+        <if test="query.startTime != null and query.startTime !=''">
+            and DATE_FORMAT(oi.order_time,'%Y-%m-%d') &gt;= DATE_FORMAT(#{query.startTime},'%Y-%m-%d')
+        </if>
+        <if test="query.endTime != null and query.endTime !=''">
+            and DATE_FORMAT(oi.order_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{query.endTime},'%Y-%m-%d')
+        </if>
+        <if test="query.type == 1">
+        and (oi.has_child =0 or oi.has_child is null or oi.has_child ='')
+    </if>
+        <if test="status != null and status != 0">
+            and oi.order_status = #{status}
+        </if>
+        group by orderId
+        limit ${page},${rows}
+    </select>
+
+    <!-- 商城 供应商订单列表的商品显示-->
+    <select id="selectSellerGoodsByOrderId" parameterType="map" resultType="map">
+ 	  	select
+	  		og.goods_id goodsId,og.num,og.unit_price saleUnitPrice,
+			g.title title,
+			concat('${@bmatser.util.Constants@IMAGE_URL}','goodsImg/',g.image) image,
+			g.model,g.buy_no buyNo,og.is_comment isComment,
+			b.name_cn brandName,g.measure measure,og.unit_price unitPrice
+		from order_info o
+    LEFT JOIN order_goods og on o.id=og.order_id
+		left join goods g on g.id = og.goods_id 
+		left join brand b on b.id = g.brand_id  
+  		where og.order_id =#{id} 
+  		AND g.status='1' AND b.status='1'
+ </select>
+
+    <select id="selectNoSyncGoodsByOrderIdForErp"  resultType="String">
+        SELECT
+        og.goods_id goodId
+        FROM
+        order_goods og
+        LEFT JOIN goods g ON g.id = og.goods_id
+        LEFT JOIN seller_goods sg ON og.seller_goods_id = sg.id
+        WHERE
+        og.order_id =#{oid}
+        and (g.syn_code is null or g.syn_code='')
+    </select>
+
+    <select id="selectByOrderIdAndGoodId" resultMap="BaseResultMap">
+        SELECT * FROM order_goods og
+        WHERE og.order_id=#{orderId} and og.goods_id=#{goodId}
+    </select>
+
+    <insert id="insertOrderGoods">
+        <foreach collection="list" item="goods"  separator=";">
+            insert into order_goods
+            <trim prefix="(" suffix=")" suffixOverrides="," >
+                <if test="goods.id != null" >
+                    id,
+                </if>
+                <if test="goods.orderId != null" >
+                    order_id,
+                </if>
+                <if test="goods.goodsId != null" >
+                    goods_id,
+                </if>
+                <if test="goods.sellerGoodsId != null" >
+                    seller_goods_id,
+                </if>
+                <if test="goods.num != null" >
+                    num,
+                </if>
+                <if test="goods.unitPrice != null" >
+                    unit_price,
+                </if>
+                <if test="goods.goodsDesc != null" >
+                    goods_desc,
+                </if>
+                <if test="goods.salePrice != null" >
+                    sale_price,
+                </if>
+                <if test="goods.saleUnitPrice != null" >
+                    sale_unit_price,
+                </if>
+                <if test="goods.costPrice != null" >
+                    cost_price,
+                </if>
+                <if test="goods.tail != null" >
+                    tail,
+                </if>
+                <if test="goods.goodsType != null" >
+                    goods_type,
+                </if>
+                <if test="goods.activityId != null" >
+                    activity_id,
+                </if>
+                <if test="goods.price != null" >
+                    price,
+                </if>
+            </trim>
+            <trim prefix="values (" suffix=")" suffixOverrides="," >
+                <if test="goods.id != null" >
+                    #{goods.id,jdbcType=BIGINT},
+                </if>
+                <if test="goods.orderId != null" >
+                    #{goods.orderId,jdbcType=BIGINT},
+                </if>
+                <if test="goods.goodsId != null" >
+                    #{goods.goodsId,jdbcType=BIGINT},
+                </if>
+                <if test="goods.sellerGoodsId != null" >
+                    #{goods.sellerGoodsId,jdbcType=BIGINT},
+                </if>
+                <if test="goods.num != null" >
+                    #{goods.num,jdbcType=INTEGER},
+                </if>
+                <if test="goods.unitPrice != null" >
+                    #{goods.unitPrice,jdbcType=DECIMAL},
+                </if>
+                <if test="goods.goodsDesc != null" >
+                    #{goods.goodsDesc,jdbcType=VARCHAR},
+                </if>
+                <if test="goods.salePrice != null" >
+                    #{goods.salePrice,jdbcType=DECIMAL},
+                </if>
+                <if test="goods.saleUnitPrice != null" >
+                    #{goods.saleUnitPrice,jdbcType=DECIMAL},
+                </if>
+                <if test="goods.costPrice != null" >
+                    #{goods.costPrice,jdbcType=DECIMAL},
+                </if>
+                <if test="goods.tail != null" >
+                    #{goods.tail,jdbcType=DECIMAL},
+                </if>
+                <if test="goods.goodsType != null" >
+                    #{goods.goodsType},
+                </if>
+                <if test="goods.activityId != null" >
+                    #{goods.activityId},
+                </if>
+                <if test="goods.price != null" >
+                    #{goods.price},
+                </if>
+            </trim>
+        </foreach>
+    </insert>
+    <update id="updateGoodsRebate">
+		update 
+			order_goods og,goods g,seller_goods sg,cashback_role cr
+		SET	
+			og.rebate = (og.num*ifnull(sg.sale_price,sg.price))*IFNULL(cr.rate,0)
+		where g.id = og.goods_id 
+			and og.seller_goods_id = sg.id  
+			and cr.brand_id = g.brand_id 
+			and  cr.start_time &lt;= now() 
+			and cr.end_time &gt;= now() 
+			and og.order_id = #{orderId}
+	</update>
+</mapper>

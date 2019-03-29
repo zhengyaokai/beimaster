@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.PaymentBillMapper" >
+	<!-- 根据id查询付款单 -->
+	<select id="findById" parameterType="java.lang.String" resultType="bmatser.model.PaymentBill">
+		select 
+			id,buyer_id buyerId,should_amount shouldAmount,real_amount realAmount,payment_score_amount paymentScoreAmount,
+			third_trade_code thirdTradeCode,pay_type payType,pay_status payStatus,pay_time payTime,remark,order_num orderNum,
+			payment_no paymentNo,payment_time paymentTime,status,reject_reason rejectReason
+		from payment_bill
+		where id = #{id} and status='1'
+	</select>
+	<!-- 根据单号查询付款单id -->
+	<select id="findPayOrderById" parameterType="long" resultType="map">
+		select 
+			count(1) num,order_id orderId,payment_bill_id 
+		from payment_bill_order
+		where order_id = #{id} and status='1'
+	</select>
+	
+	<!--  根据订单id查询付款单id -->
+	<select id="selectPaymentBillOrderId" resultType="String">
+		select 
+			payment_bill_id 
+		from payment_bill_order
+		where order_id = #{id} and status='1'
+	</select>
+	
+	<!-- 根据单号查询付款单id -->
+	<select id="findOrderById" parameterType="long" resultType="map">
+		select 
+			pbo.order_id orderId,pbo.payment_bill_id,pb.pay_type,oi.is_manual,if(oi.goods_sale_amount,oi.goods_sale_amount,0)+
+			if(oi.freight_sale_amount,oi.freight_sale_amount,0)+if(oi.full_cut_amount,oi.full_cut_amount,0)+if(oi.tax_sale_amount,oi.tax_sale_amount,0) saleAmount
+		from payment_bill_order pbo
+		left join payment_bill pb on pb.id=pbo.payment_bill_id 
+		left join order_info oi on oi.id=pbo.order_id
+		where pbo.order_id = #{id} and pbo.status='1' and pb.status='1'
+	</select>
+	<!-- 插入付款单数据 -->
+	<insert id="save" parameterType="bmatser.model.PaymentBill" useGeneratedKeys="true" keyProperty="id">
+		insert into payment_bill 
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="id != null">id,</if>
+			<if test="buyerId != null">buyer_id,</if>
+			<if test="shouldAmount != null">should_amount,</if>
+			<if test="realAmount != null">real_amount,</if>
+			<if test="paymentScoreAmount != null">payment_score_amount,</if>
+			<if test="thirdTradeCode != null">third_trade_code,</if>
+			<if test="payType != null">pay_type,</if>
+			<if test="payStatus != null">pay_status,</if>
+			<if test="payTime != null">pay_time,</if>
+			<if test="remark != null">remark,</if>
+			<if test="orderNum != null">order_num,</if>
+			<if test="paymentNo != null">payment_no,</if>
+			<if test="paymentTime != null">payment_time,</if>
+			<if test="status != null">status,</if>
+			<if test="companyAccount != null and companyAccount != '' ">company_account,</if>
+			<if test="balanceDeduction != null and balanceDeduction != '' ">balance_deduction,</if>
+			<if test="bankReceiveTime != null">bank_receive_time,</if>
+            <if test="tradeNo != null">trade_no,</if>
+            <if test="paymentAccount != null and paymentAccount !=''">payment_account,</if>
+            <if test="paymentAccountOnline != null and paymentAccountOnline !=''">payment_account_online,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="id != null">#{id},</if>
+			<if test="buyerId != null">#{buyerId},</if>
+			<if test="shouldAmount != null">#{shouldAmount},</if>
+			<if test="realAmount != null">#{realAmount},</if>
+			<if test="paymentScoreAmount != null">#{paymentScoreAmount},</if>
+			<if test="thirdTradeCode != null">#{thirdTradeCode},</if>
+			<if test="payType != null">#{payType},</if>
+			<if test="payStatus != null">#{payStatus},</if>
+			<if test="payTime != null">#{payTime},</if>
+			<if test="remark != null">#{remark},</if>
+			<if test="orderNum != null and orderNum != ''">#{orderNum},</if>
+			<if test="paymentNo != null">#{paymentNo},</if>
+			<if test="paymentTime != null">#{paymentTime},</if>
+			<if test="status != null">#{status},</if>
+			<if test="companyAccount != null and companyAccount != '' ">#{companyAccount},</if>
+			<if test="balanceDeduction != null and balanceDeduction != '' ">#{balanceDeduction},</if>
+			<if test="bankReceiveTime != null">now(),</if>
+            <if test="tradeNo != null">#{tradeNo},</if>
+            <if test="paymentAccount != null and paymentAccount != ''">#{paymentAccount},</if>
+            <if test="paymentAccountOnline != null and paymentAccountOnline != ''">#{paymentAccountOnline},</if>
+		</trim>
+	</insert>
+	<!-- 建立付款单合同关系-->
+	<insert id="savePaymentBillOrder" parameterType="bmatser.model.PaymentBillOrder"  useGeneratedKeys="true" keyProperty="id">
+		insert into payment_bill_order
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="id != null">id,</if>
+			<if test="paymentBillId != null">payment_bill_id,</if>
+			<if test="orderId != null">order_id,</if>
+			<if test="status != null">status,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="id != null">#{id},</if>
+			<if test="paymentBillId != null">#{paymentBillId},</if>
+			<if test="orderId != null">#{orderId},</if>
+			<if test="status != null">#{status},</if>
+		</trim>
+	</insert>
+	<!-- 更新付款单 -->
+	<update id="update" parameterType="bmatser.model.PaymentBill">
+		update payment_bill 
+		<set>
+			<if test="buyerId != null">buyer_id = #{buyerId},</if>
+			<if test="shouldAmount != null">should_amount = #{shouldAmount},</if>
+			<if test="realAmount != null">real_amount = #{realAmount},</if>
+			<if test="paymentScoreAmount != null">payment_score_amount = #{paymentScoreAmount},</if>
+			<if test="thirdTradeCode != null">third_trade_code = #{thirdTradeCode},</if>
+			<if test="payType != null">pay_type = #{payType},</if>
+			<if test="payStatus != null">pay_status = #{payStatus},</if>
+			<if test="payTime != null">pay_time = #{payTime},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			<if test="orderNum != null">order_num = #{orderNum},</if>
+			<if test="paymentNo != null">payment_no = #{paymentNo},</if>
+			<if test="paymentTime != null">payment_time = #{paymentTime},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="rejectStatus != null">reject_status = #{rejectStatus},</if>
+			<if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+			<if test="companyAccount != null">company_account = #{companyAccount},</if>
+			<if test="balanceDeduction != null">balance_deduction = #{balanceDeduction},</if>
+			<if test="bankReceiveTime != null">bank_receive_time = now(),</if>
+			<if test="tradeNo != null">trade_no = #{tradeNo},</if>
+			<if test="paymentAccount != null and paymentAccount !=''">payment_account = #{paymentAccount},</if>
+			 <if test="paymentAccountOnline != null and paymentAccountOnline !=''">payment_account_online = #{paymentAccountOnline},</if>
+		</set>
+		where id = #{id}
+	</update>
+	<!-- 修改付款单状态 -->
+	<update id="updatePayStatus" parameterType="map">
+		update payment_bill 
+		<set>
+			pay_status = #{check}
+		</set>
+		where id = #{id}
+	</update>
+	<!-- 付款单列表信息 -->
+	<select id="getPayByPage" resultType="bmatser.pageModel.PaymentBillPage" parameterType="bmatser.pageModel.PaymentBillPage">
+	select payment_bill.id,payment_bill.real_amount realAmount, payment_bill.pay_time payTime,
+		payment_bill.pay_status payStatus, payment_bill.third_trade_code thirdTradeCode,
+		payment_bill.should_amount shouldAmount, dealer.dealer_name dealerName, order_info.id orderId,
+		payment_bill.company_account companyAccount,if(order_info.goods_sale_amount,order_info.goods_sale_amount,0) scoreDeductionAmout,
+		payment_bill.reject_reason rejectReason,payment_bill.pay_type payType
+	from payment_bill
+	left join dealer on dealer.id=payment_bill.buyer_id
+	left join payment_bill_order on payment_bill_order.payment_bill_id=payment_bill.id and payment_bill_order.status=1
+	left join order_info on order_info.id=payment_bill_order.order_id
+	where payment_bill.status = '1' and payment_bill.pay_status='0' and payment_bill.reject_status='1'
+	and order_info.order_status='9'
+	<if test="thirdTradeCode != null and thirdTradeCode!=''">
+		and payment_bill.third_trade_code like '%${thirdTradeCode}%'
+	</if>
+	<if test="payStatus != null and payStatus!=''">
+		and payment_bill.pay_status = #{payStatus}
+	</if>
+	<if test="payType != null and payType!=''">
+		and payment_bill.pay_type = #{payType}
+	</if>
+	<if test="payStartTime != null and payStartTime!=''">
+		and payment_bill.pay_time &gt;= #{payStartTime}
+	</if>
+	<if test="payEndTime != null and payEndTime!=''">
+		and payment_bill.pay_time &lt;= date_add(#{payEndTime,jdbcType=TIMESTAMP}, INTERVAL 1 day)
+	</if>
+	order by payment_bill.pay_time desc,payment_bill.id desc
+	limit ${page},${rows}
+	</select>
+	<!-- 付款单数量 -->
+	<select id="countPayByPage" resultType="int" parameterType="bmatser.pageModel.PaymentBillPage">
+	select count(1)
+	from payment_bill
+	left join payment_bill_order on payment_bill_order.payment_bill_id=payment_bill.id and payment_bill_order.status=1
+	left join order_info on order_info.id=payment_bill_order.order_id
+	where payment_bill.status = '1' and payment_bill.pay_status='0' and payment_bill.reject_status='1'
+	and order_info.order_status='9'
+	<if test="thirdTradeCode != null and thirdTradeCode!=''">
+		and payment_bill.third_trade_code like '%${thirdTradeCode}%'
+	</if>
+	<if test="payStatus != null and payStatus!=''">
+		and payment_bill.pay_status = #{payStatus}
+	</if>
+	<if test="payType != null and payType!=''">
+		and payment_bill.pay_type = #{payType}
+	</if>
+	<if test="payStartTime != null and payStartTime!=''">
+		and payment_bill.pay_time &gt;= #{payStartTime}
+	</if>
+	<if test="payEndTime != null and payEndTime!=''">
+		and payment_bill.pay_time &lt;= date_add(#{payEndTime,jdbcType=TIMESTAMP}, INTERVAL 1 day)
+	</if>
+	</select>
+	<!-- 删除付款单 -->
+	<update id="deleteById" parameterType="string">
+		update payment_bill set status=2
+		where id= #{id}
+	</update>
+	
+	<!-- 删除payment_bill （付款单对应订单关系表）  -->
+	<delete id="delete">
+		delete from payment_bill 
+		where id= #{selectPaymentBillId}
+	</delete>
+	
+	<!-- 根据对账单id 删除 payment_bill_order （付款单对应订单关系表）-->
+	<delete id="delete1">
+		delete from payment_bill_order 
+		where payment_bill_id= #{selectPaymentBillId}
+	</delete>
+	
+	<!-- 更新付款单优惠金额 -->
+	<update id="updateDiscountAmount" parameterType="bmatser.model.PaymentBill">
+		update payment_bill
+		<set>
+			<if test="payType ==2">real_amount = real_amount + #{goodsSaleAmount} - #{paymentScoreAmount},</if>
+			<if test="rejectStatus != null">reject_status = #{rejectStatus},</if>
+			<if test="paymentScoreAmount != null">should_amount = should_amount + #{goodsSaleAmount} - #{paymentScoreAmount},</if>
+		</set>
+		where id= #{id}
+	</update>
+	<!-- 根据id查询单号 -->
+	<select id="findOrderIdById" parameterType="string" resultType="long">
+		select order_id orderId from payment_bill_order where payment_bill_id=#{id} and status='1'
+	</select>
+	
+	<update id="updateOrderAmount" parameterType="bmatser.model.PaymentBill">
+		update order_info set goods_sale_amount = ${paymentScoreAmount},service_remark=#{remark} 
+		where id=#{id}
+	</update>
+	
+	<update id="deletePayOrderByOrderId" parameterType="long">
+		update payment_bill_order set status ='2'
+		where order_id = #{id}
+	</update>
+	
+	<select id="findOpxVal" parameterType="int" resultType="map">
+		select opt_text,opt_value from sys_options_value where opt_id=#{i}
+	</select>
+	
+	<select id="getsaleAmountById" parameterType="long" resultType="string">
+		select goods_sale_amount from order_info where id=#{id}
+	</select>
+	
+	<!--保存支付页面支付宝转账信息  -->
+	<update id="updateOrderAlipay" parameterType="bmatser.model.PaymentBill" >
+		   update payment_bill 
+	    <set>
+	      <if test="thirdTradeCode != null" >
+	      third_trade_code = #{thirdTradeCode,jdbcType=VARCHAR},
+	      </if>
+        </set>
+	    where id = #{id,jdbcType=BIGINT}
+	</update>	
+	
+		<!-- 更新付款单 updateInt-->
+	<update id="updateInt" parameterType="bmatser.model.PaymentBill">
+		update payment_bill 
+		<set>
+			<if test="buyerId != null">buyer_id = #{buyerId},</if>
+			<if test="shouldAmount != null">should_amount = #{shouldAmount},</if>
+			<if test="realAmount != null">real_amount = #{realAmount},</if>
+			<if test="paymentScoreAmount != null">payment_score_amount = #{paymentScoreAmount},</if>
+			<if test="thirdTradeCode != null">third_trade_code = #{thirdTradeCode},</if>
+			<if test="payType != null">pay_type = #{payType},</if>
+			<if test="payStatus != null">pay_status = #{payStatus},</if>
+			<if test="payTime != null">pay_time = #{payTime},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			<if test="orderNum != null">order_num = #{orderNum},</if>
+			<if test="paymentNo != null">payment_no = #{paymentNo},</if>
+			<if test="paymentTime != null">payment_time = #{paymentTime},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="rejectStatus != null">reject_status = #{rejectStatus},</if>
+			<if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+			<if test="companyAccount != null">company_account = #{companyAccount},</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<!-- 插入付款单数据 saveParam-->
+	<insert id="saveParam" parameterType="bmatser.model.PaymentBill" useGeneratedKeys="true" keyProperty="id">
+		insert into payment_bill 
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="id != null">id,</if>
+			<if test="buyerId != null">buyer_id,</if>
+			<if test="shouldAmount != null">should_amount,</if>
+			<if test="realAmount != null">real_amount,</if>
+			<if test="paymentScoreAmount != null">payment_score_amount,</if>
+			<if test="thirdTradeCode != null">third_trade_code,</if>
+			<if test="payType != null">pay_type,</if>
+			<if test="payStatus != null">pay_status,</if>
+			<if test="payTime != null">pay_time,</if>
+			<if test="remark != null">remark,</if>
+			<if test="orderNum != null">order_num,</if>
+			<if test="paymentNo != null">payment_no,</if>
+			<if test="paymentTime != null">payment_time,</if>
+			<if test="status != null">status,</if>
+			<if test="companyAccount != null and companyAccount != '' ">company_account,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="id != null">#{id},</if>
+			<if test="buyerId != null">#{buyerId},</if>
+			<if test="shouldAmount != null">#{shouldAmount},</if>
+			<if test="realAmount != null">#{realAmount},</if>
+			<if test="paymentScoreAmount != null">#{paymentScoreAmount},</if>
+			<if test="thirdTradeCode != null">#{thirdTradeCode},</if>
+			<if test="payType != null">#{payType},</if>
+			<if test="payStatus != null">#{payStatus},</if>
+			<if test="payTime != null">#{payTime},</if>
+			<if test="remark != null">#{remark},</if>
+			<if test="orderNum != null and orderNum != ''">#{orderNum},</if>
+			<if test="paymentNo != null">#{paymentNo},</if>
+			<if test="paymentTime != null">#{paymentTime},</if>
+			<if test="status != null">#{status},</if>
+			<if test="companyAccount != null and companyAccount != '' ">#{companyAccount},</if>
+		</trim>
+	</insert>
+	
+	<!-- 建立付款单合同关系 savePaymentBillOrderParam-->
+	<insert id="savePaymentBillOrderParam" parameterType="bmatser.model.PaymentBillOrder"  useGeneratedKeys="true" keyProperty="id">
+		insert into payment_bill_order
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="paymentBillId != null">payment_bill_id,</if>
+			<if test="orderId != null">order_id,</if>
+			<if test="status != null">status,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="paymentBillId != null">#{paymentBillId},</if>
+			<if test="orderId != null">#{orderId},</if>
+			<if test="status != null">#{status},</if>
+		</trim>
+	</insert>
+	
+<!-- 	<select id="findIdByOrderId" resultType="java.lang.String">
+		select 
+			pb.id 
+		from payment_bill pb
+		left join payment_bill_order pbo on pb.id = pbo.payment_bill_id
+		where pbo.order_id = #{orderId} and pb.status = 1 and pbo.status = 1
+	</select> -->
+	<update id="updatePaymentBillIByBalance">
+		update
+			 payment_bill pb,payment_bill_order pbo,order_info oi
+		set 
+			pb.pay_type = 4,	
+			pb.pay_status = 1,	
+			pb.pay_time = now(),
+			pb.company_account = 8,
+			pb.balance_deduction = ifnull(oi.balance_deduction,0),
+			pb.bank_receive_time = now()
+		where pb.id = pbo.payment_bill_id and pbo.order_id = #{orderId} and oi.id = pbo.order_id
+	
+	</update>
+	
+	<update id="delBalanceByOrderId">
+		update 
+			payment_bill pb,payment_bill_order pbo
+		set
+			pb.balance_deduction = 0 
+		where pb.id = pbo.payment_bill_id and pbo.order_id = #{orderId}
+	</update>
+</mapper>

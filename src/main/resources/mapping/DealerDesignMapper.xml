@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.DealerDesignMapper" >
+	
+	<select id="findByDealerAlias"  parameterType="map" resultType="map">
+		select 
+			dd.id,dd.dealer_id dealerId,dd.template,dd.goods_show goodsShow,
+			if(dd.logo is not null and dd.logo !='',concat('${@bmatser.util.Constants@IMAGE_URL}','dealerImg/',dd.logo),null) logo,
+			if(dd.head_img is not null and dd.head_img !='',concat('${@bmatser.util.Constants@IMAGE_URL}','dealerImg/',dd.head_img),null) headImg,
+			if(dd.company_img is not null and dd.company_img !='',concat('${@bmatser.util.Constants@IMAGE_URL}',dd.company_img),null) companyImg,dd.json_flink jsonFlink,
+			dd.json_custom jsonCustom,dd.json_banner jsonBanner,dd.json_other jsonOther,d.qq,
+			d.shop_name shopName,dd.background_color backgroundColor 
+		from dealer_design dd 
+		left join dealer d on d.id = dd.dealer_id 
+		where d.alias = #{alias}
+	</select><!--店铺查询返回增加背景颜色字段 -->
+	
+	<select id="findStoreList"  parameterType="map" resultType="map">
+		select 
+			d.id,d.dealer_name dealerName,d.alias,d.country_id countryId,
+			d.province_id provinceId,d.city_id cityId,d.area_id areaId,d.operate_scope operateScope,
+			count(sg.id) goodsNum,if(dd.logo is not null and dd.logo != '',dd.logo,'0.jpg')logo,d.shop_name shopName
+		from dealer d 
+		left join seller_goods sg on sg.seller_id = d.id 
+		left join dealer_design dd on dd.dealer_id = d.id 
+		where alias is not null and d.status = 1 and d.dealer_type = 1 and sg.channel = 2 and sg.is_show = 1 and d.check_status =1
+		<if test="operateScope != null and operateScope != ''">
+			and d.operate_scope like '%${operateScope}%'
+		</if>
+		GROUP BY d.id
+		having count(sg.id)>0
+		ORDER BY count(sg.id) desc
+		limit ${page},${row}
+	</select>
+	<select id="findStoreListCount"  parameterType="map" resultType="int">
+	select count(1) from (
+		select 
+			1
+		from dealer d 
+		left join seller_goods sg on sg.seller_id = d.id 
+		left join dealer_design dd on dd.dealer_id = d.id 
+		where alias is not null and d.status = 1 and d.dealer_type = 1 and sg.channel = 2  and d.check_status =1 and sg.is_show = 1
+		<if test="operateScope != null and operateScope != ''">
+			and d.operate_scope like '%${operateScope}%'
+		</if>
+		GROUP BY d.id
+		having count(sg.id)>0
+		ORDER BY count(sg.id) desc
+	)x	
+	</select>
+	
+	<select id="getStoreList" resultType="map">
+		select 
+			d.id,d.alias,
+			concat('${@bmatser.util.Constants@IMAGE_URL}','dealerImg/',if(dd.logo is not null and dd.logo != '',dd.logo,'0.jpg'))logo,
+			d.shop_name shopName,x.count goodsNum  
+		from dealer d
+		INNER JOIN
+		(
+			select sg.seller_id id,count(1) count from seller_goods sg
+			where sg.channel = 2 and sg.is_show = 1 and sg.status = 1
+			group by sg.seller_id
+		)x on x.id = d.id
+		left join dealer_design dd on dd.dealer_id = d.id 
+		where d.alias is not null and d.status = 1 and d.dealer_type = 1 and d.check_status =1 and lower(d.shop_name) like '%${keyword}%'
+		limit ${page},${row}
+	</select>
+	<select id="getStoreListCount" resultType="int">
+		select 
+			count(1)
+		from dealer d
+		INNER JOIN
+		(
+			select sg.seller_id id,count(1) count from seller_goods sg
+			where sg.channel = 2 and sg.is_show = 1 and sg.status = 1
+			group by sg.seller_id
+		)x on x.id = d.id
+		left join dealer_design dd on dd.dealer_id = d.id 
+		where d.alias is not null and d.status = 1 and d.dealer_type = 1 and d.check_status =1 and lower(d.shop_name) like '%${keyword}%'
+	</select>
+
+</mapper>

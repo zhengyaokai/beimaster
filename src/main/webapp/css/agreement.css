@@ -1,0 +1,19 @@
+.all_tiao{
+	width:100%;
+}
+.all_tiao{	
+	margin:0px auto;
+}
+.all_tiao span{	
+	float:left;
+	padding:5px 0px
+}
+.all_tiao span,
+.all_tiao p{
+	width:92%;
+	padding-left:4%;
+}
+.all_tiao p{	
+	float:left;
+	line-height:200%;
+}

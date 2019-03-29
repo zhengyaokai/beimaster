@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GoodsCommentMapper" >
+	<select id="getGoodsCommentByPage" parameterType="map" resultType="map">
+		select 
+			mc.id,mc.buy_time buyTime,mc.comment_time commentTime,mc.comment_score commentScore,
+			mc.comment_notes commentNotes,mc.advantage,mc.fault,
+			mc.use_experience useExperience,mc.usefull_amount usefullAmount,
+			mc.useless_amount uselessAmount,mc.is_audit isAudit
+		from member_comment mc
+		where mc.status = 1 and mc.is_audit = 1
+		<if test="id != null and id !=''"> and mc.id = #{id}</if>
+		<if test="sellerGoodsId != null and sellerGoodsId != '' "> and mc.seller_goods_id = #{sellerGoodsId}</if>
+		<if test="orderId != null and orderId != ''"> and mc.order_id = #{orderId}</if>
+		<if test="dealerId != null and dealerId !=''"> and mc.dealer_id = #{dealerId}</if>
+		limit ${page},${row}
+	</select>
+	
+	<select id="getGoodsCommentByPageColunt" parameterType="map" resultType="int">
+		select 
+			count(1)
+		from member_comment mc
+		where mc.status = 1 and mc.is_audit = 1
+		<if test="id != null and id !=''"> and mc.id = #{id}</if>
+		<if test="sellerGoodsId != null and sellerGoodsId != '' "> and mc.seller_goods_id = #{sellerGoodsId}</if>
+		<if test="orderId != null and orderId != ''"> and mc.order_id = #{orderId}</if>
+		<if test="dealerId != null and dealerId !=''"> and mc.dealer_id = #{dealerId}</if>
+	</select>
+	<insert id="add" parameterType="map" useGeneratedKeys="true" keyProperty="id">
+		 insert	into  member_comment
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+		 	<if test="sellerGoodsId != null">seller_goods_id,</if>
+		 	<if test="orderId != null">order_id,</if>
+		 	<if test="dealerId != null">dealer_id,</if>
+		 	<if test="buyTime != null">buy_time,</if>
+		 	<if test="1==1">comment_time,</if>
+		 	<if test="commentScore != null">comment_score,</if>
+		 	<if test="commentNotes != null">comment_notes,</if>
+		 	<if test="advantage != null">advantage,</if>
+		 	<if test="fault != null ">fault,</if>
+		 	<if test="useExperience != null">use_experience,</if>
+		 	<if test="usefullAmount != null">usefull_amount,</if>
+		 	<if test="uselessAmount != null">useless_amount,</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+		 	<if test="sellerGoodsId != null">#{sellerGoodsId},</if>
+		 	<if test="orderId != null">#{orderId},</if>
+		 	<if test="dealerId != null">#{dealerId},</if>
+		 	<if test="buyTime != null">#{buyTime},</if>
+		 	<if test="1==1">now(),</if>
+		 	<if test="commentScore != null">#{commentScore},</if>
+		 	<if test="commentNotes != null">#{commentNotes},</if>
+		 	<if test="advantage != null">#{advantage},</if>
+		 	<if test="fault != null ">#{fault},</if>
+		 	<if test="useExperience != null">#{useExperience},</if>
+		 	<if test="usefullAmount != null">#{usefullAmount},</if>
+		 	<if test="uselessAmount != null">#{uselessAmount},</if>
+		 </trim>
+	</insert>
+	<select id="isExist" parameterType="map" resultType="int">
+		select 
+			count(1)
+		from member_comment mc
+		where mc.status = 1  and mc.seller_goods_id = #{sellerGoodsId} 
+		and mc.order_id = #{orderId}  and mc.dealer_id = #{dealerId}
+	</select>
+	<select id="isExistGetOrder" parameterType="map" resultType="map">
+		select 
+			oi.id,oi.order_time orderTime
+		from order_goods og
+		left join order_info oi on og. order_id = oi.id 
+		where oi.pay_time is not null and oi.order_status = 6 and (og.is_comment is null or og.is_comment !=1)
+		and oi.buyer_id = #{dealerId}
+		and og.seller_goods_id = #{sellerGoodsId}
+		order by oi.order_time asc
+		limit 0,1
+	</select>
+	<update id="updateOrderGoods" parameterType="map">
+		update order_goods
+		<set>
+			is_comment = 1
+		</set>
+		where order_id = #{orderId} and seller_goods_id = #{sellerGoodsId}
+	</update>
+	<select id="isExistGoods" parameterType="map" resultType="int">
+		select
+		 	count(1)
+		from order_goods og 
+		left join order_info oi on oi.id = og.order_id
+		where oi.pay_time is not null and  oi.order_status =6
+		and oi.buyer_id = #{dealerId}
+		and oi.id = #{orderId} 
+		and og.seller_goods_id = #{sellerGoodsId}
+	</select>
+	<select id="isCheck" parameterType="map" resultType="int">
+		select 
+			count(1)
+		from member_comment
+		where status = 1 and is_audit = 1 and id = #{id}
+	</select>
+	<update id="check" parameterType="map">
+		update 
+			member_comment
+		<set>
+			is_audit = 1,audit_user_id = #{dealerId},audit_time = now()
+		</set>
+		where id = #{id}	
+	</update>
+	<update id="del" parameterType="map" >
+		update 
+			member_comment
+		<set>
+			status = 2 
+		</set>
+		where id = #{id}
+	</update>
+</mapper>

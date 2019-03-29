@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.CrmCustomerCategoryMapper" >
+  <!-- 新增客户经营类别 -->
+  <insert id="insert" parameterType="bmatser.model.CrmCustomerCategory" >
+    insert into crm_customer_category(customer_id, category_id,status)
+    values (#{customerId},#{categoryId},'1')
+  </insert>
+  <!-- 更新客户经营类别表-->
+  <update id="updateByCustomerId" parameterType="bmatser.model.CrmCustomerCategory" >
+    update crm_customer_category
+      set customer_id = #{customerId,jdbcType=INTEGER},category_id = #{categoryId,jdbcType=INTEGER} 
+    where customer_id = #{customerId,jdbcType=INTEGER}
+  </update>
+</mapper>

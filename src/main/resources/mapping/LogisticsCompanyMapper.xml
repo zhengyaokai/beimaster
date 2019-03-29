@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.LogisticsCompanyMapper">
+	<sql id="logisticsCompany">
+		id,logistics_code logisticsCode,logistics_name logisticsName,status
+	</sql>
+
+	<select id="findAll" parameterType="bmatser.model.LogisticsCompany" resultType="bmatser.model.LogisticsCompany">
+		select
+		<include refid="logisticsCompany" />
+		from logistics_company
+		where status = 1
+	</select>
+
+	<select id="findByPage" parameterType="bmatser.model.LogisticsCompany" resultType="bmatser.model.LogisticsCompany">
+		select
+		<include refid="logisticsCompany" />
+		from logistics_company
+		where status = 1
+		<if test="id != null">
+			and id like '%${id}%'
+		</if>
+		<if test="logisticsCode != null">
+			and logistics_code like '%${logisticsCode}%'
+		</if>
+		<if test="logisticsName != null">
+			and logistics_name like '%${logisticsName}%'
+		</if>
+	</select>
+
+	<select id="fingById" parameterType="java.lang.Integer" resultType="bmatser.model.LogisticsCompany">
+		select
+		<include refid="logisticsCompany" />
+		from logistics_company
+		where status = 1 and id = #{id}
+	</select>
+
+	<select id="fingByName" parameterType="java.lang.String" resultType="bmatser.model.LogisticsCompany">
+		select
+		<include refid="logisticsCompany" />
+		from logistics_company
+		where status = 1 and logistics_name = #{name}
+	</select>
+
+
+</mapper>

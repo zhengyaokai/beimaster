@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GbeansMapper" >
+
+	<sql id="bigCustomer">
+		(
+		select bcpg.big_customer_package_id id,bcpg.seller_goods_id sellerGoodsId,bcpg.rate from big_customer_package_goods bcpg
+			left join  big_customer_package_dealer dcpd on bcpg.big_customer_package_id = dcpd.big_customer_package_id
+			left join  big_customer_package bcp on bcp.id = dcpd.big_customer_package_id 
+			where   dcpd.dealer_id = ${@bmatser.util.SQLUtil@getSaasDealerId()}  and dcpd.status = 1 and bcp.status =1 and bcpg.status =1
+				and bcp.start_time &lt;= now() and bcp.end_time &gt;= now()
+		)x on  x.sellerGoodsId = sg.id
+	</sql>
+	<!-- 获取订单商品信息 -->
+	<select id="getOrderGoodsInfo" resultType="map">
+		select 
+			og.id,sg.price amount,og.num,
+			if(x.id is not null or og.goods_type = 3,0,${@bmatser.util.SQLUtil@IS_REAL_BEAN})isBean,
+			ifnull(sg.bean_rate,0)beanRate 
+		from order_goods og
+		left join seller_goods sg on sg.id = og.seller_goods_id
+		left join <include refid="bigCustomer"/>
+		left join ${@bmatser.util.SQLUtil@GROUP_STATUS} on groupStatus.id = sg.id
+		where og.order_id = #{orderId}
+	</select>
+	<!-- 获取购物车商品信息 -->
+	<select id="getCartsInfo"  resultType="map">
+		select 
+			bsc.id,sg.price amount,bsc.num,
+			if(x.id is not null ,0,${@bmatser.util.SQLUtil@IS_REAL_BEAN})isBean,
+			ifnull(sg.bean_rate,0)beanRate from buyer_shopping_cart bsc
+		left join seller_goods sg on sg.id = bsc.seller_goods_id
+		left join <include refid="bigCustomer"/>
+		left join ${@bmatser.util.SQLUtil@GROUP_STATUS} on groupStatus.id = sg.id
+		where bsc.activity_type != 3 and bsc.id in 
+		<foreach collection="carts" item="id" open="("  separator="," close=")">
+			#{id}
+		</foreach>
+	</select>
+	<!-- 更新订单工币获得数量 -->
+	<insert id="updateOrderBeans">
+		update 
+			order_info 
+		set
+			bean_quantity = #{amount}
+		where id = #{orderId}	
+	</insert>
+	<delete id="delDealerBeansToAdd">
+		delete from dealer_bean where  related_id = #{orderId} and type = 1
+	</delete>
+	<!-- 新增工币获得记录 -->
+	<insert id="addDealerBeansToAdd">
+		insert into 
+			dealer_bean 
+			(dealer_id,bean,create_time,modify_time,related_id,type,status,remark)
+		select oi.buyer_id,#{amount},now(),now(),oi.id,1,3,'订单交易赠送' from order_info oi where oi.id = #{orderId}
+	</insert>
+	<!-- 获取用户工币+订单中的 -->
+	<select id="getDealerBeans"  resultType="int">
+		select 
+			ifnull(bean_deduction,0)*100+ifnull(d.bean,0) 
+		from order_info oi
+		left join dealer d on oi.buyer_id = d.id
+		where oi.id = #{orderId}
+	</select>
+	<select  id="getOrderAmount" resultType="double">
+		select 
+			${@bmatser.util.SQLUtil@PAY_AMOUNT_BEAN}
+		from order_info oi 
+		where oi.id = #{orderId}
+	</select>
+	<update id="updateOrderToComplete">
+		update 
+			order_info
+		set
+			order_status = 2,
+			pay_status = 2,
+			pay_type = 8,
+			pay_time = now(),
+			company_account = 8
+		where id = #{id}
+	</update>
+	<insert id="addOrderPay">
+		insert into 
+			payment_bill 
+			(id,buyer_id,should_amount,real_amount,pay_type,pay_status,pay_time,payment_score_amount,company_account) 
+		select #{paymentBillId},buyer_id,${@bmatser.util.SQLUtil@PAY_AMOUNT}+ifnull(score_deduction_amout,0),${@bmatser.util.SQLUtil@PAY_AMOUNT},8,1,now(),score_deduction_amout,8 from order_info where id =#{orderId}
+		
+	</insert>
+	<insert id="addOrderPayOrder">
+		insert  into
+			payment_bill_order 
+			(payment_bill_id,order_id,status)values (#{paymentBillId},#{orderId},1)
+	</insert>
+	<update id="updateOrderBeansDeduction">
+		update 
+			order_info
+		set
+			bean_deduction = ${amount},
+			score = if(${@bmatser.util.SQLUtil@PAY_AMOUNT}-ifnull(freight_amount,0)>0,floor((${@bmatser.util.SQLUtil@PAY_AMOUNT}-ifnull(freight_amount,0))/10),0)
+		where id = #{orderId}
+	</update>
+	<update id="updateDealerBeans">
+		update
+			dealer  
+		set
+			bean= ifnull(bean,0)-${amount}
+		where id = #{dealerId}
+	</update>
+	<update id="returnDealerBeans">
+		update
+			dealer  
+		set
+			bean= ${amount}
+		where id = #{dealerId}
+	</update>
+	<delete id="delDealerBeansToUse">
+		delete from dealer_bean where  related_id = #{orderId} and type = 2
+	</delete>
+	<insert id="addDealerBeansToUse">
+		insert into 
+			dealer_bean 
+			(dealer_id,bean,create_time,related_id,type,status,remark)
+		select oi.buyer_id,${amount}*-1,now(),oi.id,2,2,'订单交易抵扣' from order_info oi where oi.id = #{orderId}
+	</insert>
+	
+	<select id="getUseBeans" resultType="int">
+		select 
+			 IFNULL(bean,0)
+		from dealer 
+		where id = #{dealerId}
+	</select>
+	
+	<select id="getOrderSellerGoods" resultType="map"> 
+		<foreach collection="idList" item="id" separator="UNION all" >
+			select 
+				sg.id,sg.price amount,#{id.num} num,
+				if(x.id is not null ,0,${@bmatser.util.SQLUtil@IS_REAL_BEAN})isBean,
+				ifnull(sg.bean_rate,0)beanRate  
+			from seller_goods sg
+		left join <include refid="bigCustomer"/>
+		left join ${@bmatser.util.SQLUtil@GROUP_STATUS} on groupStatus.id = sg.id
+			where sg.id = #{id.sellerGoodsId}
+		</foreach>
+	</select> 
+	
+	<update id="cancelOrderUpdateBean">
+		update order_info oi,dealer d,dealer_bean db
+		set
+			oi.order_status = 8,
+			d.bean = ifnull(d.bean,0)+(ifnull(oi.bean_deduction,0)*100),
+			db.status = 4
+		where oi.id = #{orderId} and oi.buyer_id = d.id and oi.id = db.related_id
+	</update>
+	<update id="updateOrderGoodsBeans">
+		update order_goods og,seller_goods sg  
+		set
+			bean = ROUND(sg.price*sg.bean_rate*100)
+		where  og.seller_goods_id = sg.id and og.id in (${orderGoodsId})
+	</update>
+</mapper>

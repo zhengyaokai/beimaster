@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.DealerCategoryMapper" >
+	<!-- 查询店铺的顶级分类 -->
+	<select id="findPatentCateByAlias" parameterType="map"  resultType="map">
+		select
+			dc.id,dc.name,dc.cate_no cateNo
+		from dealer_category dc,dealer d
+		where dc.seller_id = d.id  and dc.parent_id = 0 and dc.status = 1 and d.alias = #{alias} 
+		order by dc.order_sn,dc.cate_no
+	</select><!-- 20161114 添加根据 cate_no排序-->
+	<!-- 查询店铺的所有分类 -->
+	<select id="findAllCateByAlias" parameterType="map"  resultType="map">
+		select
+			dc.id,dc.name,dc.is_leaf isLeaf,dc.parent_id parentId,dc.cate_no cateNo
+		from dealer_category dc,dealer d
+		where dc.seller_id = d.id  and dc.status = 1 and d.alias = #{alias}
+		order by dc.order_sn,dc.cate_no
+	</select><!-- 20161114 添加根据 cate_no排序-->
+	<select id="findCateByParentId" parameterType="map" resultType="map">
+		select 
+			dc.id,dc.name,dc.cate_no cateNo
+		from dealer_category dc,dealer d
+		where dc.seller_id = d.id  and dc.status = 1 and d.alias = #{alias} and dc.parent_id = #{parentId}
+	</select>
+	
+</mapper>

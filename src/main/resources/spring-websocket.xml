@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:websocket="http://www.springframework.org/schema/websocket"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+       http://www.springframework.org/schema/websocket
+       http://www.springframework.org/schema/websocket/spring-websocket-4.0.xsd">
+
+    <!-- websocket 配置 -->
+
+    <websocket:message-broker  application-destination-prefix = "/app" > <!-- 客户端向服务端发送消息的前缀 -->
+        <websocket:stomp-endpoint path = "/gdb_chat_websocket">  <!-- socketJS 的连接地址; 没有项目名的情况下，前端要加上项目名。如 /gbd_mall/gdb_chat_websocket-->
+            <websocket:sockjs />
+        </websocket:stomp-endpoint>
+        <websocket:simple-broker prefix="/topic,/ptp" /><!-- 内容前缀 -->
+        <!-- 其它配置，有可能是传输的内容转换 -->
+        <websocket:message-converters register-defaults="true">
+            <bean class="org.springframework.messaging.converter.StringMessageConverter"/>
+            <bean class="org.springframework.messaging.converter.ByteArrayMessageConverter"/>
+        </websocket:message-converters>
+    </websocket:message-broker>
+</beans>
+

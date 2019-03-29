@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.PaymentAccountMapper" >
+
+	
+
+
+<!-- 新增付款账号 -->
+	<insert id="add" useGeneratedKeys="true" keyProperty="id">
+		insert into buyer_payment_account
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+	      <if test="id != null" >id,</if>
+	      <if test="buyerId != null" >buyer_id,</if>
+	      <if test="paymentAccount != null" >payment_account,</if>
+	      <if test="bankId != null" >bank_id,</if>
+	      <if test="bankDetail != null" >bank_detail,</if>
+	      <if test="isDefault != null" >is_default,</if>
+	      create_time,
+	      <if test="status != null" >status,</if>
+	    </trim>
+	    <trim prefix="values (" suffix=")" suffixOverrides="," >
+	      <if test="id != null" >#{id},</if>
+	      <if test="buyerId != null" >#{buyerId},</if>
+	      <if test="paymentAccount != null" >#{paymentAccount},</if>
+	      <if test="bankId != null" >#{bankId},</if>
+	      <if test="bankDetail != null" >#{bankDetail},</if>
+	      <if test="isDefault != null" >#{isDefault},</if>
+	      <if test="1==1" >now(),</if>
+	      <if test="1==1" >'1',</if>
+	    </trim>
+	</insert>
+	
+<!-- 修改收款账号-->
+	<update id="update" parameterType="bmatser.pageModel.PaymentAccountPage">
+		update buyer_payment_account
+		<set>
+			<if test="buyerId != null">
+				buyer_id = #{buyerId},
+			</if>
+			<if test="paymentAccount != null">
+				payment_account = #{paymentAccount},
+			</if>
+			<if test="bankId != null">
+				bank_id = #{bankId},
+			</if>
+			<if test="bankDetail != null">
+				bank_detail = #{bankDetail},
+			</if>
+			<if test="isDefault != null">
+				is_default = #{isDefault},
+			</if>
+			<if test="modifyTime != null">
+				modify_time = #{modifyTime},
+			</if>
+			<if test="status != null">
+				status = #{status},
+			</if>
+		</set>
+		where id=#{id}
+	</update>
+	
+    <!-- 删除收款账号-->
+	<delete id="delete">
+		update buyer_payment_account set status = '2' where id = #{id}
+	</delete>
+	<!-- 设置默认付款账号 -->
+	<update id="setNoDefault">
+		update buyer_payment_account
+		set is_default = '0'
+		where buyer_id = #{buyerId}
+	</update>
+	<update id="setDefault">
+		update buyer_payment_account 
+		set is_default = '1'
+		where id = #{id}
+	</update>
+	
+	<!-- 查询银行列表 -->
+	<select id="findBankList" resultType="java.util.Map">
+	  select * from bank
+	</select>
+	
+	<!-- 查询账号列表和银行信息 -->
+	<select id="findPALByBuyerId" resultType="java.util.Map">
+	 select * from buyer_payment_account bpa left join bank b
+	 on bpa.bank_id = b.id where bpa.buyer_id = #{buyerId} and bpa.status='1' and b.status='1'
+	</select>
+
+
+</mapper>

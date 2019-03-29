@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.MemberQueryMapper" >
+<resultMap id="selectMemberQuery" type="java.util.Map" >
+    <result column="id" property="id" jdbcType="INTEGER" />
+    <result column="seller_goods_id" property="sellerGoodsId" jdbcType="INTEGER" />
+    <result column="goods_name" property="goodsName" jdbcType="VARCHAR" />
+    <result column="dealer_id" property="dealerId" jdbcType="INTEGER" />
+    <result column="query_content" property="queryContent" jdbcType="VARCHAR" />
+    <result column="query_time" property="queryTime" jdbcType="VARCHAR" />
+    <result column="is_reply" property="isReply" jdbcType="VARCHAR" />
+    <result column="reply_content" property="replyContent" jdbcType="VARCHAR" />
+    <result column="reply_time" property="replyTime" jdbcType="VARCHAR" />
+    <result column="reply_user_id" property="replyUserId" jdbcType="INTEGER" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+    <result column="dealer_name" property="dealerName" jdbcType="VARCHAR" />
+  </resultMap>
+<!-- 查询会员咨询关联信息 -->
+  <select id="selectById" resultMap="selectMemberQuery" parameterType="map">
+    select m.id,m.seller_goods_id,sg.goods_name,m.dealer_id,m.query_content,m.query_time,m.is_reply,
+           m.reply_content,m.reply_time,m.reply_user_id,m.status,d.dealer_name
+         from member_query m 
+         left join seller_goods sg on m.seller_goods_id=sg.id
+         left join dealer d on m.dealer_id=d.id 
+         where sg.status='1' and m.status='1' and d.status='1' and m.is_reply='1'
+         <if test="goodsName != null">    
+				and sg.goods_name like '%${goodsName}%' 
+		 </if>
+		 <if test="sellerGoodsId != null">    
+				and m.seller_goods_id = #{sellerGoodsId} 
+		 </if>
+		 <if test="dealerId != null">    
+				and m.dealer_id = #{dealerId} 
+		 </if>
+		  order by m.id desc
+		  limit #{page}, #{rows}
+  </select>
+   <!-- 查询会员咨询总记录数-->
+  <select id="count" resultType="long" parameterType="map">
+select count(*)
+         from member_query m 
+         left join seller_goods sg on m.seller_goods_id=sg.id
+         where sg.status='1' and m.status='1' and m.is_reply='1'
+         <if test="goodsName != null">    
+				and sg.goods_name like '%${goodsName}%' 
+		 </if>
+         <if test="dealerId != null">    
+				and m.dealer_id = #{dealerId} 
+		 </if>
+		 <if test="sellerGoodsId != null">    
+				and m.seller_goods_id = #{sellerGoodsId} 
+		 </if>
+	</select>
+  <!-- 新增会员咨询 -->
+  <insert id="insert" parameterType="bmatser.model.MemberQuery" >
+    insert into member_query (seller_goods_id, dealer_id,query_content,query_time,is_reply,reply_content,reply_time,reply_user_id,status)
+    values (#{sellerGoodsId},#{dealerId},#{queryContent},now(),'0',#{replyContent},#{replyTime},#{replyUserId},'1')
+  </insert>
+</mapper>

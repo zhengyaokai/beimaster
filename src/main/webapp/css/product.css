@@ -1,0 +1,273 @@
+.product-ban{
+	overflow:hidden;
+}
+.product-ban li{
+	text-align:center;
+}
+.product-ban ul,
+.product-ban li{
+	width:auto;
+	-moz-user-select: none;
+    -khtml-user-select: none;
+    user-select: none; 
+}
+.product-ban li img{
+	width:100%;
+	max-width:640px;
+}
+.product-ban-point {
+	height:12px;
+	position:absolute;
+	left:50%;
+	bottom:20px;
+}
+.product-ban-point span{
+	width:12px;
+	height:12px;
+	background-color:#AAAAAA;
+	margin-left:3px;
+	margin-right:3px;
+}
+.product-ban-point span.on{
+	background-color:#1294F7;
+}
+.product-price{
+	color:#ee8616;
+}
+.product-sales-left{
+	width:70px;
+	padding-left:2%;
+	color:#999;
+}
+.product-sales-right{
+	width:calc(98% - 70px)
+}
+.product-sales-left,
+.product-sales-right li{
+	border-top:1px solid #ddd;
+}
+.product-sales-right li{
+	padding-bottom:1px;
+}
+.product-sales-right li span{
+	width:50px;
+	line-height:26px;
+	background-color:#1294F7;
+	color:#fff;
+}
+.product-sales-right li label{
+	width:calc(98% - 75px);
+	color:#666;
+	padding-left:15px;
+	font-size:14px;
+	padding-top:12px;
+}
+.product-type li{
+	line-height:22px;
+}
+.product-type li span{
+	width:70px;
+	text-align:right;
+}
+.product-type li label{
+	padding-left:10px;
+	width:calc(100% - 80px);
+}
+.product-body{
+	padding-bottom:70px;
+}
+.product-attr ul{
+	border-bottom:1px solid #DADADA;
+}
+.product-attr li{
+	width:calc(100% - 2px);
+	border:1px solid #DADADA;
+	border-bottom:0px;
+}
+.product-attr li span.a{
+	width:90px;
+	padding:10px 0px 10px 10px;
+}
+.product-attr li span.b{
+	width:calc(100% - 111px);
+	padding:10px 0px 10px 10px;
+	border-left:1px solid #DADADA;
+}
+.product-buy{
+	position:fixed;
+	left:0px;
+	bottom:0px;
+	border-top:1px solid #ddd;
+}
+.product-buy li.a{
+	width:30%;
+	position:relative;
+}
+.product-buy li.a span {
+	width:auto;
+    min-width: 11px;
+    line-height: 15px;
+    background-color: #F72812;
+    color: #fff;
+    position: absolute;
+    left: 50%;
+    top: 3px;
+    margin-left: 4px;
+    padding:0px 2px;
+    font-size:10px;
+}
+.product-buy li{
+	height:50px;
+}
+.product-buy li.b{
+	width:35%;
+	background-color:#1294F7;
+}
+.product-buy li.c{
+	width:35%;
+	background-color:#EE8616;
+}
+.product-buy li.a a,
+.product-buy li.b a,
+.product-buy li.c a{
+	width:100%;	
+}
+.product-buy li.b a,
+.product-buy li.c a{
+	line-height:50px;
+}
+.product-buy li.a a{
+	background:url(../image/common/cart.png) no-repeat 50% 8px;
+	background-size:20px 20px;
+	color:#999;
+	padding-top:28px;
+	height:22px;
+}
+.product-buy li.b a,
+.product-buy li.c a{
+	color:#fff;
+}
+.product-body p{
+	line-height:180%;
+	margin-bottom:10px;
+	font-size:16px;
+	color:#666;
+}
+.product-body img{
+	width:100%;
+}
+.add-cart{
+	height:100%;
+	background-color:#313131;
+	opacity:0.6;
+	position:fixed;
+	left:0px;
+	top:0px;
+}
+.add-cart-box,
+.add-cart-box a.add-cart-a{
+	width:100%;
+}
+.add-cart-box{	
+	position:fixed;;
+	left:0px;
+	bottom:0px;
+	background-color:#fff;
+}
+.add-cart-box a.add-cart-a{
+	line-height:50px;
+	background-color:#1294f7;
+	color:#fff;
+	text-shadow:none;
+}
+.add-cart-box a.add-cart-a-jd{
+	background-color:#aaa;
+}
+.add-cart-box-opera,
+.add-cart-box span.c,
+.add-cart-attr{
+	width:94%;
+}
+.add-cart-box-opera{
+	border-top:1px solid #ddd;
+	border-bottom:1px solid #ddd;
+	line-height:70px;
+}
+.add-cart-box-opera span{
+	width:20%;
+}
+.add-cart-text{
+	-webkit-appearance:none;
+	width:60px;
+	border:1px solid #ccc;
+	border-left:0px;
+	border-right:0px;
+	padding:0px;
+    border-radius:0px;
+    background-color:#fff;
+}
+.add-cart-text,
+.add-cart-box-opera a{
+	line-height:28px;
+}
+.add-cart-box-opera a{
+	width:28px;
+	border:1px solid #ccc;
+	color:#333;
+}
+.add-cart-attr{
+	position:relative;
+}
+.add-cart-attr select{
+	height:28px;
+	line-height:28px;
+}
+.add-cart-attr span.x{
+	width:32px;
+	line-height:32px;
+	position:absolute;
+	right:0px;
+	top:0px;
+	color:#666;
+	font-weight:normal;
+}
+.Ptable {
+    background: #ccc;
+}
+.Ptable {
+	float:left;
+    margin: 10px 0;
+}
+.Ptable th.tdTitle {
+    text-align: center;
+}
+.Ptable .tdTitle {
+    text-align: right;
+    width: 110px;
+    background: #F5FAFE;
+}
+.Ptable th {
+    background: #EEF7FE;
+    text-align: right;
+    padding: 8px;
+}
+.Ptable td {
+    padding: 5px 5px;
+    background: #fff;
+}
+.Ptable td, .Ptable th {
+    font-size: 12px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

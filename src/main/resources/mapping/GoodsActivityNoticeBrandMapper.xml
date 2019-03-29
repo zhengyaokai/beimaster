@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GoodsActivityNoticeBrandMapper" >
+  <resultMap id="BaseResultMap" type="bmatser.model.GoodsActivityNoticeBrand" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="activity_notice_id" property="activityNoticeId" jdbcType="INTEGER" />
+    <result column="brand_id" property="brandId" jdbcType="INTEGER" />
+    <result column="brand_image" property="brandImage" jdbcType="VARCHAR" />
+    <result column="brief" property="brief" jdbcType="VARCHAR" />
+    <result column="order_sn" property="orderSn" jdbcType="INTEGER" />
+    <result column="status" property="status" jdbcType="CHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, activity_notice_id, brand_id, brand_image, brief, order_sn, status
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from goods_activity_notice_brand
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from goods_activity_notice_brand
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.GoodsActivityNoticeBrand" >
+    insert into goods_activity_notice_brand (id, activity_notice_id, brand_id, 
+      brand_image, brief, order_sn, 
+      status)
+    values (#{id,jdbcType=INTEGER}, #{activityNoticeId,jdbcType=INTEGER}, #{brandId,jdbcType=INTEGER}, 
+      #{brandImage,jdbcType=VARCHAR}, #{brief,jdbcType=VARCHAR}, #{orderSn,jdbcType=INTEGER}, 
+      #{status,jdbcType=CHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.model.GoodsActivityNoticeBrand" >
+    insert into goods_activity_notice_brand
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="activityNoticeId != null" >
+        activity_notice_id,
+      </if>
+      <if test="brandId != null" >
+        brand_id,
+      </if>
+      <if test="brandImage != null" >
+        brand_image,
+      </if>
+      <if test="brief != null" >
+        brief,
+      </if>
+      <if test="orderSn != null" >
+        order_sn,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="activityNoticeId != null" >
+        #{activityNoticeId,jdbcType=INTEGER},
+      </if>
+      <if test="brandId != null" >
+        #{brandId,jdbcType=INTEGER},
+      </if>
+      <if test="brandImage != null" >
+        #{brandImage,jdbcType=VARCHAR},
+      </if>
+      <if test="brief != null" >
+        #{brief,jdbcType=VARCHAR},
+      </if>
+      <if test="orderSn != null" >
+        #{orderSn,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=CHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.GoodsActivityNoticeBrand" >
+    update goods_activity_notice_brand
+    <set >
+      <if test="activityNoticeId != null" >
+        activity_notice_id = #{activityNoticeId,jdbcType=INTEGER},
+      </if>
+      <if test="brandId != null" >
+        brand_id = #{brandId,jdbcType=INTEGER},
+      </if>
+      <if test="brandImage != null" >
+        brand_image = #{brandImage,jdbcType=VARCHAR},
+      </if>
+      <if test="brief != null" >
+        brief = #{brief,jdbcType=VARCHAR},
+      </if>
+      <if test="orderSn != null" >
+        order_sn = #{orderSn,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.GoodsActivityNoticeBrand" >
+    update goods_activity_notice_brand
+    set activity_notice_id = #{activityNoticeId,jdbcType=INTEGER},
+      brand_id = #{brandId,jdbcType=INTEGER},
+      brand_image = #{brandImage,jdbcType=VARCHAR},
+      brief = #{brief,jdbcType=VARCHAR},
+      order_sn = #{orderSn,jdbcType=INTEGER},
+      status = #{status,jdbcType=CHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

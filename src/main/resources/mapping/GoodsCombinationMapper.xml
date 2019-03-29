@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.GoodsCombinationMapper" >
+
+    <!-- 根据sellerGoodsId查出所有套餐 -->
+	<select id="selectGoodsCombination" resultType="map">
+		select gc.package_id packageId,gp.package_name packageName,gp.combination_id combinationId 
+         from goods_combination gc 
+        LEFT JOIN goods_package gp on gp.id = gc.package_id 
+        LEFT JOIN combination c on gp.combination_id = c.id 
+        where gc.seller_goods_id = #{sellerGoodsId} and gc.is_main = '1' and gc.status = '1'
+        and gp.status = '1'
+        and c.status = '1' and c.start_time&lt;=now() and c.end_time&gt;=now();
+	</select>
+	
+	<!-- 根据所有套餐id查询所有该套餐下所有商品价格合计 -->
+	<select id="selectPackagePrice" resultType="map">
+		select gp.id,sum(sg.sale_price) salePrice,
+        sum(if(c.combination_type='1',ifnull(gc.fixed_price,sg.sale_price),round(ifnull(gc.rate,1)*sg.sale_price,2))) packagePrice 
+         from goods_combination gc 
+        LEFT JOIN seller_goods sg on sg.id = gc.seller_goods_id
+        LEFT JOIN goods_package gp on gp.id = gc.package_id 
+        LEFT JOIN combination c on gp.combination_id = c.id 
+        where  gc.status = '1'
+        and gp.status = '1'
+        and c.status = '1' and c.start_time&lt;=now() and c.end_time&gt;=now()
+        and gc.package_id in
+         <foreach collection="idList" item="id" open="(" separator="," close=")">
+			#{id.packageId}
+		 </foreach>
+        and sg.status = '1'
+        group by gp.id
+	</select>
+	
+	<!-- 根据所有套餐id查询套餐下的所有商品 -->
+	<select id="selectPackageGoods" resultType="map">
+	  select sg.id,gc.package_id packageId,gc.is_main isMain,ifnull(sg.goods_name,g.title) goodsName, g.model,sg.sale_price marketPrice,
+	   gc.rate,sg.stock, IF(sg.sku_unit is not null and sg.sku_unit!='',sg.sku_unit,g.measure) measure,g.buy_no buyNo,${@bmatser.util.SQLUtil@GOODS_IMG} image,
+       if(c.combination_type='1',ifnull(gc.fixed_price,sg.sale_price),sg.sale_price*(ifnull(gc.rate,1))) salePrice,1 num 
+		from goods_combination gc
+	  LEFT JOIN goods_package gp on gp.id = gc.package_id 
+	  LEFT JOIN combination c on gp.combination_id = c.id 
+      LEFT JOIN seller_goods sg on gc.seller_goods_id = sg.id
+	  left join goods g on g.id = sg.goods_id
+     where gc.package_id in
+         <foreach collection="idList" item="id" open="(" separator="," close=")">
+			#{id.packageId}
+		 </foreach>
+      and gc.status = '1' and gp.status = '1'
+      and sg.channel = '1' and sg.status = '1' and g.status = '1' and sg.is_show='1'
+      and c.status = '1' and c.start_time&lt;=now() and c.end_time&gt;=now()
+	</select>
+	
+	<!-- 根据所有套餐id查询所有活动 -->
+	<select id="selectCombination" resultType="map">
+	  select c.id,c.combination_name combinationName,c.combination_desc combinationDesc,c.combination_type combinationType from goods_package gp
+	  left join combination c on gp.combination_id = c.id
+	  where gp.status = '1'
+        and c.status = '1' and c.start_time&lt;=now() and c.end_time&gt;=now()
+        and gp.id in 
+         <foreach collection="idList" item="id" open="(" separator="," close=")">
+			#{id.packageId}
+		 </foreach>
+	  group by c.id 	 
+	</select>
+	
+</mapper>

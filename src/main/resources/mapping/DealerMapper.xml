@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bmatser.dao.DealerMapper">
+
+<!-- 注册 -->
+	<insert id="add" parameterType="bmatser.pageModel.RegisterPage" useGeneratedKeys="true" keyProperty="dealerId">
+		insert into dealer(dealer_name, 
+		check_status, dealer_type, status, 
+		<if test="cash != null"> 
+			cash, 
+		</if>
+		<if test="regChannel != null">
+			reg_channel,
+		</if>
+		<if test="linkman != null and linkman != ''">
+			linkman,
+		</if>
+		<if test="linkTel != null and linkTel !=''">
+			link_tel,
+		</if>
+		<if test="linkTelSecret != null and linkTelSecret != ''">
+			link_tel_secret,
+		</if>
+		<if test="qq != null and qq != ''">
+			qq,
+		</if>
+		<if test="operateScope != null">
+			operate_scope,
+		</if>
+		<if test="saleCustomerGroup != null">
+			sale_customer_group,
+		</if>
+		<if test="openId != null and openId != ''">
+			open_id,
+		</if>
+		<if test="sourceType != null and sourceType != ''">
+			source_type,
+		</if>
+		create_time)
+		values(#{dealerName},
+		 #{checkStatus}, #{dealerType}, '1', 
+		<if test="cash != null"> 
+			#{cash}, 
+		</if>
+		<if test="regChannel != null">
+			#{regChannel},
+		</if>
+		<if test="linkman != null and linkman != ''">
+			#{linkman},
+		</if>
+		<if test="linkTel != null and linkTel !=''">
+			#{linkTel},
+		</if>
+		<if test="linkTelSecret != null and linkTelSecret != ''">
+			#{linkTelSecret},
+		</if>
+		<if test="qq != null and qq != ''">
+			#{qq},
+		</if>
+		<if test="operateScope != null">
+			#{operateScope},
+		</if>
+		<if test="saleCustomerGroup != null">
+			#{saleCustomerGroup},
+		</if>
+		<if test="openId != null and openId != ''">
+			#{openId},
+		</if>
+		<if test="sourceType != null and sourceType != ''">
+			#{sourceType},
+		</if>
+		now());
+	</insert>
+
+<!-- 增加积分 -->
+	<update id="addScoreById" >
+		update dealer set score = ifnull(score,0) + #{score},rank_score = ifnull(rank_score,0) + #{rankScore} where id = #{buyerId}
+	</update>
+<!-- 查询个人资料 -->
+	<select id="findLoginInfo" parameterType="java.lang.String" resultType="map">
+		select 
+			d.dealer_name dealerName,ifnull(d.bean,0) bean,if(d.email is not null and d.email != '' ,d.email,'') email,r.mobile,d.gender,d.birthday,if(d.country_id is not null and d.country_id !='',d.country_id,100) countryId,
+			if(d.province_id is not null and d.province_id !='',d.province_id,ifnull(cc.province_id,0)) provinceId,if(d.city_id is not null and d.city_id !='',d.city_id,ifnull(cc.city_id,0)) cityId,
+			d.dealer_type dealerType,ifnull(d.linkman,ccl.link_man) linkman,d.link_tel linkTel,d.operate_scope operateScope,d.sale_customer_group saleCustomerGroup,
+			if(d.area_id is not null and d.area_id != '',d.area_id,'') areaId,if(d.address is not null and d.address != '',d.address,'') address,if(d.telephone is not null and d.telephone != '',d.telephone,'') telephone,ifnull(d.qq,'') qq,d.check_status checkStatus,
+			concat('${@bmatser.util.Constants@IMAGE_URL}',d.logo) logo,if(d.score is not null and d.score !='',d.score,0)score,if(d.cash is not null and d.cash !='',d.cash,0)cash,sum(if(bsc.num and dd.`status` =1 ,bsc.num,0)) cartNum,d.rank,d.shop_name shopName,
+			if(dbl.business_license_file is not null and length(dbl.business_license_file)>10,concat('${@bmatser.util.Constants@IMAGE_URL}','licenseImg/',dbl.business_license_file),'') businessLicenseFile,
+			if(dbl.tax_certificate_file is not null and length(dbl.tax_certificate_file)>10,concat('${@bmatser.util.Constants@IMAGE_URL}','licenseImg/',dbl.tax_certificate_file),'') taxCertificateFile,
+			if(dbl.organize_code_file is not null and length(dbl.organize_code_file)>10,concat('${@bmatser.util.Constants@IMAGE_URL}','licenseImg/',dbl.organize_code_file),'') organizeCodeFile,
+			CASE d.operate_scope WHEN 10 THEN '工具及工具耗材' 
+			WHEN 20 THEN '测量、仪表、仪器设备'
+			WHEN 30 THEN '生产加工、磨具磨料' 
+			WHEN 40 THEN '机械部件及辅件' 
+			WHEN 50 THEN '电气工程及工业自动化' 
+			WHEN 60 THEN '个人防护、安防、标识' 
+			WHEN 70 THEN '办公住宅、清洁用品' 
+			WHEN 80 THEN '物流保管、包材' 
+			 END as operateScope1   
+		from register r
+		left join dealer d on r.dealer_id = d.id	 
+		left join buyer_shopping_cart bsc on bsc.buyer_id = r.dealer_id and bsc.status = 1 
+		left join dealer dd on dd.id = bsc.seller_id and dd.status =1
+		left join dealer_business_license dbl on dbl.dealer_id = d.id
+    left join crm_customer cc on cc.dealer_id = d.id and cc.status = 1
+    left join crm_customer_linkman ccl on ccl.customer_id = cc.id and ccl.status = 1
+		where d.id =#{id}
+		GROUP BY d.id	
+    order by ccl.is_default desc 
+    limit 0,1
+	</select><!-- 返回增加dealerType字段 用来判断是个人还是企业用户  operateScope 经营范围/主营行业，saleCustomerGroup 销售客户群/客户性质-->
+	         <!--  手机端查询个人信息增加返回可用工币 -->
+	         <!--  个人信息查询修改省市和联系人 -->
+       
+	<!-- add 20161122 saas个人信息返回增加专属商务经理信息(只查A类客户)，商务人员显示全名，联系电话为手机号码,QQ -->
+	<select id="getBusinessManagerInfo" resultType="map">
+	select 
+			if(ss.staff_name is not null and ss.staff_name != '' ,ss.staff_name,'') staffName,
+			if(ss.mobile is not null and ss.mobile != '' ,ss.mobile,'') staffMobile,
+			if(ss.qq is not null and ss.qq != '' ,ss.qq,'') qq,
+			r.user_name userName
+		from dealer d
+		left join register r on r.dealer_id = d.id
+		left join crm_customer cc on cc.dealer_id = d.id and cc.status = 1
+		left join crm_customer_rank ccr on cc.rank_id = ccr.id and ccr.status = 1
+		left join crm_customer_service ccs on ccs.customer_id = cc.id and ccs.status = 1	
+		left join sys_staff ss on ss.id = ccs.service_id and ss.status = 1
+		where d.id = #{dealerId}
+		GROUP BY d.id	
+	</select>
+	
+	<!-- 查询个人等级积分，等级 
+	<select id="findDealerRankAndRankScore" parameterType="java.lang.String" resultType="map">
+	   select COALESCE(rank_score,0) rankScore,COALESCE(rank,1) rank from dealer where id = #{id}   
+	</select>
+	-->
+	<!-- 查询个人等级积分，等级以及人员根据等级积分排名的位置 -->
+	<select id="findDealerRankAndRankScore" parameterType="java.lang.String" resultType="map">
+	   select t.rownum,COALESCE(d.rank_score,0) rankScore,COALESCE(d.rank,1) rank  from (SELECT @rownum:=@rownum+1 AS rownum, dealer.id
+       FROM (SELECT @rownum:=0) r, dealer where status= 1 and dealer_type = 2 and check_status = 1 ORDER BY rank_score) t LEFT JOIN
+       dealer d ON t.id =d.id   where d.id = #{id}  
+	</select>
+	<!-- 查询dealer表总人数 -->
+	<select id="countDealer" parameterType="map" resultType="int">
+		select count(1) from dealer where status = 1 and check_status = 1 and dealer_type = 2
+	</select>
+	
+	<select id="findById" parameterType="java.lang.String" resultType="map">
+		select dealer_name dealerName,country_id,province_id,city_id,area_id,address,sf_cust_id,
+		linkman,link_tel,link_tel_secret,telephone_secret  from dealer
+		where id = #{id}
+	</select>
+	
+	<update id="updateValue" parameterType="bmatser.model.Dealer">
+	  	update dealer 
+	  	<set>
+	      <if test="checkStatus != null" >check_status = #{checkStatus},</if>
+	      <if test="checkTime != null" >check_time = #{checkTime},</if>
+	      <if test="cash != null" >cash = #{cash},</if>
+	  	</set>
+	  	where id = #{id}
+	</update>
+	
+	
+<update id="update" parameterType="bmatser.model.Dealer">
+	  	update dealer 
+	  	<set>
+	      <if test="dealerName != null" >dealer_name = #{dealerName},</if>
+	      <if test="logo != null" >logo = #{logo},</if>
+	      <if test="telephone != null" >telephone = #{telephone},</if>
+	      <if test="fax != null" >fax = #{fax},</if>
+	      <if test="countryId != null" >country_id = #{countryId},</if>
+	      <if test="provinceId != null" >province_id = #{provinceId},</if>
+	      <if test="cityId != null" >city_id = #{cityId},</if>
+	      <if test="areaId != null" >area_id = #{areaId},</if>
+	      <if test="address != null" >address = #{address},</if>
+	      <if test="linkman != null" >linkman = #{linkman},</if>
+	      <if test="linkTel != null" >link_tel = #{linkTel},</if>
+	      <if test="qq != null" >qq = #{qq},</if>
+	      <if test="lng != null" >lng = #{lng},</if>
+	      <if test="lat != null" >lat = #{lat},</if>
+	      <if test="checkStatus != null" >check_status = #{checkStatus},</if>
+	      <if test="checkTime != null" >check_time = #{checkTime},</if>
+	      <if test="checkUserId != null" >check_userId = #{checkUserId},</if>
+	      <if test="rejectReason != null" >reject_reason = #{rejectReason},</if>
+	      <if test="rank != null" >rank = #{rank},</if>
+	      <if test="rankScore != null" >rank_score = #{rankScore},</if>
+	      <if test="score != null" >score = #{score},</if>
+	      <if test="cash != null" >cash = #{cash},</if>
+	      <if test="cashValidDate != null" >cash_valid_date = #{cashValidDate},</if>
+	      <if test="dealerType != null" >dealer_type = #{dealerType},</if>
+	      <if test="authorizeDate != null" >authorize_date = #{authorizeDate},</if>
+	      <if test="status != null" >status = #{status},</if>
+	      <if test="modifyTime != null" >modify_time = #{modifyTime},</if>
+	      <if test="modifyUserId != null" >modify_userId = #{modifyUserId},</if>
+	      <if test="orderSn != null" >order_sn = #{orderSn},</if>
+	      <if test="logisticsTempModel != null" >logistics_temp_model = #{logisticsTempModel},</if>
+	      <if test="createTime != null" >create_time = #{createTime},</if>
+	      <if test="email != null" >email = #{email},</if>
+	      <if test="shortName != null" >short_name = #{shortName},</if>
+	      <if test="dealRate != null" >deal_rate = #{dealRate},</if>
+	      <if test="isShow != null" >is_show = #{isShow},</if>
+	      <if test="cooperationMode != null" >cooperation_mode = #{cooperationMode},</if>
+	      <if test="orderHandle != null" >order_handle = #{orderHandle},</if>
+	      <if test="profitModel != null" >profit_model = #{profitModel},</if>
+	      <if test="weixinId != null" >weixin_id = #{weixinId},</if>
+	      <if test="crmCostomerId != null" >crm_costomer_id = #{crmCostomerId},</if>
+	      <if test="isManual != null" >is_manual = #{isManual},</if>
+	  	</set>
+	  	where id = #{id}
+	</update>
+	<update id="updatePerson" parameterType="bmatser.model.Dealer">
+	  	update dealer 
+	  	<set>
+	      <if test="dealerName != null" >dealer_name = #{dealerName},</if>
+	      <if test="logo != null" >logo = #{logo},</if>
+	      <if test="telephone != null" >telephone = #{telephone},</if>
+	      <if test="telephoneSecret != null" >telephone_secret = #{telephoneSecret},</if>
+	      <if test="countryId != null and countryId !=''" >country_id = #{countryId,jdbcType=INTEGER},</if>
+	      <if test="provinceId != null and provinceId !=''" >province_id = #{provinceId,jdbcType=INTEGER},</if>
+	      <if test="cityId != null and cityId !=''" >city_id = #{cityId,jdbcType=INTEGER},</if>
+	      <if test="areaId != null and areaId != ''" >area_id = #{areaId,jdbcType=INTEGER},</if>
+	      <if test="address != null" >address = #{address},</if>
+	      <if test="gender != null" >gender = #{gender},</if>
+	      <if test="birthday != null" >
+		      <if test="birthday == ''">birthday = null, </if>
+		      <if test="birthday != ''">birthday = #{birthday}, </if>
+	      </if>
+	      <if test="qq != null" >
+		      <if test="qq == ''">qq = null, </if>
+		      <if test="qq != ''">qq = #{qq}, </if>
+	      </if>
+	      <if test="1 == 1" >modify_time = now(),</if>
+	      linkman = #{linkman},
+	      <if test="linkTel != null" >link_tel = #{linkTel},</if>
+	      <if test="linkTelSecret != null" >link_tel_secret = #{linkTelSecret},</if>
+	      <if test="operateScope != null and operateScope !=''" >operate_scope = #{operateScope},</if>
+	      <if test="saleCustomerGroup != null and saleCustomerGroup !=''" >sale_customer_group = #{saleCustomerGroup,jdbcType=INTEGER},</if>
+	      email = #{email}
+	  	</set>
+	  	where id = #{id}
+	</update>
+	
+	<!-- 由会员id更新商家数据-->
+   <update id="updateById" parameterType="bmatser.model.Dealer" >
+    update dealer
+    <set>
+    check_status='3',
+      <if test="dealerName != null" >
+        dealer_name = #{dealerName},
+      </if>
+      <if test="operateScope != null" >
+         operate_scope = #{operateScope}
+      </if>
+    </set>
+    where id = #{id} 
+  </update>
+  
+  <!-- 扣除积分 -->
+	<update id="updateScoreById">
+		update dealer set score = score - #{score} where id = #{dealerId} and status='1'
+	</update>
+	 <!-- 查询扣除积分前的剩余积分 -->
+	<select id="selectScoreRemain" resultType="Integer">
+		select score from dealer
+		where status = '1' and id = #{dealerId}
+	</select>
+	
+	<select id="IsExistName" parameterType="map" resultType="int">
+		select 
+			count(1) 
+		from dealer
+		where status = 1 and dealer_name = #{dealerName} and dealer_type = 2 and ifnull(is_manual,0) =0
+	</select>
+	<update id="updateRank">
+		update 
+			dealer
+		<set>
+			rank = #{rank}
+		</set>	
+		where id = #{dealerId}
+	</update>
+	<select id="IsExistCheck" resultType="int"> 
+		select 
+			ifnull(check_status,0) checkStatus
+		from dealer
+		where id  =#{dealerId}
+	</select>
+	<update id="delCrmCustomer" parameterType="map" >
+		update crm_customer cc set cc.`status` = 2 where dealer_id = #{dealerId}
+	</update>
+	<insert id="insertDealerRankScore" parameterType="map">
+		insert into dealer_rank_score 
+		(dealer_id,score,rank_score,rank,create_time,related_id,type,status) 
+		select d.id,#{score},d.rank_score,d.rank,now(),#{orderId},1,1 from dealer d where d.id = #{dealerId}
+	</insert>
+	
+	<update id="returnDealerBalance">
+		update 
+			order_info oi,dealer d 
+		set d.balance = IFNULL(d.balance,0) + IFNULL(oi.balance_deduction,0) 
+		where oi.id = #{orderId}
+			and  oi.buyer_id = d.id 
+			and oi.order_status = 1 
+			and oi.balance_deduction >0
+	</update>
+	<update id="updateBalanceByOrderId">
+		update 
+			order_info oi,dealer d
+		set
+			d.balance = ifnull(d.balance,0) - ifnull(oi.balance_deduction,0)
+		where	oi.id = #{orderId}
+			and  oi.buyer_id = d.id 
+			and oi.order_status = 1 
+	</update>
+	<select id="getDealerCashBackDetail" resultType="map">
+		select 
+			cashback_time cashbackTime,
+			cashback_amount cashbackAmount,
+			${@bmatser.util.SQLUtil@CASHBACK_TYPE}cashbackType,
+			${@bmatser.util.SQLUtil@CASHBACK_STATUS}cashbackStatus
+		from cash_back_detail
+		where  dealer_id = #{dealerId} and status = 1 
+		<if test="startTime != null and startTime !=''">
+			and DATE_FORMAT(cashback_time,'%Y-%m-%d') &gt;= DATE_FORMAT(#{startTime},'%Y-%m-%d')
+	   </if>
+	   <if test="endTime != null and endTime !=''">
+			and DATE_FORMAT(cashback_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d')
+	   </if>
+	   limit #{page}, #{rows}
+	</select>
+	<select id="getDealerCashBackDetailCount" resultType="int">
+		select 
+			count(1)
+		from cash_back_detail
+		where  dealer_id = #{dealerId} and status = 1 
+		<if test="startTime != null and startTime !=''">
+			and DATE_FORMAT(cashback_time,'%Y-%m-%d') &gt;= DATE_FORMAT(#{startTime},'%Y-%m-%d')
+	   </if>
+	   <if test="endTime != null and endTime !=''">
+			and DATE_FORMAT(cashback_time,'%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime},'%Y-%m-%d')
+	   </if>
+	</select>
+	<select id="getDealerCashBack" resultType="map">
+		select 
+			ifnull(d.cashback,0)cashback,
+			sum(ifnull(cbd.cashback_amount,0))totalCashback 
+		from dealer d
+		left join cash_back_detail cbd on cbd.dealer_id = d.id and cbd.status = 1 and cbd.cashback_status = 2 and cbd.cashback_type = 1	
+		where d.status =1 and d.id = #{dealerId}
+	</select>
+	
+	<select id="isExistBankCard" resultType="int">
+		select 
+			count(1) 
+		from dealer_bank_card 
+		where dealer_id =#{dealerId} and id = #{cardId}
+	</select>
+	
+	<insert id="addWithdrawals" >
+		insert into 
+			dealer_withdrawals 
+		(dealer,dealer_bank_card_id,money,status,create_time,modify_time)
+		values
+		 (#{dealerId},#{cardId},#{amount},0,now(),now())
+	</insert>
+	
+	<select id="getBankCard" resultType="map">
+		select 
+			id,bank_name bankName,account_name accountName,card 
+		from dealer_bank_card
+		where dealer_id = #{dealerId}
+		order by create_time
+	</select>
+	
+	<select id="getApplyDetail"  resultType="map">
+		select 
+			money,
+			create_time createTime,
+			modify_time modifyTime,
+			${@bmatser.util.SQLUtil@WITHDRAWALS_STATUS}status
+		from dealer_withdrawals
+		where dealer_id = #{dealerId}
+	</select>
+	
+	<update id="delDealerName" >
+		update dealer set dealer_name = '' where id = #{dealerId}
+	</update>
+	
+	<select id="getOpenId" resultType="java.lang.String">
+		select 
+			d.open_id
+		from order_info oi
+		left join dealer d on d.id = oi.buyer_id
+		where oi.id = #{orderId}
+	</select>
+	<select id="getSaasOpenId" resultType="java.lang.String">
+		select 
+			d.saas_open_id
+		from order_info oi
+		left join dealer d on d.id = oi.buyer_id
+		where oi.id = #{orderId}
+	</select>
+	
+	<delete id="delCrmCustomerInfo" >
+		DELETE 
+			cc ,ccl  
+		from crm_customer cc 
+		left join crm_customer_linkman ccl on ccl.customer_id = cc.id
+		where cc.dealer_id = #{dealerId}
+	</delete>
+	<delete id="delDealerLicense" >
+		DELETE 
+		from dealer_business_license
+		where dealer_id = #{dealerId}
+	</delete>
+	<select id="IsExistDealerName" resultType="int">
+		select 
+			count(1) 
+		from dealer
+		where status = 1 and dealer_name = #{dealerName} and dealer_type = 2 and ifnull(is_manual,0) =0 and id != #{dealerId}
+	</select>
+	<select id="checkReason" resultType="java.lang.String">
+		select 
+			check_fail_reason
+		from dealer
+		where id = #{dealerId}
+	</select>
+	<!-- 是否符合返利资格 -->
+	<select id="isRebate" resultType="int">
+		select 
+			count(1)
+		from dealer d
+		left join dealer_invited di on di.invited_open_id = d.open_id
+		where d.open_id is not null and d.open_id != '' and  d.id = #{dealerId} and di.dealer_id is not null
+	</select>
+	<select id="checkInfo" resultType="map">
+		select 
+			d.check_fail_reason checkFailReason,
+			if(dbl.business_license_file is not null and length(dbl.business_license_file)>10,concat('${@bmatser.util.Constants@IMAGE_URL}','licenseImg/',dbl.business_license_file),'') businessLicenseFile,
+			if(dbl.tax_certificate_file is not null and length(dbl.tax_certificate_file)>10,concat('${@bmatser.util.Constants@IMAGE_URL}','licenseImg/',dbl.tax_certificate_file),'') taxCertificateFile,
+			if(dbl.organize_code_file is not null and length(dbl.organize_code_file)>10,concat('${@bmatser.util.Constants@IMAGE_URL}','licenseImg/',dbl.organize_code_file),'') organizeCodeFile,
+			d.operate_scope operateScope,d.dealer_name dealerName,ccl.link_man linkMan,ifnull(cc.province_id,0) provinceId,ifnull(cc.city_id,0) cityId,
+			c.name operateScopeValue
+		from dealer_business_license dbl
+		left join dealer d on d.id = dbl.dealer_id and d.status = 1 
+		left join crm_customer cc on cc.dealer_id = d.id 
+		left join crm_customer_linkman ccl on ccl.customer_id = cc.id and ccl.status = 1
+		left join category c on c.cate_no = d.operate_scope and c.status =1
+		where d.id = #{dealerId}
+		limit 0,1
+	</select>
+	
+	<update id="updateSaasOpenId">
+	 update dealer set saas_open_id = #{openId} where id = #{dealerId}
+	</update>
+	
+	<!-- 	
+		 * @author wmt
+		 * @describe 年度账单
+		 * @param date 时间
+		 * @param dealerId 用户ID
+		 * @return
+	  -->
+	<select id="getAnnualBill" resultType="map">
+		select 
+			g.brand_id brandId,sum(round(ifnull(og.tail,og.sale_unit_price)*og.num,2)) price,DATE_FORMAT(oi.order_time,'%Y-%m')date from order_goods og
+		left join order_info oi on oi.id = og.order_id and oi.order_status =6 and ifnull(oi.has_child,0) =0
+		left join goods g on g.id = og.goods_id 
+		where buyer_id = #{dealerId} and DATE_FORMAT(oi.order_time,'%Y-%m') = #{date}
+		GROUP BY g.brand_id,date
+		ORDER BY date
+	</select>
+	<select id="getRegChannel" resultType="int">
+		select 
+			ifnull(source_type,0) 
+		from dealer
+		where id = #{dealerId}
+	</select>
+</mapper>

@@ -1,0 +1,761 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.ShoppingCartMapper" >
+
+
+	<sql id="bigCustomer">
+		(
+		select bcpg.big_customer_package_id id,bcpg.seller_goods_id sellerGoodsId,bcpg.rate from big_customer_package_goods bcpg
+			left join  big_customer_package_dealer dcpd on bcpg.big_customer_package_id = dcpd.big_customer_package_id
+			left join  big_customer_package bcp on bcp.id = dcpd.big_customer_package_id 
+			where   dcpd.dealer_id = ${@bmatser.util.SQLUtil@getSaasDealerId()}  and dcpd.status = 1 and bcp.status =1 and bcpg.status =1
+				and bcp.start_time &lt;= now() and bcp.end_time &gt;= now()
+		)x on  x.sellerGoodsId = sg.id
+	</sql>
+  	<sql id="package">
+ 		  	(
+  		  	select 
+  			gc.package_id packageId,
+  			gc.seller_goods_id sellerGoodsId,
+  			if(c.combination_type=2,ifnull(gc.rate,1)*sg.sale_price,ifnull(gc.fixed_price,sg.sale_price)) price
+		  	from goods_package gp
+			left join combination c  on gp.combination_id = c.id
+			left join goods_combination gc on gc.package_id = gp.id
+			inner join seller_goods sg  on sg.id = gc.seller_goods_id
+			where 
+				c.start_time &lt;=now() and c.end_time &gt;=now() and c.status = 1 
+			and gp.status = 1 and gc.status = 1
+		)p
+ 	</sql>
+<!-- 加入购物车 -->
+	<insert id="addShoppingCart" parameterType="bmatser.pageModel.ShoppingCartPage">
+		insert into buyer_shopping_cart (buyer_id, num, seller_id, seller_goods_id, create_time, sale_price, status)
+	    values (#{buyerId}, #{num}, #{sellerId}, #{sellerGoodsId}, now(), #{salePrice}, '1')
+	</insert>
+
+<!-- 获取购物车列表 -->
+	<select id="findShoppingCart" resultType="Map">
+		select 
+			bsc.id,g.id goodsId, g.goods_no goodsNo, sg.id sellerGoodsId, sg.goods_name goodsName, ${@bmatser.util.SQLUtil@GOODS_IMG} image, g.model, g.buy_no buyNo,
+			b.name_cn brandName, bsc.num, sg.sale_price salePrice, IFNULL(bsc.sale_price,'') cartPrice,if(sg.sale_price,sg.sale_price,sg.price)price, 
+			IFNULL(sg.sku_unit,'') skuUnit,sg.is_rate isRate,sg.is_sale isSale,sg.rate,if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1) batchQuantity,if(sg.order_quantity is not null and sg.order_quantity>1,sg.order_quantity,0) orderQuantity,d.dealer_name dealerName,g.market_price marketPrice
+		from buyer_shopping_cart bsc
+		left join seller_goods sg ON bsc.seller_goods_id = sg.id
+		left join goods g ON sg.goods_id = g.id 
+		left join brand b on g.brand_id = b.id
+		left join dealer d on d.id = 939817
+		where  bsc.buyer_id = #{buyerId} and bsc.status = 1 and sg.`status`=1 and sg.is_show = 1
+		order by bsc.create_time desc
+	</select>
+
+	<sql id="findShoppingCartByIds_default">
+		 select 
+			g.id goodsId, sg.id sellerGoodsId, sg.goods_name goodsName, ${@bmatser.util.SQLUtil@GOODS_IMG} image,
+			bsc.num, IFNULL(bsc.sale_price,'') cartPrice,  g.brand_id brandId,g.model,g.market_price marketPrice,b.name_cn brandName,
+			IFNULL(sg.sku_unit,g.measure) skuUnit, sg.rate rate, lst.order_amount orderAmount, lst.freight_amount freightAmount,bsc.id,g.buy_no buyNo,
+			if(x.id is not null ,0,sg.is_sale) isSale,
+			if(x.id is not null ,0,${@bmatser.util.SQLUtil@IS_RATE}) isRate,
+			IFNULL(bsc.activity_type,0) activityType,IFNULL(bsc.activity_id,'') activityId, 
+			if(x.id is not null ,ROUND(g.market_price*x.rate,2),sg.price) price,
+            IFNULL(bsc.sale_price,'') costPrice,
+			--if(x.id is not null ,ROUND(g.market_price*x.rate,2),sg.sale_price) costPrice,
+            IFNULL(bsc.sale_price,'') salePrice,
+			--if(x.id is not null ,ROUND(g.market_price*x.rate,2),sg.sale_price) salePrice,
+			x.id packageId 
+		from buyer_shopping_cart bsc
+		left join seller_goods sg on bsc.seller_goods_id = sg.id
+		left join goods g on sg.goods_id = g.id
+		left join logistics_shop_temp lst on sg.fare_temp_id = lst.id
+		left join brand b on g.brand_id = b.id
+		left join <include refid="bigCustomer"/>
+		where bsc.buyer_id = #{buyerId} and bsc.status = 1 and ifnull(bsc.activity_type,0)=0
+			and bsc.id in 
+			<foreach collection="ids" item="id" open="(" close=")" separator=",">
+				#{id}
+			</foreach>
+	</sql>
+	<sql id="findShoppingCartByIds_group">
+		select 
+			g.id goodsId, sg.id sellerGoodsId, sg.goods_name goodsName, ${@bmatser.util.SQLUtil@GOODS_IMG} image,
+			bsc.num, IFNULL(bsc.sale_price,'') cartPrice,  g.brand_id brandId,g.model,g.market_price marketPrice,b.name_cn brandName,
+			IFNULL(sg.sku_unit,g.measure) skuUnit, sg.rate rate, lst.order_amount orderAmount, lst.freight_amount freightAmount,bsc.id,g.buy_no buyNo,
+			sg.is_sale isSale,
+			${@bmatser.util.SQLUtil@IS_RATE} isRate,
+			IFNULL(bsc.activity_type,0) activityType,IFNULL(bsc.activity_id,'') activityId, 
+			 sg.price price,
+			sg.sale_price costPrice,
+			gg.deduction_price salePrice,
+			null packageId
+		from buyer_shopping_cart bsc
+		left join seller_goods sg on bsc.seller_goods_id = sg.id
+		left join goods g on sg.goods_id = g.id
+		left join logistics_shop_temp lst on sg.fare_temp_id = lst.id
+		left join brand b on g.brand_id = b.id
+		left join groupon_activity ga on ga.id = bsc.activity_id
+		left join groupon_goods gg on gg.groupon_id = bsc.activity_id and gg.seller_goods_id = bsc.seller_goods_id
+		where bsc.buyer_id = #{buyerId} and bsc.status = 1 and bsc.activity_type =1 and ga.start_time &lt;= now() and ga.end_time &gt;= now() and gg.status =1 and ga.groupon_status !=5
+			and bsc.id in 
+			<foreach collection="ids" item="id" open="(" close=")" separator=",">
+				#{id}
+			</foreach>
+	</sql>
+	
+	<!-- 	
+		 * @author wmt
+		 * @describe 获取购物车套餐商品
+		 * @param dealerId 零售商Id 
+		 * @param packageList 套餐集合 
+		 * @return
+	  -->
+	<select id="findPackageShoppingCartByIds" resultType="bmatser.pageModel.util.MakeOrderGoodsPageUtil">
+			select 
+				g.id goodsId, g.goods_no goodsNo, sg.id sellerGoodsId, sg.goods_name goodsName, ${@bmatser.util.SQLUtil@GOODS_IMG} image,
+				bsc.num, IFNULL(bsc.sale_price,'') cartPrice,  g.brand_id brandId,g.model,sg.sale_price marketPrice,b.name_cn brandName,
+				IFNULL(sg.sku_unit,g.measure) skuUnit, sg.rate rate, lst.order_amount orderAmount, lst.freight_amount freightAmount,bsc.id,g.buy_no buyNo,
+				sg.is_sale isSale,
+				0 isRate,
+				IFNULL(bsc.activity_type,0) activityType,
+				IFNULL(bsc.activity_id,'') activityId, 
+				 sg.price price,
+				sg.sale_price costPrice,
+				if(gc.rate is not null ,round(ifnull(gc.rate,1)*sg.sale_price,2),ifnull(gc.fixed_price,sg.sale_price)) salePrice,
+				null packageId
+			from buyer_shopping_cart bsc
+			left join seller_goods sg on bsc.seller_goods_id = sg.id
+			left join goods g on sg.goods_id = g.id
+			left join logistics_shop_temp lst on sg.fare_temp_id = lst.id
+			left join brand b on g.brand_id = b.id
+			left join goods_combination gc on gc.package_id = bsc.activity_id and  gc.seller_goods_id = bsc.seller_goods_id
+			where bsc.buyer_id = #{dealerId} and bsc.status = 1 and bsc.activity_type =3 
+				and bsc.activity_id in 
+				<foreach collection="packageList" item="package" open="(" close=")" separator=",">
+					#{package.packageId}
+				</foreach>
+	</select>
+
+
+<!-- 根据id集合获取购物车商品列表 -->
+	<select id="findShoppingCartByIds" resultType="bmatser.pageModel.util.MakeOrderGoodsPageUtil">
+		<include refid="findShoppingCartByIds_default"/>
+			UNION ALL
+		<include refid="findShoppingCartByIds_group"/>
+	</select>
+	
+	<!-- 	
+		 * @author wmt
+		 * @describe 按类型查询购物车
+		 * @param buyerId 零售商ID
+		 * @param ids 购物车Id 
+		 * @param type 类型 0普通 1 团购 3 套餐
+		 * @return
+	  -->
+	<select id="findCartBytype" resultType="bmatser.pageModel.util.MakeOrderGoodsPageUtil">
+		<choose>
+			<when test="type==1">
+				<include refid="findShoppingCartByIds_group"></include>
+			</when>
+			<otherwise>
+				<include refid="findShoppingCartByIds_default"></include>
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findShoppingCartFreight" resultType="int" >
+		select sum(x.freightAmount)freightAmount from (
+			select	if(sum(sg.sale_price*bsc.num)&lt;if(lst.order_amount is not null and lst.order_amount != '',lst.order_amount,0),lst.freight_amount,0) freightAmount
+		from buyer_shopping_cart bsc
+		left join seller_goods sg on bsc.seller_goods_id = sg.id
+		left join logistics_shop_temp lst on lst.id = sg.fare_temp_id
+		where bsc.id in 
+			<foreach collection="ids" item="id" open="(" close=")" separator=",">
+				#{id}
+			</foreach>
+		GROUP BY sg.fare_temp_id
+		)x
+	</select>
+	<update id="batchDelcart" parameterType="map">
+		update buyer_shopping_cart 
+		<set>
+			status = 2,num = 0
+		</set>
+		where id in
+		<foreach collection="ids" item="id" open="(" close=")" separator=",">
+			#{id}
+		</foreach>
+	</update>
+	<!-- 根据id获取购物车商品信息 -->
+	<select id="getShoppingCartByPageId" parameterType="map" resultType="bmatser.model.ShoppingCart">
+		select 
+			id,buyer_id buyerId,num,seller_id sellerId,seller_goods_id sellerGoodsId,create_time createTime,sale_price salePrice,status
+		from buyer_shopping_cart
+		where buyer_id = #{buyerId} and seller_goods_id  = #{sellerGoodsId} and status =1 and (activity_type is null or activity_type = 0)
+		limit 0,1
+	</select>
+	<!-- 根据id获取购物车商品信息 -->
+	<select id="findShoppingCartById" parameterType="map" resultType="bmatser.model.ShoppingCart">
+		select 
+			id,buyer_id buyerId,num,seller_id sellerId,seller_goods_id sellerGoodsId,create_time createTime,sale_price salePrice,status
+		from buyer_shopping_cart
+		where id = #{id}
+		limit 0,1
+	</select>
+	<!-- 添加到购物车 -->
+  <insert id="save" parameterType="bmatser.model.ShoppingCart" useGeneratedKeys="true" keyProperty="id">
+  		insert into buyer_shopping_cart
+  		<trim prefix="(" suffix=")" suffixOverrides=",">
+  			<if test="id != null">id,</if>
+  			<if test="buyerId != null">buyer_id,</if>
+  			<if test="num != null">num,</if>
+  			<if test="sellerId != null">seller_id,</if>
+  			<if test="sellerGoodsId != null">seller_goods_id,</if>
+  			<if test="createTime != null">create_time,</if>
+  			<if test="salePrice != null">sale_price,</if>
+  			<if test="status != null">status,</if>
+  			<if test="activityType != null">activity_type,</if>
+  			<if test="activityId != null">activity_id,</if>
+  		</trim>
+  		<trim prefix="values (" suffix=")" suffixOverrides=",">
+  			<if test="id != null">#{id},</if>
+  			<if test="buyerId != null">#{buyerId},</if>
+  			<if test="num != null">#{num},</if>
+  			<if test="sellerId != null">#{sellerId},</if>
+  			<if test="sellerGoodsId != null">#{sellerGoodsId},</if>
+  			<if test="createTime != null">#{createTime},</if>
+  			<if test="salePrice != null">#{salePrice},</if>
+  			<if test="status != null">#{status},</if>
+  			<if test="activityType != null">#{activityType},</if>
+  			<if test="activityId != null">#{activityId},</if>
+  		</trim>
+  </insert>
+  	<!-- 更新到购物车 -->
+  <update id="update" parameterType="bmatser.model.ShoppingCart" >
+  	update buyer_shopping_cart
+  	<set>
+		<if test="buyerId != null">buyer_id = #{buyerId},</if>
+		<if test="num != null">num = #{num},</if>
+		<if test="sellerId != null">seller_id = #{sellerId},</if>
+		<if test="sellerGoodsId != null">seller_goods_id = #{sellerGoodsId},</if>
+		<if test="createTime != null">create_time = #{createTime},</if>
+		<if test="salePrice != null">sale_price = #{salePrice},</if>
+		<if test="status != null">status = #{status},</if>
+  	</set>
+	where id = #{id}  	
+  </update>
+  <select id="findRateByGoodsNo" resultType="java.lang.String">
+  	select sg.rate FROM seller_goods sg where sg.goods_no=#{id}
+	limit 0,1
+  </select>
+
+  <!-- 查询同一店铺购物车总价 -->
+  <select id="findStoreCartAmount" parameterType="map" resultType="map">
+	select 
+		c.seller_id sellerId,sum(sg.sale_price*c.num) price 
+	from buyer_shopping_cart c 
+	LEFT JOIN seller_goods sg on sg.id  = c.seller_goods_id
+	where c.id in 
+		<foreach collection="cartIds" item="cartId" open="(" close=")" separator=",">
+			#{cartId}
+		</foreach>
+	GROUP BY c.seller_id 
+  </select>
+
+  
+  <!-- 获取商城会员购物车所含的店铺 -->
+  <select id="findShoppingCartShop" resultType="Map">
+  		select distinct d.id,ifnull(d.shop_name,'') shopName, d.alias
+		from buyer_shopping_cart bsc
+		left join dealer d on bsc.seller_id=d.id
+		left join seller_goods sg on sg.id = bsc.seller_goods_id
+		left join goods g on g.id = sg.goods_id
+		where bsc.buyer_id = #{buyerId} and bsc.status != 2 and d.status=1 and sg.status =1 and sg.is_show = 1 and g.status = 1
+		<if test="cartIds != null">
+		and bsc.id in 
+		<foreach collection="cartIds" item="cartId" open="(" close=")" separator=",">
+			#{cartId}
+		</foreach>
+		</if>
+	</select>
+  <!-- 获取商城购物车列表 -->
+  <select id="findShoppingCartMall" resultType="Map">
+		select bsc.id,g.id goodsId, g.goods_no goodsNo, sg.id sellerGoodsId, sg.goods_name goodsName, ${@bmatser.util.SQLUtil@GOODS_IMG} image, g.model, g.buy_no buyNo,
+		b.name_cn brandName, bsc.num,sg.sale_price salePrice, IFNULL(bsc.sale_price,'') cartPrice, if(sg.sale_price,sg.sale_price,sg.price)price, g.market_price marketPrice,
+		IFNULL(sg.sku_unit,'') skuUnit,sg.stock,if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1) batchQuantity,sg.order_quantity leastQunantity
+		from buyer_shopping_cart bsc
+		left join seller_goods sg on bsc.seller_goods_id = sg.id
+		left join goods g on sg.goods_id = g.id
+		left join brand b on g.brand_id = b.id
+		where bsc.buyer_id = #{buyerId} and bsc.status != 2 and sg.`status`=1 and bsc.seller_id=#{sellerId}
+	</select>
+	
+	<!-- 根据id集合获取商城购物车商品列表 -->
+	<select id="findShoppingCartByIdsMall" resultType="bmatser.model.FindShoppingCartByIdsMall">
+		select g.id goodsId, g.goods_no goodsNo, sg.id sellerGoodsId, sg.goods_name goodsName, ${@bmatser.util.SQLUtil@GOODS_IMG} image,
+		bsc.num, sg.sale_price salePrice, IFNULL(bsc.sale_price,'') cartPrice, if(sg.sale_price,sg.sale_price,sg.price)price, g.brand_id brandId,
+		IFNULL(sg.sku_unit,'') skuUnit,sg.is_rate isRate,sg.is_sale isSale, ifnull(sg.rate,0) rate,bsc.id cartId
+		from buyer_shopping_cart bsc, seller_goods sg, goods g, logistics_shop_temp lst
+		where bsc.seller_goods_id = sg.id and sg.goods_id = g.id and sg.fare_temp_id = lst.id
+		and bsc.buyer_id = #{buyerId} and bsc.status = 1 and sg.`status`=1
+		and bsc.id in
+		<foreach collection="ids" item="id" open="(" close=")" separator=",">
+			#{id}
+		</foreach>
+		<if test="sellerId != null">
+			and bsc.seller_id = #{sellerId}
+		</if>
+	</select>
+	
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer" >
+	    delete from buyer_shopping_cart
+	    where id = #{id,jdbcType=INTEGER}
+  	</delete>
+  	
+  	<!-- 根据id获取购物车 -->
+  	<select id="getCartById" parameterType="map" resultType="bmatser.model.ShoppingCart">
+		select 
+			id,buyer_id buyerId,num,seller_id sellerId,seller_goods_id sellerGoodsId,create_time createTime,sale_price salePrice,status
+		from buyer_shopping_cart
+		where id = #{cartId}
+	</select>
+	
+	<!-- 获取会员购物车中商品总数 -->
+	<select id="getCartNumById" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		select sum(bsc.num) num 
+		from buyer_shopping_cart bsc
+		left join seller_goods sg on bsc.seller_goods_id = sg.id
+		left join dealer d on bsc.seller_id = d.id
+		where bsc.buyer_id = #{buyerId} and bsc.status = 1 and sg.`status`=1 and d.`status` =1 
+	</select>
+  	<select id="getShoppingCartByPageGroupId" parameterType="map" resultType="bmatser.model.ShoppingCart">
+  		select 
+			id,buyer_id buyerId,num,seller_id sellerId,seller_goods_id sellerGoodsId,create_time createTime,sale_price salePrice,status,activity_type activityType,activity_id activityId
+		from buyer_shopping_cart
+		where buyer_id = #{buyerId} and seller_goods_id  = #{sellerGoodsId} and status =1 and activity_id = #{grouponActivityId}
+		limit 0,1
+  	</select>
+  	
+  	
+<!--   	<select id="findShoppingCartByType" parameterType="map" resultType="map"> 
+		select 
+			bsc.id,g.id goodsId, g.goods_no goodsNo, sg.id sellerGoodsId, sg.goods_name goodsName, ${@bmatser.util.SQLUtil@GOODS_IMG} image, g.model, g.buy_no buyNo,
+			b.name_cn brandName, bsc.num, sg.sale_price salePrice, IFNULL(bsc.sale_price,'') cartPrice,if(sg.sale_price,sg.sale_price,sg.price)price, 
+			IFNULL(sg.sku_unit,'') skuUnit,if(sg.is_sale is null or sg.is_sale = 0 or sg.is_sale = '',sg.is_rate,0) isRate,sg.is_sale isSale,sg.rate,if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1) batchQuantity,if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1) orderQuantity,d.dealer_name dealerName,g.market_price marketPrice,ifnull(bsc.activity_type,0) activityType,bsc.activity_id activityId,
+			ifnull(gg.deduction_price,sg.sale_price)groupPrice,sg.sale_price-ifnull(gg.deduction_price,sg.sale_price) groupSale,${@bmatser.util.SQLUtil@IS_BEAN}isBean,ifnull(sg.bean_rate,0) beanRate,sg.price costPrice
+		from buyer_shopping_cart bsc
+		left join seller_goods sg ON bsc.seller_goods_id = sg.id
+		left join goods g ON sg.goods_id = g.id 
+		left join brand b on g.brand_id = b.id
+		left join dealer d on d.id = 939817
+		left join groupon_activity ga on ga.id = bsc.activity_id
+		left join groupon_goods gg on gg.seller_goods_id = sg.id and  gg.groupon_id = bsc.activity_id
+		where  bsc.buyer_id = #{buyerId} and bsc.status = 1 and sg.`status`=1 and sg.is_show = 1
+		<if test="type == 0">
+			and (bsc.activity_type =0 or bsc.activity_type is null)
+		</if>
+		<if test="type == 1">
+			and  bsc.activity_type = 1 and ga.start_time &lt;= now() and ga.end_time &gt;= now() and gg.status = 1 and ga.groupon_status != 5 
+		</if>
+		order by bsc.create_time desc
+  	</select> -->
+  	
+  	<!--   saas购物车列表查询 START    -->
+  	<sql id="findShoppingCartByTypeSQL">
+ 		bsc.id,
+  		g.id goodsId,
+  		g.goods_no goodsNo,
+  		g.model,
+  		g.buy_no buyNo,
+  		sg.id sellerGoodsId,
+  		sg.goods_name goodsName,
+  		IFNULL(sg.sku_unit,'') skuUnit,
+  		if(sg.batch_quantity is not null and sg.batch_quantity>0,sg.batch_quantity,1) batchQuantity,
+		if(sg.order_quantity is not null and sg.order_quantity>0,sg.order_quantity,1) orderQuantity,
+		sg.rate,
+		ifnull(sg.bean_rate,0) beanRate,
+		${@bmatser.util.SQLUtil@GOODS_IMG} image,
+		b.name_cn brandName, 
+		bsc.num, 
+		IFNULL(bsc.sale_price,0) cartPrice,
+		d.dealer_name dealerName,
+		ifnull(bsc.activity_type,0) activityType,
+		bsc.activity_id activityId,
+  	</sql>
+  	
+  	
+  	<sql id="findShoppingCartByType_default">
+		select 
+			<include refid="findShoppingCartByTypeSQL"/>
+			g.market_price marketPrice,
+			if(x.id is not null ,ROUND(g.market_price*x.rate,2),sg.sale_price) salePrice, 
+			if(x.id is not null ,ROUND(g.market_price*x.rate,2),sg.price) price, 
+			if(x.id is not null ,0,${@bmatser.util.SQLUtil@IS_RATE}) isRate,
+			if(x.id is not null ,0,${@bmatser.util.SQLUtil@IS_REAL_BEAN})isBean,
+			if(x.id is not null ,0,sg.is_sale) isSale,
+			if(x.id is not null ,ROUND(g.market_price*x.rate,2),sg.sale_price) groupPrice,
+			0 groupSale,
+			if(x.id is not null ,ROUND(g.market_price*x.rate,2),sg.sale_price) costPrice
+		from buyer_shopping_cart bsc
+		left join seller_goods sg ON bsc.seller_goods_id = sg.id
+		left join goods g ON sg.goods_id = g.id 
+		left join brand b on g.brand_id = b.id
+		left join dealer d on d.id = 939817
+		left join <include refid="bigCustomer"/>
+		left join ${@bmatser.util.SQLUtil@GROUP_STATUS} on groupStatus.id = sg.id
+		where  bsc.buyer_id = #{buyerId} and bsc.status = 1 and sg.`status`=1 and sg.is_show = 1
+		and ifnull(bsc.activity_type,0) =${type} 
+  	</sql>
+  	
+  	
+  	<sql id="findShoppingCartByType_group">    
+		select 
+			<include refid="findShoppingCartByTypeSQL"/>
+			g.market_price marketPrice,
+			sg.sale_price salePrice, 
+			if(sg.sale_price,sg.sale_price,sg.price) price, 
+			if(sg.is_sale is null or sg.is_sale = 0 or sg.is_sale = '',sg.is_rate,0) isRate,
+			${@bmatser.util.SQLUtil@IS_REAL_BEAN} isBean,
+			sg.is_sale isSale,
+			ifnull(gg.deduction_price,sg.sale_price) groupPrice,
+			sg.sale_price-ifnull(gg.deduction_price,sg.sale_price) groupSale,
+			sg.price costPrice
+		from buyer_shopping_cart bsc
+		left join seller_goods sg ON bsc.seller_goods_id = sg.id
+		left join goods g ON sg.goods_id = g.id 
+		left join brand b on g.brand_id = b.id
+		left join dealer d on d.id = 939817
+		left join groupon_activity ga on ga.id = bsc.activity_id
+		left join groupon_goods gg on gg.seller_goods_id = sg.id and  gg.groupon_id = bsc.activity_id
+		left join ${@bmatser.util.SQLUtil@GROUP_STATUS} on groupStatus.id = sg.id
+		where  bsc.buyer_id = #{buyerId} and bsc.status = 1 and sg.`status`=1 and sg.is_show = 1
+		and  bsc.activity_type = ${type} and ga.start_time &lt;= now() and ga.end_time &gt;= now() and gg.status = 1 and ga.groupon_status != 5 
+		order by bsc.create_time desc
+  	</sql>
+
+  	
+  	<sql id="findShoppingCartByType_package">    
+		select 
+			<include refid="findShoppingCartByTypeSQL"/>
+			sg.sale_price marketPrice,
+			p.price salePrice, 
+			p.price price, 
+			0 isRate,
+			0 isBean,
+			sg.is_sale isSale,
+			sg.price groupPrice,
+			0 groupSale,
+			sg.price costPrice
+		from buyer_shopping_cart bsc
+		left join seller_goods sg ON bsc.seller_goods_id = sg.id
+		left join goods g ON sg.goods_id = g.id 
+		left join brand b on g.brand_id = b.id
+		left join dealer d on d.id = 939817
+		left join <include refid="package"/> on p.packageId = bsc.activity_id and bsc.seller_goods_id = p.sellerGoodsId
+		where  bsc.buyer_id = #{buyerId} and bsc.status = 1 and sg.`status`=1 and sg.is_show = 1
+		and  bsc.activity_type = ${type} and p.packageId is not null 
+		order by bsc.create_time desc
+  	</sql>
+  	
+  	<select id="findShoppingCartByType"  resultType="bmatser.model.FindShoppingCartByType">
+  		<choose>
+  			<when test="type == 1">
+  				<include refid="findShoppingCartByType_group"/>
+  			</when>
+  			<when test="type == 3">
+  				<include refid="findShoppingCartByType_package"/>
+  			</when>
+  			<otherwise>
+  				<include refid="findShoppingCartByType_default"/>
+  			</otherwise>
+  		</choose>
+  	</select>
+  	<!-- saas购物车列表查询 END   -->
+  	
+  	<!--重新打折扣-->
+    <select id="getDiscountByGoodsNo" resultType="java.math.BigDecimal">
+        select discount from dealer_goods_discount where goods_no = #{goodsNo} and dealer_id = #{dealerId}
+    </select>
+
+    <select id="getDiscountBySeries" resultType="java.math.BigDecimal">
+        select discount from dealer_goods_discount where series = #{series} and dealer_id = #{dealerId}
+    </select>
+
+    <select id="getSeries" resultType="java.lang.String">
+        select series from goods where goods_no = #{goodsNo}
+    </select>
+    <select id="getDealerId" resultType="java.lang.String">
+        select id from dealer where dealer_name = #{dealerName}
+    </select>
+
+    <select id="isExistJdGoods" resultType="int">
+  		select 
+  			count(1) 
+  		from buyer_shopping_cart bsc
+		left join seller_goods sg on sg.id = bsc.seller_goods_id
+		where sg.seller_id =9407609  and bsc.id in 
+		<foreach collection="ids" item="id" open="(" close=")" separator=",">
+			#{id}
+		</foreach>
+  	</select>
+  	
+  	
+	<!--
+	 	 @author wmt
+		 @describe 套餐加入购物车，存在则更新不存在就加入
+		 @param packageId 套餐Id
+		 @param dealerId 零售商Id
+		 @param num 数量 
+	 	 @param uNum 更新数量
+	 -->
+  	<insert id="addOrUpdatePackageCart">
+		  <selectKey keyProperty="count" resultType="int" order="BEFORE">
+		    select 
+		    	count(1) 
+		    from buyer_shopping_cart bsc 
+		    where bsc.buyer_id = #{dealerId} 
+			    and bsc.activity_id = #{packageId} 
+			    and bsc.activity_type = 3 
+			    and bsc.status = 1
+		  </selectKey>
+		  <if test="count > 0">
+		    update 
+		    	buyer_shopping_cart 
+		   	<if test="uNum ==null"> set num = ifnull(num,0)+${num} </if>
+		   	<if test="uNum !=null"> set num = ${uNum} </if>
+		    where buyer_id = #{dealerId} 
+			    and activity_id = #{packageId} 
+			    and activity_type = 3 
+			    and status = 1
+		  </if>
+		  <if test="count == 0">
+		    insert into buyer_shopping_cart (
+		    	buyer_id,num,seller_id,seller_goods_id,create_time,sale_price,status,activity_type,activity_id) 
+		    select 
+		    	#{dealerId},
+			    <if test="uNum ==null"> ${num}, </if>
+			   	<if test="uNum !=null"> ${uNum}, </if>
+		    	sg.seller_id,sg.id,now(),sg.sale_price,1,3,#{packageId}
+		    from goods_combination gc 
+			left join seller_goods sg on sg.id = gc.seller_goods_id
+			where gc.status = 1 and gc.package_id =#{packageId}
+		  </if>
+  	</insert>
+  	
+	<!--   	
+		 * @author wmt
+		 * @describe  加入购物车,存在就更新不存在就加入
+		 * @param sellerGoodsId 商品Id
+		 * @param dealerId 零售商Id
+		 * @param num 数量
+	 	 * @param uNum 更新数量
+	  -->
+  	<insert id="addOrUpdateCart">
+  		<selectKey keyProperty="count" resultType="int" order="BEFORE" >
+		    select 
+		    	count(1)
+		    from buyer_shopping_cart bsc 
+		    where bsc.buyer_id = #{dealerId} 
+			    and ifnull(bsc.activity_type,0) = #{activityType} 
+			    and bsc.status = 1
+			    and bsc.seller_goods_id = #{sellerGoodsId}
+		  </selectKey>
+		  <if test="count > 0">
+		    update 
+		    	buyer_shopping_cart 
+		    	set
+		   	<if test="uNum ==null">  num = ifnull(num,0)+${num} </if>
+		   	<if test="uNum !=null">  num = ${uNum} </if>
+		    where  buyer_id = #{dealerId} 
+		    	and ifnull(activity_type,0) = #{activityType} 
+		    	and status = 1 
+		    	and seller_goods_id = #{sellerGoodsId}
+		  </if>
+		  <if test="count == 0">
+		    insert into buyer_shopping_cart (
+		    	buyer_id,num,seller_id,seller_goods_id,create_time,sale_price,status,activity_type,activity_id) 
+		    select 
+		    	#{dealerId},
+			    <if test="uNum ==null"> ${num}, </if>
+			   	<if test="uNum !=null"> ${uNum}, </if>
+		    	sg.seller_id,sg.id,now(),sg.sale_price,1,
+		    	#{activityType},
+		    	<if test="activityId != null">
+		    		#{activityId}
+		    	</if>
+		    	<if test="activityId == null">
+		    		null
+		    	</if>
+		    from seller_goods sg 
+		    where sg.id = #{sellerGoodsId}
+		  </if>
+  	</insert>
+
+
+
+    <!--新的折扣问题-->
+
+    <insert id="addOrUpdateCartByDiscount">
+        <selectKey keyProperty="count" resultType="int" order="BEFORE" >
+            select
+            count(1)
+            from buyer_shopping_cart bsc
+            where bsc.buyer_id = #{dealerId}
+            and ifnull(bsc.activity_type,0) = #{activityType}
+            and bsc.status = 1
+            and bsc.seller_goods_id = #{sellerGoodsId}
+        </selectKey>
+        <if test="count > 0">
+            update
+            buyer_shopping_cart
+            set
+            <if test="uNum ==null">  num = ifnull(num,0)+${num} </if>
+            <if test="uNum !=null">  num = ${uNum} </if>
+            where  buyer_id = #{dealerId}
+            and ifnull(activity_type,0) = #{activityType}
+            and status = 1
+            and seller_goods_id = #{sellerGoodsId}
+        </if>
+        <if test="count == 0">
+            insert into buyer_shopping_cart (
+            buyer_id,num,seller_id,seller_goods_id,create_time,sale_price,status,activity_type,activity_id)
+            select
+            #{dealerId},
+            <if test="uNum ==null"> ${num}, </if>
+            <if test="uNum !=null"> ${uNum}, </if>
+            sg.seller_id,sg.id,now(),#{salePrice},1,
+            #{activityType},
+            <if test="activityId != null">
+                #{activityId}
+            </if>
+            <if test="activityId == null">
+                null
+            </if>
+            from seller_goods sg
+            where sg.id = #{sellerGoodsId}
+        </if>
+    </insert>
+
+	<!--   	
+  	 * @author wmt
+	 * @describe 获取购物车套餐信息
+	 * @param buyerId 零售商Id
+	 * @return
+	  -->
+  	<select id="getShoppingCartPackageInfo" resultType="bmatser.model.GoodsPackage" >
+		select 
+			x.id ,
+			gp.id packageId,
+			gp.package_name packageName,
+			sum(if(c.combination_type=2,round(ifnull(gc.rate,1)*sg.sale_price,2),ifnull(gc.fixed_price,sg.sale_price)))price,
+			x.num,
+			sum(sg.sale_price)-sum(if(c.combination_type=2,round(ifnull(gc.rate,1)*sg.sale_price,2),ifnull(gc.fixed_price,sg.sale_price))) packageSale
+		from goods_package gp
+		left join combination c  on gp.combination_id = c.id
+		left join goods_combination gc on gc.package_id = gp.id
+		inner join seller_goods sg  on sg.id = gc.seller_goods_id and sg.`status`=1 and sg.is_show = 1
+		INNER JOIN (
+			select bsc.activity_id,bsc.num,bsc.id from buyer_shopping_cart bsc 
+			where bsc.status = 1 and bsc.activity_type = 3 and bsc.buyer_id = #{buyerId}
+			GROUP BY bsc.activity_id
+		)x on x.activity_id = gp.id
+		where 
+		c.start_time &lt;=now() and c.end_time &gt;=now() and c.status = 1 
+		and gp.status = 1 and gc.status = 1
+		GROUP BY gp.id
+  	</select>
+  	
+	<!--   	
+	  	 * @author wmt
+		 * @describe 获取套餐信息
+		 * @param ids 购物车Id集合
+		 * @return
+	  -->
+  	<select id="getPackageInfoByCartId" resultType="bmatser.model.GoodsPackage" >
+		select 
+			x.id ,
+			gp.id packageId,
+			gp.package_name packageName,
+			sum(if(c.combination_type=2,round(ifnull(gc.rate,1)*sg.sale_price,2),ifnull(gc.fixed_price,sg.sale_price)))price,
+			x.num,
+			sum(sg.sale_price)-sum(if(c.combination_type=2,round(ifnull(gc.rate,1)*sg.sale_price,2),ifnull(gc.fixed_price,sg.sale_price))) packageSale
+		from goods_package gp
+		left join combination c  on gp.combination_id = c.id
+		left join goods_combination gc on gc.package_id = gp.id
+		inner join seller_goods sg  on sg.id = gc.seller_goods_id and sg.`status`=1 and sg.is_show = 1
+		INNER JOIN (
+			select bsc.activity_id,bsc.num,bsc.id from buyer_shopping_cart bsc 
+			where bsc.status = 1 and bsc.activity_type = 3 and bsc.id in
+			<foreach collection="ids" item="id" open="(" close=")" separator=",">
+				#{id}
+			</foreach>
+			GROUP BY bsc.activity_id
+		)x on x.activity_id = gp.id
+		where 
+		c.start_time &lt;=now() and c.end_time &gt;=now() and c.status = 1 
+		and gp.status = 1 and gc.status = 1
+		GROUP BY gp.id
+  	</select>
+  	
+	<!--   	
+	  	 * @author wmt
+		 * @describe 更新购物车，会根据购物车类型来进行更新
+		 * @param cartId 购物车Id
+		 * @param dealerId 零售商Id
+		 * @param num 数量
+		 * @param uNum 更新数量
+	  -->
+  	<update id="updateCartByType" >
+  		<selectKey keyProperty="type" resultType="int" order="BEFORE">
+  			select 
+  				ifnull(activity_type,0)
+  			from buyer_shopping_cart
+  			where id = #{cartId}
+  		</selectKey>
+  		<if test="type==3">
+  			update buyer_shopping_cart
+  			<set>
+			   	<if test="uNum ==null">  num = ifnull(num,0)+${num} </if>
+			   	<if test="uNum !=null">  num = ${uNum} </if>
+  			</set>
+  			where activity_id = (select x.activity_id from ( select activity_id from buyer_shopping_cart where id =#{cartId} )x) 
+  				and buyer_id = #{dealerId}  
+  				and status = 1 
+  				and activity_type =3 
+  		</if>
+  		<if test="type!=3">
+  			update buyer_shopping_cart 
+  			<set>
+			   	<if test="uNum ==null">  num = ifnull(num,0)+${num} </if>
+			   	<if test="uNum !=null">  num = ${uNum} </if>
+  			</set>
+  			where id = #{cartId}
+  		</if>
+  	</update>
+  	
+  	
+  	<update id="deleteCart" >
+  		<selectKey keyProperty="type" resultType="int" order="BEFORE">
+  			select 
+  				ifnull(activity_type,0)
+  			from buyer_shopping_cart
+  			where id = #{cartId}
+  		</selectKey>
+  		<if test="type==3">
+  			update buyer_shopping_cart
+  			<set>
+			  	status = 2,num = 0
+  			</set>
+  			where activity_id = (select x.activity_id from ( select activity_id from buyer_shopping_cart where id =#{cartId} )x) 
+  				and buyer_id = #{dealerId}  
+  				and status = 1 
+  				and activity_type =3 
+  		</if>
+  		<if test="type!=3">
+  			update buyer_shopping_cart 
+  			<set>
+			   status = 2,num = 0
+  			</set>
+  			where id = #{cartId}
+  		</if>
+  	</update>
+  	
+</mapper>

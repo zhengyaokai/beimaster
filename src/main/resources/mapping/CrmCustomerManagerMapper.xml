@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.CrmCustomerManagerMapper" >
+<!--新增customer_id客户ID，manager_id客户经理ID等数据  -->
+  <insert id="insert"  >
+    insert into crm_customer_manager(customer_id, manager_id,create_time,status)
+    values (#{customerId},#{managerId},now(),'1')
+  </insert>
+  <!-- 更新客户对应客户经理表--> 
+  <update id="updateByCustomerId">
+    update crm_customer_manager 
+      set customer_id = #{customerId},manager_id = #{managerId},create_time = now() 
+    where  customer_id = #{customerId}
+  </update>
+</mapper>

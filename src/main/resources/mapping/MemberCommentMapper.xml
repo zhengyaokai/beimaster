@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.MemberCommentMapper" >
+
+<!-- 插入评价表 -->
+  <insert id="insertMemberComment" parameterType="bmatser.model.MemberComment">
+		 insert	into  member_comment
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+		 	<if test="sellerGoodsId != null">seller_goods_id,</if>
+		 	<if test="orderId != null">order_id,</if>
+		 	<if test="dealerId != null">dealer_id,</if>
+		 	<if test="buyTime != null and buyTime !=''">buy_time,</if>
+		 	<if test="1==1">comment_time,</if>
+		 	<if test="commentScore != null">comment_score,</if>
+		 	<if test="commentNotes != null">comment_notes,</if>
+		 	<if test="advantage != null">advantage,</if>
+		 	<if test="fault != null ">fault,</if>
+		 	<if test="useExperience != null">use_experience,</if>
+		 	<if test="usefullAmount != null">usefull_amount,</if>
+		 	<if test="isAudit != null">is_audit,</if>
+		 	<if test="auditUserId != null">audit_user_id,</if>
+		 	<if test="auditTime != null and auditTime !=''">audit_time,</if>
+		 	<if test="status != null">status,</if>
+		 	<if test="packageScore != null">package_score,</if>
+		 	<if test="logisticsScore != null">logistics_score,</if>
+		 	<if test="serviceScore != null">service_score,</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+		 	<if test="sellerGoodsId != null">#{sellerGoodsId},</if>
+		 	<if test="orderId != null">#{orderId},</if>
+		 	<if test="dealerId != null">#{dealerId},</if>
+		 	<if test="buyTime != null  and buyTime !=''">#{buyTime},</if>
+		 	<if test="1==1">now(),</if>
+		 	<if test="commentScore != null">#{commentScore},</if>
+		 	<if test="commentNotes != null">#{commentNotes},</if>
+		 	<if test="advantage != null">#{advantage},</if>
+		 	<if test="fault != null ">#{fault},</if>
+		 	<if test="useExperience != null">#{useExperience},</if>
+		 	<if test="usefullAmount != null">#{usefullAmount},</if>
+		 	<if test="uselessAmount != null">#{uselessAmount},</if>
+		 	<if test="isAudit != null">#{isAudit},</if>
+		 	<if test="auditUserId != null">#{auditUserId},</if>
+		 	<if test="auditTime != null and auditTime !=''">#{auditTime},</if>
+		 	<if test="status != null">#{status},</if>
+		 	<if test="packageScore != null">#{packageScore},</if>
+		 	<if test="logisticsScore != null">#{logisticsScore},</if>
+		 	<if test="serviceScore != null">#{serviceScore},</if>
+		 </trim>
+	</insert>
+	
+	 <!-- 修改订单表评价字段为已评 -->
+   <update id="updateIsComment" parameterType="bmatser.model.MemberComment" >
+    update order_info set is_comment = '1' where id = #{orderId}
+  </update>
+	
+   <!-- 查询订单评价-->
+  <select id="selectMemberComment" resultType="map">
+		 select id,order_id orderId,dealer_id dealerId,buy_time buyTime,comment_time commentTime,ifnull(comment_score,'1') commentScore,
+		 ifnull(comment_notes,'') commentNotes,ifnull(package_score,5) packageScore,ifnull(logistics_score,5) logisticsScore,
+		 ifnull(service_score,5) serviceScore
+         from member_comment  
+         where order_id = #{orderId} and status = 1 
+	</select>
+
+</mapper>

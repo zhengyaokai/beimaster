@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.DealerBusinessLicenseMapper" >
+<resultMap id="selectDealerBusinessLicense" type="java.util.Map" >
+    <result column="id" property="id" jdbcType="INTEGER" />
+    <result column="business_license_file" property="businessLicenseFile" jdbcType="VARCHAR" />
+      <result column="tax_certificate_file" property="taxCertificateFile" jdbcType="VARCHAR" />
+        <result column="organize_code_file" property="organizeCodeFile" jdbcType="VARCHAR" />
+    <result column="dealer_id" property="dealerId" jdbcType="INTEGER" />
+  </resultMap>
+<!-- 查询营业执照关联信息 -->
+  <select id="selectByDealerId" resultMap="selectDealerBusinessLicense" parameterType="java.lang.Integer">
+    select d.business_license_file,d.tax_certificate_file,d.organize_code_file
+         from dealer_business_license d 
+         left join dealer r on d.dealer_id=r.id
+         where d.status='1' and r.status='1' 
+         <if test="dealerId != null">
+				and d.dealer_id = #{dealerId} 
+		 </if>
+		 order by d.id desc
+  </select>
+  <!-- 新增营业执照   新增统一社会信用代码和营业执照注册号-->
+  <insert id="insert" parameterType="bmatser.model.DealerBusinessLicense" >
+    insert into dealer_business_license 
+    (dealer_id,business_license_file,status,tax_certificate_file,
+    <if test="businessLicenseNo !=null and businessLicenseNo !=''" >business_license_no,</if>
+    <if test="creditCode !=null and creditCode !=''" >credit_code,</if>
+    organize_code_file,
+    reg_name)
+    values (#{dealerId},#{businessLicenseFile},'1',#{taxCertificateFile},
+    <if test="businessLicenseNo !=null and businessLicenseNo !=''" >#{businessLicenseNo},</if>
+    <if test="creditCode !=null and creditCode !=''" >#{creditCode},</if>
+    #{organizeCodeFile},#{regName})
+  </insert>
+  <!-- 更新营业执照-->
+  <update id="update" parameterType="bmatser.model.DealerBusinessLicense">
+    update dealer_business_license
+    <set>
+      business_license_no = #{businessLicenseNo},
+      credit_code = #{creditCode},
+      business_license_file = #{businessLicenseFile},
+      tax_certificate_file = #{taxCertificateFile},
+      organize_code_file = #{organizeCodeFile},
+      reg_name = #{regName}
+    </set>
+    where dealer_id = #{dealerId}
+  </update>
+</mapper>

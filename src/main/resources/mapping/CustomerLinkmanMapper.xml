@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.CustomerLinkmanMapper" >
+  <resultMap id="BaseResultMap" type="bmatser.model.CustomerLinkman" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="mobile" property="mobile" jdbcType="VARCHAR" />
+    <result column="duty_id" property="dutyId" jdbcType="INTEGER" />
+    <result column="status" property="status" jdbcType="CHAR" />
+    <result column="qq" property="qq" jdbcType="VARCHAR" />
+    <result column="customer_id" property="customerId" jdbcType="INTEGER" />
+    <result column="link_man" property="linkMan" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, mobile, duty_id, status, qq, customer_id, link_man
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from crm_customer_linkman
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from crm_customer_linkman
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bmatser.model.CustomerLinkman" >
+    insert into crm_customer_linkman (id, mobile, duty_id, 
+      status, qq, customer_id, 
+      link_man)
+    values (#{id,jdbcType=INTEGER}, #{mobile,jdbcType=VARCHAR}, #{dutyId,jdbcType=INTEGER}, 
+      #{status,jdbcType=CHAR}, #{qq,jdbcType=VARCHAR}, #{customerId,jdbcType=INTEGER}, 
+      #{linkMan,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bmatser.model.CustomerLinkman" useGeneratedKeys="true" keyProperty="id">
+    insert into crm_customer_linkman
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="mobile != null" >
+        mobile,
+      </if>
+      <if test="mobileSecret != null" >
+        mobile_secret,
+      </if>
+      <if test="dutyId != null" >
+        duty_id,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="qq != null" >
+        qq,
+      </if>
+      <if test="customerId != null" >
+        customer_id,
+      </if>
+      <if test="linkMan != null" >
+        link_man,
+      </if>
+      <if test="isDefault != null" >
+        is_default,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="mobile != null" >
+        #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="mobileSecret != null" >
+        #{mobileSecret,jdbcType=VARCHAR},
+      </if>
+      <if test="dutyId != null" >
+        #{dutyId,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=CHAR},
+      </if>
+      <if test="qq != null" >
+        #{qq,jdbcType=VARCHAR},
+      </if>
+      <if test="customerId != null" >
+        #{customerId,jdbcType=INTEGER},
+      </if>
+      <if test="linkMan != null" >
+        #{linkMan,jdbcType=VARCHAR},
+      </if>
+      <if test="isDefault != null" >
+        #{isDefault,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <!-- 更新客户联系人表 -->
+  <update id="updateByCustomerId" parameterType="bmatser.model.CustomerLinkman">
+    update crm_customer_linkman
+    <set >
+      <if test="mobile != null" >
+        mobile = #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="mobileSecret != null" >
+        mobile_secret = #{mobileSecret,jdbcType=VARCHAR},
+      </if>
+      <if test="dutyId != null" >
+        duty_id = #{dutyId,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+      <if test="qq != null" >
+        qq = #{qq,jdbcType=VARCHAR},
+      </if>
+      <if test="customerId != null" >
+        customer_id = #{customerId,jdbcType=INTEGER},
+      </if>
+      <if test="linkMan != null" >
+        link_man = #{linkMan,jdbcType=VARCHAR},
+      </if>
+      <if test="isDefault != null" >
+        is_default = #{isDefault,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where customer_id = #{customerId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="bmatser.model.CustomerLinkman" >
+    update crm_customer_linkman
+    <set >
+      <if test="mobile != null" >
+        mobile = #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="mobileSecret != null" >
+        mobile_secret = #{mobileSecret,jdbcType=VARCHAR},
+      </if>
+      <if test="dutyId != null" >
+        duty_id = #{dutyId,jdbcType=INTEGER},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=CHAR},
+      </if>
+      <if test="qq != null" >
+        qq = #{qq,jdbcType=VARCHAR},
+      </if>
+      <if test="customerId != null" >
+        customer_id = #{customerId,jdbcType=INTEGER},
+      </if>
+      <if test="linkMan != null" >
+        link_man = #{linkMan,jdbcType=VARCHAR},
+      </if>
+      <if test="isDefault != null" >
+        is_default = #{isDefault,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bmatser.model.CustomerLinkman" >
+    update crm_customer_linkman
+    set mobile = #{mobile,jdbcType=VARCHAR},
+      duty_id = #{dutyId,jdbcType=INTEGER},
+      status = #{status,jdbcType=CHAR},
+      qq = #{qq,jdbcType=VARCHAR},
+      customer_id = #{customerId,jdbcType=INTEGER},
+      link_man = #{linkMan,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="selectLinkmanById" resultType="bmatser.model.CustomerLinkman" parameterType="java.lang.Integer" >
+   SELECT cl.id,cl.link_man linkMan ,ifnull(cl.mobile,'') mobile,ifnull(cl.qq, '') qq,cd.duty_name duty,
+			cl.customer_id customerId,cl.is_default isDefault,cl.duty_id dutyId
+	from crm_customer_linkman cl
+	LEFT JOIN crm_customer_duty cd on cd.id=cl.duty_id and cd.`status`=1
+	WHERE cl.`status`=1 and cl.customer_id=#{customerId}
+  </select>
+  
+  <update id="deleteByCustomerId" parameterType="int" >
+	update crm_customer_linkman
+	set status = 2
+	where customer_id = #{customerId}
+  </update>
+</mapper>

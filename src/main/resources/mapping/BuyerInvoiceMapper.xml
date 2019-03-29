@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.BuyerInvoiceMapper" >
+
+  <resultMap id="findByBuyerIdResultMap" type="java.util.Map" >
+    <result column="inv_type" property="invType" jdbcType="CHAR" />
+    <result column="inv_title" property="invTitle" jdbcType="VARCHAR" />
+    <result column="taxpaye_rno" property="taxpayeRno" jdbcType="VARCHAR" />
+    <result column="reg_address" property="regAddress" jdbcType="VARCHAR" />
+    <result column="reg_telphone" property="regTelphone" jdbcType="VARCHAR" />
+    <result column="reg_telphone_secret" property="regTelphoneSecret" jdbcType="VARCHAR" />
+    <result column="bank" property="bank" jdbcType="VARCHAR" />
+    <result column="bank_account" property="bankAccount" jdbcType="VARCHAR" />
+    <result column="recv_name" property="recvName" jdbcType="VARCHAR" />
+    <result column="recv_mobile" property="recvMobile" jdbcType="VARCHAR" />
+    <result column="recv_mobile_secret" property="recvMobileSecret" jdbcType="VARCHAR" />
+    <result column="recv_province" property="recvProvince" jdbcType="INTEGER" />
+    <result column="recv_city" property="recvCity" jdbcType="INTEGER" />
+    <result column="recv_area" property="recvArea" jdbcType="INTEGER" />
+    <result column="recv_address" property="recvAddress" jdbcType="VARCHAR" />
+    <result column="is_default" property="isDefault" jdbcType="CHAR" />
+    <result column="inv_title_type" property="invTitleType" jdbcType="CHAR" />
+    <result column="inv_content" property="invContent" jdbcType="VARCHAR" />
+  </resultMap>
+ 
+<!-- 获取指定用户的发票信息 --> 
+	<select id="findByBuyerId" resultMap="findByBuyerIdResultMap">
+		select id, inv_type, inv_title, taxpaye_rno, reg_address, reg_telphone, bank, bank_account, recv_name, recv_mobile, recv_city, recv_province, recv_area, recv_address, is_default,inv_content invContent
+		from buyer_invoice
+		where buyer_id = #{buyerId} and status='1'
+		order by is_default desc
+	</select>
+	
+<!-- 设置默认发票-->
+	<update id="setNoDefault">
+		update buyer_invoice
+		set is_default = '0'
+		where buyer_id = #{buyerId}
+	</update>
+	<update id="setDefault">
+		update buyer_invoice 
+		set is_default = '1'
+		where id = #{id}
+	</update>
+	
+<!-- 新增发票信息 -->
+	<insert id="add" useGeneratedKeys="true" keyProperty="id">
+		insert into buyer_invoice
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			buyer_id, inv_type, inv_title,
+			<if test="taxpayeRno != null and taxpayeRno != ''">
+				taxpaye_rno,
+			</if>
+			<if test="regAddress != null and regAddress != ''">
+				reg_address,
+			</if>
+			<if test="regTelphone != null and regTelphone != ''">
+				reg_telphone,
+			</if>
+			<if test="regTelphoneSecret != null and regTelphoneSecret != ''">
+				reg_telphone_secret,
+			</if>
+			<if test="bank != null and bank != ''">
+				bank,
+			</if>
+			<if test="bankAccount != null and bankAccount != ''">
+				bank_account,
+			</if>
+			<if test="recvName != null ">
+				recv_name,
+			</if>
+			<if test="recvMobile != null ">
+				recv_mobile,
+			</if>
+			<if test="recvMobileSecret != null and recvMobileSecret != ''">
+				recv_mobile_secret,
+			</if>
+			recv_province, recv_city, 
+			<if test="recvArea != null ">
+				recv_area,
+			</if>
+			<if test="invTitleType != null and invTitleType != ''">
+				inv_title_type,
+			</if>
+			<if test="invContent != null and invContent != ''">
+				inv_content,
+			</if>
+			<if test="authorization != null">
+				authorization,
+			</if>
+			<if test="clientCompanyLicenseFile != null">
+				client_company_license_file,
+			</if>
+			recv_address, is_default, create_time, status
+		</trim>
+		<trim prefix="values(" suffix=")" suffixOverrides=",">
+			#{buyerId}, #{invType}, #{invTitle},
+			<if test="taxpayeRno != null and taxpayeRno != ''">
+				#{taxpayeRno},
+			</if>
+			<if test="regAddress != null and regAddress != ''">
+				#{regAddress},
+			</if>
+			<if test="regTelphone != null and regTelphone != ''">
+				#{regTelphone},
+			</if>
+			<if test="regTelphoneSecret != null and regTelphoneSecret != ''">
+				#{regTelphoneSecret},
+			</if>
+			<if test="bank != null and bank != ''">
+				#{bank},
+			</if>
+			<if test="bankAccount != null and bankAccount != ''">
+				#{bankAccount},
+			</if>
+			<if test="recvName != null ">
+				#{recvName},
+			</if>
+			<if test="recvMobile != null ">
+				#{recvMobile},
+			</if>
+			<if test="recvMobileSecret != null and recvMobileSecret != ''">
+				#{recvMobileSecret},
+			</if>
+			#{recvProvince}, #{recvCity}, 
+			<if test="recvArea != null ">
+				#{recvArea},
+			</if>
+			<if test="invTitleType != null and invTitleType != ''">
+				#{invTitleType},
+			</if>
+			<if test="invContent != null and invContent != ''">
+				#{invContent},
+			</if>
+			<if test="authorization != null">
+				#{authorization},
+			</if>
+			<if test="clientCompanyLicenseFile != null">
+				#{clientCompanyLicenseFile},
+			</if>
+			#{recvAddress}, #{isDefault}, now(), '1'
+		</trim>
+	</insert>
+  
+<!-- 修改发票信息 -->
+	<update id="edit" parameterType="bmatser.pageModel.BuyerInvoicePage">
+		update buyer_invoice
+		<set>
+			<if test="invTitle != null and invTitle != ''">
+				inv_title = #{invTitle},
+			</if>
+			<if test="taxpayeRno != null and taxpayeRno != ''">
+				taxpaye_rno = #{taxpayeRno},
+			</if>
+			<if test="regAddress != null and regAddress != ''">
+				reg_address = #{regAddress},
+			</if>
+			<if test="regTelphone != null and regTelphone != ''">
+				reg_telphone = #{regTelphone},
+			</if>
+			<if test="regTelphoneSecret != null and regTelphoneSecret != ''">
+				reg_telphone_secret = #{regTelphoneSecret},
+			</if>
+			<if test="bank != null and bank != ''">
+				bank = #{bank},
+			</if>
+			<if test="bankAccount != null and bankAccount != ''">
+				bank_account = #{bankAccount},
+			</if>
+			<if test="recvName != null and recvName != ''">
+				recv_name = #{recvName},
+			</if>
+			<if test="recvMobile != null and recvMobile != ''">
+				recv_mobile = #{recvMobile},
+			</if>
+			<if test="recvMobileSecret != null and recvMobileSecret != ''">
+				recv_mobile_secret = #{recvMobileSecret},
+			</if>
+			<if test="recvProvince != null and recvProvince != ''">
+				recv_province = #{recvProvince},
+			</if>
+			<if test="recvCity != null and recvCity != ''">
+				recv_city = #{recvCity},
+			</if>
+			<if test="recvArea != null and recvArea != ''">
+				recv_area = #{recvArea},
+			</if>
+			<if test="recvAddress != null and recvAddress != ''">
+				recv_address = #{recvAddress},
+			</if>
+			<if test="invContent != null and invContent != ''">
+				inv_content = #{invContent},
+			</if>
+			<if test="invTitleType != null and invTitleType != ''">
+				inv_title_type = #{invTitleType},
+			</if>
+			<if test="isDefault != null and isDefault != ''">
+				is_default = #{isDefault},
+			</if>
+			<if test="authorization != null">
+				authorization = #{authorization},
+			</if>
+			<if test="clientCompanyLicenseFile != null">
+				client_company_license_file = #{clientCompanyLicenseFile},
+			</if>
+		</set>
+		where id=#{id}
+	</update>
+	
+<!-- 删除发票信息 -->
+	<delete id="delete">
+		update buyer_invoice set status = '2' where id = #{id}
+	</delete>
+	
+<!-- 获取指定用户的发票信息 --> 
+	<select id="getDefaultByBuyerId" resultMap="findByBuyerIdResultMap">
+		select id, inv_type, inv_title,inv_title_type, taxpaye_rno, reg_address, reg_telphone, bank, bank_account, recv_name, recv_mobile, recv_city, recv_province, recv_area, recv_address, is_default,inv_content
+		from buyer_invoice
+		where buyer_id = #{buyerId} and status='1' and is_default='1'
+	</select>
+	
+	<!-- 商城首页获取发票列表--> 
+	<select id="getMallInvoiceList" resultType="map">
+		select id, inv_type invType, inv_title invTitle,inv_title_type invTitleType,
+		 taxpaye_rno taxpayeRno, reg_address regAddress, reg_telphone regTelphone, bank,
+		  bank_account bankAccount, recv_name recvName, recv_mobile recvMobile, recv_city recvCity,
+		   recv_province recvProvince, recv_area recvArea, recv_address recvAddress, is_default isDefault,inv_content invContent
+		from buyer_invoice
+		where buyer_id = #{buyerId} and status='1' and inv_type = '2' 
+        order by is_default desc,create_time desc
+	</select><!-- 发票只查询增值税发票 -->
+	
+<!-- 获取指定发票的详细信息 --> 
+	<select id="findInvoiceById" resultMap="findByBuyerIdResultMap">
+		select id, inv_type, inv_title,inv_title_type, taxpaye_rno, reg_address, reg_telphone,reg_telphone_secret, bank, bank_account, recv_name, recv_mobile,recv_mobile_secret, recv_city, recv_province, recv_area, recv_address, is_default,inv_content,
+		if(authorization is not null and length(authorization)>10,concat('${@bmatser.util.Constants@IMAGE_URL}','licenseImg/',authorization),'') authorImg,
+		if(client_company_license_file is not null and length(client_company_license_file)>10,concat('${@bmatser.util.Constants@IMAGE_URL}','licenseImg/',client_company_license_file),'')  licenseFile
+		from buyer_invoice
+		where id = #{id} and status='1'
+	</select>
+	<update id="deleteByPage" parameterType="map" >
+		update buyer_invoice
+		<set>
+			status = 2
+		</set>
+		where id = #{id} and buyer_id = #{buyerId}
+	</update>
+	
+	<select id="selectIsWhite" resultType="map">
+      select is_review isReview,
+      if(qualifications is not null and length(qualifications)>10,concat('${@bmatser.util.Constants@IMAGE_URL}','licenseImg/',qualifications),'') qualifications
+      from customer_qualified where dealer_id = #{buyerId} and status = '1'
+	</select>
+	
+	<!-- 专票新增上传开票申请(发票的开票申请不在buyer_invoice这张表) -->
+	<insert id="addCustomerQualified">
+	  insert into customer_qualified(dealer_id,qualifications,is_review,status)
+	  values(#{buyerId},#{qualifications},'0','1')
+	</insert>
+	<!-- 专票修改上传开票申请(发票的开票申请不在buyer_invoice这张表) -->
+	<update id="updateCustomerQualified">
+	  update customer_qualified set qualifications = #{qualifications},
+	  is_review = #{isReview}
+	  where dealer_id = #{buyerId} and status = '1'
+	</update>
+	
+	<!-- 发票明细列表 -->
+	<select id="getInvoiveDetialList" resultType="map">
+	select o.fjs_no fjsNo,o.famt,GROUP_CONCAT(DISTINCT o.original_order_id separator '|') orderId from order_receipt o
+	LEFT JOIN  order_info ori on o.original_order_id = ori.id 
+     where o.fjs_no in (
+       select orc.fjs_no fjsNo from order_receipt orc 
+        LEFT JOIN order_info oi on orc.original_order_id = oi.id 
+       where orc.status = '1' and oi.buyer_id = #{dealerId}
+        <if test="fjsNo != null and fjsNo != ''">
+			 and orc.fjs_no = #{fjsNo} 
+		</if>
+        <if test="orderId != null and orderId != ''">
+			 and oi.id = #{orderId}
+		</if>
+        GROUP BY orc.fjs_no)
+        and ori.buyer_id = #{dealerId}
+        and o.status = '1'
+    GROUP BY o.fjs_no
+    ORDER BY o.fcheck_time desc
+    limit #{page}, #{rows} 
+	</select>
+	
+	<select id="getInvoiveDetialListCount" resultType="int">
+	 select count(1) from (select o.fjs_no fjsNo,o.famt,GROUP_CONCAT(DISTINCT o.original_order_id separator '|') orderId from order_receipt o
+	    LEFT JOIN  order_info ori on o.original_order_id = ori.id 
+     where o.fjs_no in (
+       select orc.fjs_no fjsNo from order_receipt orc 
+        LEFT JOIN order_info oi on orc.original_order_id = oi.id 
+       where orc.status = '1' and oi.buyer_id = #{dealerId}
+        <if test="fjsNo != null and fjsNo != ''">
+			 and orc.fjs_no = #{fjsNo} 
+		</if>
+        <if test="orderId != null and orderId != ''">
+			 and oi.id = #{orderId}
+		</if>
+        GROUP BY orc.fjs_no)
+        and ori.buyer_id = #{dealerId}
+        and o.status = '1' 
+    GROUP BY o.fjs_no) t
+	</select>
+</mapper>

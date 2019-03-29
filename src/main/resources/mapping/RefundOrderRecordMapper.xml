@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bmatser.dao.RefundOrderRecordMapper" >
+
+
+	<select id="findIdByOrderId" resultType="java.lang.String">
+		select 
+			ror.refund_order_id from refund_order_record ror
+		left join refund_order ro on ro.id = ror.refund_order_id 
+		where ro.order_id = #{orderId} and ror.status =1 and ro.status = 1
+	</select>
+		
+	<insert id="addBackware" >
+		insert into refund_order_record
+		(refund_order_id,refund_no,refund_time) 
+		values 
+		(#{id},#{refundNo},now())
+	</insert>
+	
+	<update id="updatePutware" >
+		update refund_order_record
+		SET
+		putware_no = #{refundNo},
+		putware_time= now()
+		where refund_order_id = #{id} and status = 0
+	</update>
+</mapper>
